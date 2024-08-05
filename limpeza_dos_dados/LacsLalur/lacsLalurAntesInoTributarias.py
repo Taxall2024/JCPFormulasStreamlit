@@ -5,7 +5,7 @@ import numpy as np
 
 class LacsLalurCSLL():
 
-    #@st.cache_data(ttl='1d', show_spinner=False)
+    @st.cache_data(ttl='1d', show_spinner=False)
     def load_excel_file(file_path):
         return pd.read_excel(file_path)
 
