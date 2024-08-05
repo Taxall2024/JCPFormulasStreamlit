@@ -8,7 +8,6 @@ import requests
 from functools import lru_cache
 import time
 import base64
-from streamlit_navigation_bar import st_navbar
 
 start_time = time.time()
 st.set_page_config(layout="wide")
