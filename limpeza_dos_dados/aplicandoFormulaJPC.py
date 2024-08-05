@@ -11,7 +11,7 @@ import base64
 
 start_time = time.time()
 st.set_page_config(layout="wide")
-background_image ="limpeza_dos_dados\Untitleddesign.jpg"
+background_image ="Untitleddesign.jpg"
 st.markdown(
     f"""
     <iframe src="data:image/jpg;base64,{base64.b64encode(open(background_image, 'rb').read()).decode(
