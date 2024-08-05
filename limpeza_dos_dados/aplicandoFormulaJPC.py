@@ -21,8 +21,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-@st.cache_data(ttl='1d')
-@lru_cache(maxsize=1)
+#@st.cache_data(ttl='1d')
+#@lru_cache(maxsize=1)
 def fetch_tjlp_data():
     url = 'https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/pagamentos-e-parcelamentos/taxa-de-juros-de-longo-prazo-tjlp'
     response = requests.get(url)
