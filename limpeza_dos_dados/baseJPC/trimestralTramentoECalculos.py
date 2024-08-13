@@ -7,6 +7,8 @@ import os
 import base64
 import requests
 from bs4 import BeautifulSoup
+from dataclasses import dataclass
+
 # Adicione o caminho do diretório onde o módulo 'LacsLalur' está localizado
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -45,6 +47,7 @@ def fetch_tjlp_data():
 
 
 
+@dataclass
 class trimestralFiltrandoDadosParaCalculo():
     _widget_counter = 0
 
@@ -145,72 +148,67 @@ class trimestralFiltrandoDadosParaCalculo():
     
     def capitalIntegralizador(self):
     
-        key = f'capitalIntregalizador{self.ano,self.mes_inicio,self.trimestre,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'capitalIntregalizador{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
             st.session_state[key] = 0.0
         st.session_state[key] = st.session_state[key]    
         
         self.capitalIntegra = st.number_input('Digite o valor do Capital Integralizador', key=key, value=st.session_state[key])
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Capital Integralizador", "Value": self.capitalIntegra}])], ignore_index=True)
     
 
     def ReservasDeCapital(self):
 
-        key = f'reservasDeCapital{self.ano,self.mes_inicio,self.trimestre,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'reservasDeCapital{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
             st.session_state[key] = 0.0
         st.session_state[key] = st.session_state[key]    
         
         self.reservaCapital = st.number_input('Digite o valor das Reservas de Capital', key=key, value=st.session_state[key])
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reservas de Capital", "Value": self.reservaCapital}])], ignore_index=True)
 
             
     def ajustesAvalPatrimonial(self):
-        key = f'ajustesPatrimonial{self.ano,self.mes_inicio,self.trimestre,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'ajustesPatrimonial{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
             st.session_state[key] = 0.0
         st.session_state[key] = st.session_state[key]    
         
         self.ajusteAvaPatrimonial = st.number_input('Digite o valor dos Ajustes de Avaliação Patrimonial', key=key, value=st.session_state[key])
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ajustes Avaliação Patrimonial", "Value": self.ajusteAvaPatrimonial}])], ignore_index=True)
 
                     
     def lucrosAcumulados(self):
 
-        key = f'lucrosAcumulados{self.ano,self.mes_inicio,self.trimestre,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'lucrosAcumulados{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
             st.session_state[key] = 0.0
         st.session_state[key] = st.session_state[key]    
         
         self.lucroAcumulado = st.number_input('Digite o valor dos Lucros Acumulados', key=key, value=st.session_state[key])
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
       
     
     def ajustesExerAnteriores(self):
 
-        key = f'ajustesExerAnteirores{self.ano,self.mes_inicio,self.trimestre,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'ajustesExerAnteirores{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
             st.session_state[key] = 0.0
         st.session_state[key] = st.session_state[key]    
         
         self.ajustExercAnt = st.number_input('Ajustes de Exercícios Anteriores', key=key, value=st.session_state[key])
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ajustes Exercícios Anteriores", "Value": self.ajustExercAnt}])], ignore_index=True)
 
     
     def lucroPeriodo(self):
 
-        key = f'lucroPeriodo{self.ano,self.mes_inicio,self.trimestre,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'lucroPeriodo{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
             st.session_state[key] = 0.0
         st.session_state[key] = st.session_state[key]    
@@ -236,21 +234,20 @@ class trimestralFiltrandoDadosParaCalculo():
         self.resultsTabelaFinal.loc[self.resultsTabelaFinal['Operation'] == 'Reservas de Lucros', 'Value'] = self.reservLucro
 
     def ReservaLegal(self):
-        key = f'reservaLegal{self.ano,self.mes_inicio,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'reservaLegal{self.ano,self.mes_inicio,self.trimestre}'
 
         if key not in st.session_state:
             st.session_state[key] = 0.0
 
         st.session_state[key] = st.session_state[key]
         self.reservLegal = st.number_input('Digite o valor da Reserva Legal', key=key, value=st.session_state[key])
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reserva legal", "Value": self.reservLegal}])], ignore_index=True)
 
 
 
     def ReservaEstatutária(self):
-        key = f'reservaEsta{self.ano,self.mes_inicio,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'reservaEsta{self.ano,self.mes_inicio,self.trimestre}'
 
         if key not in st.session_state:
             st.session_state[key] = 0.0
@@ -258,13 +255,12 @@ class trimestralFiltrandoDadosParaCalculo():
         st.session_state[key] = st.session_state[key]
 
         self.reservEstatuaria =  st.number_input('Digite o valor da Reserva Estatuaria',key=key,value=st.session_state[key])
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reserva Estatutária", "Value": self.reservEstatuaria}])], ignore_index=True)
     
 
     def ReservaContingencias(self):
-        key = f'reservaCont{self.ano,self.mes_inicio,trimestralFiltrandoDadosParaCalculo._widget_counter}'  
+        key = f'reservaCont{self.ano,self.mes_inicio,self.trimestre}'  
 
         if key not in st.session_state:
             st.session_state[key] = 0.0
@@ -272,26 +268,24 @@ class trimestralFiltrandoDadosParaCalculo():
         st.session_state[key] = st.session_state[key]
 
         self.resContingencia =  st.number_input('Digite o valor da Reserva Reserva de contingências',key=key,value=st.session_state[key])
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-        
+                 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reserva para Contingências", "Value": self.resContingencia}])], ignore_index=True)
     
 
     def ReservaExpansao(self):
-        key = f'reservaExpans{self.ano,self.mes_inicio,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'reservaExpans{self.ano,self.mes_inicio,self.trimestre}'
 
         if key not in st.session_state:
             st.session_state[key] = 0.0
 
         st.session_state[key] = st.session_state[key]
         self.reserExp =  st.number_input('Digite o valor da Reserva de Expansão',key=key,value=st.session_state[key])
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation":"Reserva de Lucros para Expansão", "Value": self.reserExp}])], ignore_index=True)
     
 
     def OutrasReservasLucros(self):
-        key = f'reservaOutras{self.ano,self.mes_inicio,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'reservaOutras{self.ano,self.mes_inicio,self.trimestre}'
 
         if key not in st.session_state:
             st.session_state[key] = 0.0
@@ -299,8 +293,7 @@ class trimestralFiltrandoDadosParaCalculo():
         st.session_state[key] = st.session_state[key]
 
         self.outrasResLuc = st.number_input('Digite o valor Outras reservas de lucros',key=key,value=st.session_state[key])
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Outras Reservas de Lucros", "Value": self.outrasResLuc}])], ignore_index=True)
 
@@ -333,10 +326,10 @@ class trimestralFiltrandoDadosParaCalculo():
         self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Contas do Patrimônio Líquido Não Classificadas ", "Value": self.contaPatriNClassifica}])], ignore_index=True)
     
-    
+    #@staticmethod
     def PrejuizoPeriodo(self):
 
-        key = f'PrejuAcumulado{self.ano,self.mes_inicio,trimestralFiltrandoDadosParaCalculo._widget_counter}'   
+        key = f'PrejuAcumulado{self.ano,self.mes_inicio,self.trimestre}'   
 
         if key not in st.session_state:
             st.session_state[key] = 0.0
@@ -344,8 +337,7 @@ class trimestralFiltrandoDadosParaCalculo():
         st.session_state[key] = st.session_state[key]
 
         self.prejuizoPeirod = st.number_input('Digite o valor do Prejuízo do Período',key=key,value=st.session_state[key]) * -1
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízo do Período", "Value": self.prejuizoPeirod}])], ignore_index=True)
         
     
@@ -391,14 +383,13 @@ class trimestralFiltrandoDadosParaCalculo():
 
     def limiteDedutibilidade(self):
 
-        key = f'retirar_multa_{self.ano,trimestralFiltrandoDadosParaCalculo._widget_counter}'
+        key = f'retirar_multa_{self.ano,self.trimestre,self.mes_fim}'
         if key not in st.session_state:
             st.session_state[key] = False
 
         retirarMulta = st.toggle('Retirar valor de multa da conta', key=key)
         
-        trimestralFiltrandoDadosParaCalculo._widget_counter += 1
-
+         
         self.LacsLalurTrimestral.LucroLiquidoAntesIRPJ()
         self.lucroLiquid50 = self.LacsLalurTrimestral.lucroAntIRPJ * 0.5
         self.lucroAcuEReserva = (self.reservLucro + self.lucroAcumulado) * 0.5
@@ -427,7 +418,7 @@ class trimestralFiltrandoDadosParaCalculo():
         self.resultadoEconomiaGerada = pd.concat([self.resultadoEconomiaGerada, pd.DataFrame(results)], ignore_index=True)
 
    
-
+    
     def runPipe(self):
         with st.expander("Adicionar valores :"):
             self.nomeDasEmpresas()
@@ -482,160 +473,84 @@ class trimestralFiltrandoDadosParaCalculo():
         self.resultsTabelaFinal['Value'] = self.resultsTabelaFinal['Value'].apply(lambda x: "{:,.2f}".format(x))
         st.dataframe(self.resultsTabelaFinal)
     
-    def processarCalculos(self):
-   
 
-        with st.form(key='form1'):
-            submitButton = st.form_submit_button('Processar')
+
+
+
+# if __name__=='__main__':
+
+    # uploaded_file_l100 = st.sidebar.file_uploader("Upload L100 Excel File", type="xlsx")
+    # uploaded_file_l300 = st.sidebar.file_uploader("Upload L300 Excel File", type="xlsx")
+    # uploaded_file_lacs = st.sidebar.file_uploader("Upload Lacs Excel File", type="xlsx")
+    # uploaded_file_lalur = st.sidebar.file_uploader("Upload Lalur Excel File", type="xlsx")
+    # uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
+    # uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
+
+
+    # if uploaded_file_l100 and uploaded_file_l300 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ecf670 and uploaded_file_ec630:
+    #     with st.form(key='form1'):
+    #         submitButton = st.form_submit_button('Processar')
             
-            if submitButton:
+    #         if submitButton:
 
-                colunas = st.columns(4)
-                trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
-                economia_gerada_por_trimestre = []
-                for ano in range(2019, 2024):
-                    year_dfsLacs = []
-                    resultadoJCP = []
-                    resultadoDedu = []
-                    economiaGerada = []
-                    for col, trimestre in zip(colunas, trimestres):
-                        with col:
+    #             colunas = st.columns(4)
+    #             trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
+    #             economia_gerada_por_trimestre = []
+    #             for ano in range(2019, 2024):
+    #                 year_dfsLacs = []
+    #                 resultadoJCP = []
+    #                 resultadoDedu = []
+    #                 economiaGerada = []
+    #                 for col, trimestre in zip(colunas, trimestres):
+    #                     with col:
 
-                            lacs = trimestralFiltrandoDadosParaCalculo(
-                                                trimestre=trimestre,
-                                                ano=ano,
-                                                mes_inicio=1,
-                                                mes_fim=12,
-                                                l100_file=uploaded_file_l100,
-                                                l300_file=uploaded_file_l300,
-                                                lacs_file=uploaded_file_lacs,
-                                                lalur_file=uploaded_file_lalur,
-                                                ecf670_file=uploaded_file_ecf670,
-                                                ec630_file=uploaded_file_ec630)
+    #                         lacs = trimestralFiltrandoDadosParaCalculo(
+    #                                             trimestre=trimestre,
+    #                                             ano=ano,
+    #                                             mes_inicio=1,
+    #                                             mes_fim=12,
+    #                                             l100_file=uploaded_file_l100,
+    #                                             l300_file=uploaded_file_l300,
+    #                                             lacs_file=uploaded_file_lacs,
+    #                                             lalur_file=uploaded_file_lalur,
+    #                                             ecf670_file=uploaded_file_ecf670,
+    #                                             ec630_file=uploaded_file_ec630)
 
-                            st.subheader(f'{ano}    {trimestre}')
-                            lacs.runPipe()
+    #                         st.subheader(f'{ano}    {trimestre}')
+    #                         lacs.runPipe()
                             
-                            df = lacs.dataframeFinal
-                            df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                            year_dfsLacs.append(df)
+    #                         df = lacs.dataframeFinal
+    #                         df.columns = [f"{col} {trimestre}" for col in df.columns] 
+    #                         year_dfsLacs.append(df)
 
-                            df = lacs.resultadoJPC
-                            df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                            resultadoJCP.append(df)
+    #                         df = lacs.resultadoJPC
+    #                         df.columns = [f"{col} {trimestre}" for col in df.columns] 
+    #                         resultadoJCP.append(df)
 
-                            df = lacs.resultadoLimiteDedu
-                            df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                            resultadoDedu.append(df)
+    #                         df = lacs.resultadoLimiteDedu
+    #                         df.columns = [f"{col} {trimestre}" for col in df.columns] 
+    #                         resultadoDedu.append(df)
                             
-                            df = lacs.resultadoEconomiaGerada
-                            df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                            economiaGerada.append(df) 
+    #                         df = lacs.resultadoEconomiaGerada
+    #                         df.columns = [f"{col} {trimestre}" for col in df.columns] 
+    #                         economiaGerada.append(df) 
 
-                            economia_gerada_por_trimestre.append(lacs.economia)
+    #                         economia_gerada_por_trimestre.append(lacs.economia)
 
                             
 
 
 
-                    self.dfCalculos = pd.concat(year_dfsLacs, axis=1)
-                    self.tabelaJCP = pd.concat(resultadoJCP, axis=1)
-                    self.limiteDedutibili = pd.concat(resultadoDedu, axis=1)
-                    self.economiaGerada = pd.concat(economiaGerada, axis=1)
+    #                 dfCalculos = pd.concat(year_dfsLacs, axis=1)
+    #                 tabelaJCP = pd.concat(resultadoJCP, axis=1)
+    #                 limiteDedutibili = pd.concat(resultadoDedu, axis=1)
+    #                 economiaGerada = pd.concat(economiaGerada, axis=1)
                     
 
-                    st.subheader(f"Resultados Anuais - {ano}")
-                    st.dataframe(self.dfCalculos)
-                    st.dataframe(self.tabelaJCP)
-                    st.dataframe(self.limiteDedutibili)
-                    st.dataframe(self.economiaGerada)
-
-
-                    #Implementação do st.metric para visualização do resultado, porem o resultado nao esta atualizado as atualizações do streamlit 
-                    # session e a visualização ficou muito poluida, deixei o codigo para manutenção e ajustes futuros 
-                    
-                    # for economia, trimestre, col in zip(economia_gerada_por_trimestre, trimestres, colunas):
-                    #                     with col:
-                    #                         delta_color = "normal" if economia > 0 else "inverse"
-                    #                         st.metric(f"Economia Gerada - {trimestre}", f"R$ {economia:,.2f}", delta_color=delta_color)
-
-
-
-
-if __name__=='__main__':
-
-    uploaded_file_l100 = st.sidebar.file_uploader("Upload L100 Excel File", type="xlsx")
-    uploaded_file_l300 = st.sidebar.file_uploader("Upload L300 Excel File", type="xlsx")
-    uploaded_file_lacs = st.sidebar.file_uploader("Upload Lacs Excel File", type="xlsx")
-    uploaded_file_lalur = st.sidebar.file_uploader("Upload Lalur Excel File", type="xlsx")
-    uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
-    uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
-
-
-    if uploaded_file_l100 and uploaded_file_l300 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ecf670 and uploaded_file_ec630:
-        with st.form(key='form1'):
-            submitButton = st.form_submit_button('Processar')
-            
-            if submitButton:
-
-                colunas = st.columns(4)
-                trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
-                economia_gerada_por_trimestre = []
-                for ano in range(2019, 2024):
-                    year_dfsLacs = []
-                    resultadoJCP = []
-                    resultadoDedu = []
-                    economiaGerada = []
-                    for col, trimestre in zip(colunas, trimestres):
-                        with col:
-
-                            lacs = trimestralFiltrandoDadosParaCalculo(
-                                                trimestre=trimestre,
-                                                ano=ano,
-                                                mes_inicio=1,
-                                                mes_fim=12,
-                                                l100_file=uploaded_file_l100,
-                                                l300_file=uploaded_file_l300,
-                                                lacs_file=uploaded_file_lacs,
-                                                lalur_file=uploaded_file_lalur,
-                                                ecf670_file=uploaded_file_ecf670,
-                                                ec630_file=uploaded_file_ec630)
-
-                            st.subheader(f'{ano}    {trimestre}')
-                            lacs.runPipe()
-                            
-                            df = lacs.dataframeFinal
-                            df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                            year_dfsLacs.append(df)
-
-                            df = lacs.resultadoJPC
-                            df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                            resultadoJCP.append(df)
-
-                            df = lacs.resultadoLimiteDedu
-                            df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                            resultadoDedu.append(df)
-                            
-                            df = lacs.resultadoEconomiaGerada
-                            df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                            economiaGerada.append(df) 
-
-                            economia_gerada_por_trimestre.append(lacs.economia)
-
-                            
-
-
-
-                    dfCalculos = pd.concat(year_dfsLacs, axis=1)
-                    tabelaJCP = pd.concat(resultadoJCP, axis=1)
-                    limiteDedutibili = pd.concat(resultadoDedu, axis=1)
-                    economiaGerada = pd.concat(economiaGerada, axis=1)
-                    
-
-                    st.subheader(f"Resultados Anuais - {ano}")
-                    st.dataframe(dfCalculos)
-                    st.dataframe(tabelaJCP)
-                    st.dataframe(limiteDedutibili)
-                    st.dataframe(economiaGerada)
+    #                 st.subheader(f"Resultados Anuais - {ano}")
+    #                 st.dataframe(dfCalculos)
+    #                 st.dataframe(tabelaJCP)
+    #                 st.dataframe(limiteDedutibili)
+    #                 st.dataframe(economiaGerada)
 
 

@@ -15,7 +15,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     def load_excel_file(file_path):
         return pd.read_excel(file_path)
     
-    st.cache_data(ttl='1d')
+    
     def __init__(self, ano,mes_inicio,mes_fim, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file):
         self.data = None 
         super().__init__(ano,mes_inicio,mes_fim,lacs_file, lalur_file, ecf670_file, ec630_file)
@@ -44,7 +44,8 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
 
 
         self.resultsCalcJcp = pd.DataFrame(columns=["Operation", "Value"])
-        self.resultsTabelaFinal = pd.DataFrame(columns=["Operation", "Value"]) 
+        self.resultsTabelaFinal = pd.DataFrame(columns=["Operation", "Value"])
+         
         self.lucro_periodo_value = 0
 
     def nomeDasEmpresas(self):
@@ -62,12 +63,12 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
 
 
 
-    st.cache_data(ttl='1d')
+    
     def set_date(self, data):
         self.data = data         
 
     
-    st.cache_data(ttl='1d')
+    
     def capitalSocial(self):
         l100 = self.l100
         l100 = l100[(l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
@@ -80,7 +81,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
 
 
 
-    st.cache_data(ttl='1d')
+    
     def capitalIntegralizador(self):
         l100 = self.l100
 
@@ -92,7 +93,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.capitalIntegra = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Capital Integralizador", "Value": self.capitalIntegra}])], ignore_index=True)
     
-    st.cache_data(ttl='1d')
+    
     def ReservasDeCapital(self):
         l100 = self.l100
         l100 = l100[(l100['Conta Referencial']=='2.03.02.01.99')&
@@ -102,7 +103,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.reservaCapital = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reservas de Capital", "Value": self.reservaCapital}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')        
+            
     def ajustesAvalPatrimonial(self):
         l100 = self.l100
         l100 = l100[(l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&
@@ -113,7 +114,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.ajusteAvaPatrimonial = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ajustes Avaliação Patrimonial", "Value": self.ajusteAvaPatrimonial}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')                
+                    
     def lucrosAcumulados(self):
 
         l100 = self.l100
@@ -137,7 +138,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
       
-    st.cache_data(ttl='1d')
+    
     def ajustesExerAnteriores(self):
         l100 = self.l100
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.10')&
@@ -148,7 +149,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.ajustExercAnt = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ajustes Exercícios Anteriores", "Value": self.ajustExercAnt}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def lucroPeriodo(self):
         l100 = self.l300
         l100 = l100[(l100['Descrição Conta Referencial']=='RESULTADO LÍQUIDO DO PERÍODO')&
@@ -160,7 +161,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucro do Período", "Value": self.lucro_periodo_value}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucro do Período", "Value": self.lucro_periodo_value}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def TotalFinsCalcJSPC(self):
 
         self.totalJSPC =  sum((self.capSocial,self.reservaCapital,self.lucroAcumulado,self.reservLucro,self.contaPatriNClassifica,self.prejuizoPeirod))
@@ -238,12 +239,12 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Outras Reservas de Lucros", "Value": self.outrasResLuc}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def ReservasLucros(self):
         self.reservLucro = self.reservLegal + self.reservEstatuaria + self.resContingencia + self.reserExp + self.outrasResLuc
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reservas de Lucros", "Value": self.reservLucro}])], ignore_index=True)
     
-    st.cache_data(ttl='1d')
+    
     def acoesTesouraria(self):
 
         l100 = self.l100
@@ -255,7 +256,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.acosTesouraria = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ações em Tesouraria", "Value": self.acosTesouraria}])], ignore_index=True)
     
-    st.cache_data(ttl='1d')
+    
     def contPatrimonioNaoClass(self):
 
         l100 = self.l100
@@ -267,7 +268,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Contas do Patrimônio Líquido Não Classificadas ", "Value": self.contaPatriNClassifica}])], ignore_index=True)
     
-    st.cache_data(ttl='1d')
+    
     def PrejuizoPeriodo(self):
 
         key = f'PrejuAcumulado{self.ano,self.mes_inicio}'
@@ -282,7 +283,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízo do Período", "Value": self.prejuizoPeirod}])], ignore_index=True)
         
     
-    st.cache_data(ttl='1d')    
+        
     def prejuizosAcumulados(self):
 
         l100 = self.l100
@@ -294,37 +295,38 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum() * -1
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.contaPatriNClassifica}])], ignore_index=True)
     
-    st.cache_data(ttl='1d')
+    
     def runPipe(self):
 
-        self.capitalSocial()
-        self.capitalIntegralizador()
-        self.ReservasDeCapital()
-        self.ajustesAvalPatrimonial()
+        with st.expander('Adicionar valores'):
+            self.capitalSocial()
+            self.capitalIntegralizador()
+            self.ReservasDeCapital()
+            self.ajustesAvalPatrimonial()
 
-        self.ReservaLegal()
-        self.ReservaEstatutária()
-        self.ReservaContingencias()
-        self.ReservaExpansao()
-        self.OutrasReservasLucros()
-        self.ReservasLucros()
+            self.ReservaLegal()
+            self.ReservaEstatutária()
+            self.ReservaContingencias()
+            self.ReservaExpansao()
+            self.OutrasReservasLucros()
+            self.ReservasLucros()
 
-        self.acoesTesouraria()
-        self.contPatrimonioNaoClass()
-        self.PrejuizoPeriodo()
-        self.prejuizosAcumulados()
+            self.acoesTesouraria()
+            self.contPatrimonioNaoClass()
+            self.PrejuizoPeriodo()
+            self.prejuizosAcumulados()
 
-        self.acoesTesouraria()
-        self.lucrosAcumulados()
-        self.ajustesExerAnteriores()
-        self.lucroPeriodo()
-        self.TotalFinsCalcJSPC()
+            self.acoesTesouraria()
+            self.lucrosAcumulados()
+            self.ajustesExerAnteriores()
+            self.lucroPeriodo()
+            self.TotalFinsCalcJSPC()
         
 
         self.resultsCalcJcp['Value'] = self.resultsCalcJcp['Value'].apply(lambda x: "{:,.2f}".format(x))
         st.dataframe(self.resultsCalcJcp)
 
-    st.cache_data(ttl='1d')
+    
     def runPipeFinalTable(self):
 
         self.lucrosAcumulados()

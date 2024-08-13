@@ -1,26 +1,38 @@
 import pandas as pd
 import streamlit as st
 import numpy as np
-from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
-from LacsLalur.lacsLalurAntesInoTributarias import LacsLalurCSLL
+
 from bs4 import BeautifulSoup
 import requests
+
+
 from functools import lru_cache
 import time
 import base64
-from streamlit_navigation_bar import st_navbar
+import sys
+import os
+
+
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
+from LacsLalur.lacsLalurAntesInoTributarias import LacsLalurCSLL
+from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo 
+from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral 
+
 
 start_time = time.time()
-st.set_page_config(layout="wide")
-background_image ="limpeza_dos_dados\\Untitleddesign.jpg"
+#st.set_page_config(layout="wide")
+background_image ="Untitleddesign.jpg"
 st.markdown(
     f"""
     <iframe src="data:image/jpg;base64,{base64.b64encode(open(background_image, 'rb').read()).decode(
 
-    )}" style="width:3000px;height:3500px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
+    )}" style="width:3000px;height:6500px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
     """,
     unsafe_allow_html=True
 )
+
 
 @st.cache_data(ttl='1d')
 @lru_cache(maxsize=1)
@@ -41,8 +53,7 @@ def fetch_tjlp_data():
     dataframe['Ano'] = round(dataframe[['1º Tri', '2º Tri', '3º Tri', '4º Tri']].sum(axis=1), 2)
 
     return dataframe
-
-    
+   
 class Calculo(FiltrandoDadosParaCalculo):
     _widget_counter = 0
     def __init__(self, ano,mes_incicio,mes_fim, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file):
@@ -105,13 +116,12 @@ class Calculo(FiltrandoDadosParaCalculo):
 
     def limiteDedutibilidade(self):
 
-        key = f'retirar_multa_{year,FiltrandoDadosParaCalculo._widget_counter}'
+        key = f'retirar_multa_{year,self.ano,self.mes_fim,self.mes_fim}'
         if key not in st.session_state:
             st.session_state[key] = False
 
         retirarMulta = st.toggle('Retirar valor de multa da conta', key=key)
         
-        FiltrandoDadosParaCalculo._widget_counter += 1
 
         self.lucroLiquid50 = self.lucroAntIRPJ * 0.5
         self.lucroAcuEReserva = (self.reservLucro + self.lucroAcumulado) * 0.5
@@ -155,24 +165,13 @@ class Calculo(FiltrandoDadosParaCalculo):
         self.tabelaEconomia()
 
 if __name__ == "__main__":
-         
-  
+
+
     barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur"])
+
     empresa_nome_placeholder = st.header("Empresa não selecionada")
     anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre']) 
-    
-
-    trimester_ranges = {
-    '1º Tri': (1, 3),
-    '2º Tri': (4, 6),
-    '3º Tri': (7, 9),
-    '4º Tri': (10, 12)
-}
-
-
     col1, col2, col3, col4, col5 = st.columns(5)
-
-        
 
 
     uploaded_file_l100 = st.sidebar.file_uploader("Upload L100 Excel File", type="xlsx")
@@ -182,80 +181,80 @@ if __name__ == "__main__":
     uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
     uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
 
-    if uploaded_file_l100 and uploaded_file_l300 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ecf670 and uploaded_file_ec630:
-        filtrando_dados = FiltrandoDadosParaCalculo(
-            ano=None,
-            mes_inicio=None,
-            mes_fim=None,
-            lacs_file=uploaded_file_lacs,
-            lalur_file=uploaded_file_lalur,
-            ecf670_file=uploaded_file_ecf670,
-            ec630_file=uploaded_file_ec630,
-            l100_file=uploaded_file_l100,
-            l300_file=uploaded_file_l300
-        )
+    
+    if anualOuTrimestral == 'Ano':
 
-        if anualOuTrimestral == 'Ano':
-            calculos = {year: Calculo(ano=year,
-                                    mes_incicio=1,
-                                    mes_fim=12,
-                                    lacs_file=uploaded_file_lacs,
-                                    lalur_file=uploaded_file_lalur,
-                                    ecf670_file=uploaded_file_ecf670,
-                                    ec630_file=uploaded_file_ec630,
-                                    l100_file=uploaded_file_l100,
-                                    l300_file=uploaded_file_l300) for year in range(2019, 2024)}
-            
-            empresa_nome = calculos[2019].nomeDasEmpresas(uploaded_file_l100)
-            empresa_nome_placeholder.header(empresa_nome)   
-
-        else:
-            trimester_ranges = {
-                    '1º Tri': (1, 3),
-                    '2º Tri': (4, 6),
-                    '3º Tri': (7, 9),
-                    '4º Tri': (10, 12)
-                }
-
-            calculos = {}
-            for year in range(2019, 2024):
-                for trimester, (mes_inicio, mes_fim) in trimester_ranges.items():
-                    calculos[f"{trimester} {year}"] = Calculo(ano=year,
-                                                            mes_incicio=mes_inicio,
-                                                            mes_fim=mes_fim,
-                                                            lacs_file=uploaded_file_lacs,
-                                                            lalur_file=uploaded_file_lalur,
-                                                            ecf670_file=uploaded_file_ecf670,
-                                                            ec630_file=uploaded_file_ec630,
-                                                            l100_file=uploaded_file_l100,
-                                                            l300_file=uploaded_file_l300)
-
-        # empresa_nome = calculos[2019].nomeDasEmpresas(uploaded_file_l100)
-        # empresa_nome_placeholder.header(empresa_nome)    
+        if barra == "Calculo JCP":
+            if all([uploaded_file_l100,
+                     uploaded_file_l300,
+                       uploaded_file_lacs,
+                         uploaded_file_lalur,
+                           uploaded_file_ecf670,
+                             uploaded_file_ec630]):
                 
-        if anualOuTrimestral == 'Trimestre':
-            if barra == "Calculo JCP":
-                for col, year in zip([col1, col2, col3, col4, col5], range(2019, 2024)):
-                    for trimester in trimester_ranges:
+                    filtrando_dados = FiltrandoDadosParaCalculo(
+                        ano=None,
+                        mes_inicio=None,
+                        mes_fim=None,
+                        lacs_file=uploaded_file_lacs,
+                        lalur_file=uploaded_file_lalur,
+                        ecf670_file=uploaded_file_ecf670,
+                        ec630_file=uploaded_file_ec630,
+                        l100_file=uploaded_file_l100,
+                        l300_file=uploaded_file_l300)
+                    
+
+                    calculos = {year: Calculo(ano=year,
+                                                mes_incicio=1,
+                                                mes_fim=12,
+                                                lacs_file=uploaded_file_lacs,
+                                                lalur_file=uploaded_file_lalur,
+                                                ecf670_file=uploaded_file_ecf670,
+                                                ec630_file=uploaded_file_ec630,
+                                                l100_file=uploaded_file_l100,
+                                                l300_file=uploaded_file_l300) for year in range(2019, 2024)}
+
+                    empresa_nome = calculos[2019].nomeDasEmpresas(uploaded_file_l100)
+                    empresa_nome_placeholder.header(empresa_nome)
+
+                    for col, year in zip([col1, col2, col3, col4, col5], range(2019, 2024)):
                         with col:
                             st.write('')
                             st.write('')
                             st.write('')
-                            st.write('')
-                            st.write('')
-                            st.write('')
-                            st.write('')
-                            st.write('')
-                            st.write('')
-                            st.write('')
-                            st.subheader(f"{trimester} {year}")
-                            calculos[f"{trimester} {year}"].runPipe()
-                            calculos[f"{trimester} {year}"].runPipeFinalTable()
-                            calculos[f"{trimester} {year}"].pipeCalculo(str(year))
+                            st.subheader(str(year))
+                            calculos[year].runPipe()
+                            calculos[year].runPipeFinalTable()
+                            calculos[year].pipeCalculo(str(year))
 
-       
-
-            if barra == "Lacs e Lalur":
+        elif barra == "Lacs e Lalur":
+            if all([uploaded_file_l100,
+                    uploaded_file_l300,
+                    uploaded_file_lacs,
+                    uploaded_file_lalur,
+                    uploaded_file_ecf670,
+                    uploaded_file_ec630]):
+                
+                filtrando_dados = FiltrandoDadosParaCalculo(
+                    ano=None,
+                    mes_inicio=None,
+                    mes_fim=None,
+                    lacs_file=uploaded_file_lacs,
+                    lalur_file=uploaded_file_lalur,
+                    ecf670_file=uploaded_file_ecf670,
+                    ec630_file=uploaded_file_ec630,
+                    l100_file=uploaded_file_l100,
+                    l300_file=uploaded_file_l300)
+                
+                calculos = {year: Calculo(ano=year,
+                                        mes_incicio=1,
+                                        mes_fim=12,
+                                        lacs_file=uploaded_file_lacs,
+                                        lalur_file=uploaded_file_lalur,
+                                        ecf670_file=uploaded_file_ecf670,
+                                        ec630_file=uploaded_file_ec630,
+                                        l100_file=uploaded_file_l100,
+                                        l300_file=uploaded_file_l300) for year in range(2019, 2024)}
 
                 for col, year in zip([col1, col2, col3, col4, col5], range(2019, 2024)):
                     with col:
@@ -263,36 +262,108 @@ if __name__ == "__main__":
                         st.write('')
                         st.write('')
                         st.write('')
-                        st.write('')
-                        st.write('')
-                        st.write('')
-                        st.write('')
-                        st.write('')
-                        st.write('')
                         st.subheader(str(year))
                         calculos[year].runPipeLacsLalurIRPJ()
-                        calculos[year].runPipeLacsLalurCSLL()
+                        calculos[year].runPipeLacsLalurCSLL()          
 
-        if anualOuTrimestral=='Ano':                    
-            #calculos.
-            for col, year in zip([col1, col2, col3, col4, col5], range(2019, 2024)):                
-                with col:
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.subheader(str(year))
-                    calculos[year].runPipe()
-                    calculos[year].runPipeFinalTable()
-                    calculos[year].pipeCalculo(str(year))
+    elif anualOuTrimestral == 'Trimestre':
 
+        if barra == "Calculo JCP":
+            if all([uploaded_file_l100,
+                    uploaded_file_l300,
+                    uploaded_file_lacs,
+                        uploaded_file_lalur,
+                        uploaded_file_ecf670,
+                            uploaded_file_ec630]):
+                @st.cache_data
+                def trimestral_state():
+                    return {
+                        'processar_trimestre': False,
+                        'economia_gerada_por_trimestre': []
+                    }
 
+                trimestral_state = trimestral_state()
+
+                with st.form(key='form1'):
+                    submitButton = st.form_submit_button('Processar')
+                    if submitButton:
+                        trimestral_state['processar_trimestre'] = True
+
+                    if trimestral_state['processar_trimestre']:
+                        colunas = st.columns(4)
+                        trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
+                        economia_gerada_por_trimestre = []
+                        for ano in range(2019, 2024):
+                            year_dfsLacs = []
+                            resultadoJCP = []
+                            resultadoDedu = []
+                            economiaGerada = []
+                            for col, trimestre in zip(colunas, trimestres):
+                                with col:
+                                    lacs = trimestralFiltrandoDadosParaCalculo(
+                                        trimestre=trimestre,
+                                        ano=ano,
+                                        mes_inicio=1,
+                                        mes_fim=12,
+                                        l100_file=uploaded_file_l100,
+                                        l300_file=uploaded_file_l300,
+                                        lacs_file=uploaded_file_lacs,
+                                        lalur_file=uploaded_file_lalur,
+                                        ecf670_file=uploaded_file_ecf670,
+                                        ec630_file=uploaded_file_ec630
+                                    )
+
+                                    st.subheader(f'{ano}    {trimestre}')
+                                    lacs.runPipe()
+
+                                    df = lacs.dataframeFinal
+                                    df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                    year_dfsLacs.append(df)
+
+                                    df = lacs.resultadoJPC
+                                    df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                    resultadoJCP.append(df)
+
+                                    df = lacs.resultadoLimiteDedu
+                                    df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                    resultadoDedu.append(df)
+
+                                    df = lacs.resultadoEconomiaGerada
+                                    df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                    economiaGerada.append(df)
+
+                                    economia_gerada_por_trimestre.append(lacs.economia)
+
+                            dfCalculos = pd.concat(year_dfsLacs, axis=1)
+                            tabelaJCP = pd.concat(resultadoJCP, axis=1)
+                            limiteDedutibili = pd.concat(resultadoDedu, axis=1)
+                            economiaGerada = pd.concat(economiaGerada, axis=1)
+
+                            st.subheader(f"Resultados Anuais - {ano}")
+                            st.dataframe(dfCalculos)
+                            st.dataframe(tabelaJCP)
+                            st.dataframe(limiteDedutibili)
+                            st.dataframe(economiaGerada)
+        elif barra == "Lacs e Lalur":
+            ''
+            if all([uploaded_file_l100,
+                    uploaded_file_l300,
+                    uploaded_file_lacs,
+                    uploaded_file_lalur,
+                    uploaded_file_ecf670,
+                    uploaded_file_ec630]):
+                
+                lacLalurTri = LacsLalurCSLLTrimestral(
+                    ano=0,
+                    trimestre='',
+                    mes_inicio=1,
+                    mes_fim=12,
+                    lacs_file=uploaded_file_lacs,
+                    lalur_file=uploaded_file_lalur,
+                    ecf670_file=uploaded_file_ecf670,
+                    ec630_file=uploaded_file_ec630)
+                
+                lacLalurTri.processarDados()
 
 end_time = time.time()
 

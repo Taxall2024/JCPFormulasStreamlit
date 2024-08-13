@@ -9,7 +9,7 @@ class LacsLalurCSLL():
     def load_excel_file(file_path):
         return pd.read_excel(file_path)
 
-    st.cache_data(ttl='1d')
+    
     def __init__(self,ano,mes_inicio,mes_fim,lacs_file, lalur_file, ecf670_file, ec630_file):
         print('hello world')
 
@@ -36,7 +36,7 @@ class LacsLalurCSLL():
     #       CSLL ----
 
     #As funções abaixo utilizam como base para os calculos as a planilha LACS, 
-    st.cache_data(ttl='1d')
+    
     def lucroAntesCSLL(self):
         
         lacs = self.lacs   
@@ -50,7 +50,7 @@ class LacsLalurCSLL():
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+
     def adicoes(self):
         
         lacs = self.lacs   
@@ -63,7 +63,7 @@ class LacsLalurCSLL():
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Adições", "Value": self.audicoes}])], ignore_index=True)
     
-    st.cache_data(ttl='1d')
+ 
     def exclusoes(self):
         
         lacs = self.lacs   
@@ -76,12 +76,12 @@ class LacsLalurCSLL():
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Exclusões", "Value": self.exclusao}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def baseDeCalculo(self):
         self.baseCalculoCls = self.lucroAntCSLL + self.audicoes - self.exclusao
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Base de Cálculo", "Value": self.baseCalculoCls}])], ignore_index=True)         
 
-    st.cache_data(ttl='1d')
+    
     def compensacaoPrejuizo(self):
         lalur = self.lalur
         lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
@@ -93,18 +93,18 @@ class LacsLalurCSLL():
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Compensação de Prejuízo", "Value": self.compensacao}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def baseCSLL(self):
         self.basecSLL = self.baseCalculoCls - self.compensacao
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Base CSLL", "Value": self.basecSLL}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Base CSLL", "Value": self.basecSLL}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def valorCSLL(self):
         self.valorcSLL = np.where(self.basecSLL<0,0,self.basecSLL*0.09)
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Valor CSLL", "Value": self.valorcSLL}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def retencoesFonte(self):
 
         lalur = self.lalur
@@ -118,7 +118,7 @@ class LacsLalurCSLL():
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Renteções fonte", "Value": self.retencoes}])], ignore_index=True)
     
     #As função abaixo utiliza como base para os calculos as planilhas do ECF 670
-    st.cache_data(ttl='1d')
+    
     def retencoesOrgPublicos(self):
 
         lalur = self.ecf670
@@ -147,7 +147,7 @@ class LacsLalurCSLL():
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Retenções orgãos publicos", "Value": self.retencoesOrgPub}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def impostoPorEstimativa(self):
         ecf760 = self.ecf670
         ecf760 = ecf760[(ecf760['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
@@ -159,12 +159,12 @@ class LacsLalurCSLL():
         self.impostoPorEstim = ecf760['Vlr Lançamento'].sum()
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Imposto por estimativa", "Value": self.impostoPorEstim}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def subTotalCSLLRecolher(self):
         self.subTotalcl = self.valorcSLL - self.retencoes - self.retencoesOrgPub - self.impostoPorEstim
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Subtotal CSLL a recolher", "Value": self.subTotalcl}])], ignore_index=True)
     
-    st.cache_data(ttl='1d')
+    
     def runPipeLacsLalurCSLL(self):
 
         self.lucroAntesCSLL()
@@ -182,7 +182,7 @@ class LacsLalurCSLL():
         st.dataframe(self.resultsLacs)
     
     #       IRPJ ----
-    st.cache_data(ttl='1d')
+    
     def LucroLiquidoAntesIRPJ(self):
 
         lalur = self.lalur  
@@ -197,7 +197,7 @@ class LacsLalurCSLL():
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def clss(self):
 
         lalur = self.lalur  
@@ -211,7 +211,7 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Contribuição Social Sobre o Lucro Líquido - CSLL", "Value": self.contrilss}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def demaisAdicoes(self):
 
         lalur = self.lalur  
@@ -231,7 +231,7 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Demais Adições", "Value": self.demaisAd}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def adicoesIRPJ(self):
 
         clss = self.lalur  
@@ -263,7 +263,7 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Adições IRPJ", "Value": self.adicoesIRPj}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def exclusoesIRPJ(self):
 
         lalur = self.lalur  
@@ -277,14 +277,14 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Exclusoes", "Value": self.exclusoeS}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def baseCalculoIRPJ(self):
 
         self.baseCalIRPJ = self.lucroAntIRPJ + self.adicoesIRPj - self.exclusoeS
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Base de cálculo", "Value": self.baseCalIRPJ}])], ignore_index=True)
     
-    st.cache_data(ttl='1d')
+    
     def CompPrejuFiscal(self):
 
         lalur = self.lalur  
@@ -298,28 +298,28 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Compensação Prejuízo fiscal", "Value": self.compPrejFiscal}])], ignore_index=True)        
 
-    st.cache_data(ttl='1d')
+    
     def lucroReal(self):
         self.lucroRel= self.baseCalIRPJ - self.compPrejFiscal
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Lucro Real", "Value": self.lucroRel}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def valorIRPJ(self):
         self.valorIRPj = np.where(self.lucroRel<0,0,self.lucroRel*0.15)
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Valor IRPJ", "Value": self.valorIRPj}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def valorIRPJadicionais(self):
         self.valorIRPJAd = np.where(self.lucroRel>240000,(self.lucroRel-240000)*0.10,0)
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Valor IRPJ Adicionais", "Value": self.valorIRPJAd}])], ignore_index=True)
 
-    st.cache_data(ttl='1d')
+    
     def totalDevidoIRPJantesRetencao(self):
         self.totalDevido = self.valorIRPj + self.valorIRPJAd
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Total devido IRPJ antes da retenção", "Value": self.totalDevido}])], ignore_index=True)    
 
     #A função abaixo utiliza como base para os calculos as planilhas do ECF 630
-    st.cache_data(ttl='1d')
+    
     def pat(self):
 
         lalur = self.ec630
@@ -333,7 +333,7 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "PAT", "Value": self.PAT}])], ignore_index=True) 
 
-    st.cache_data(ttl='1d')
+    
     def operacoesCulturalArtistico(self):
 
         lalur = self.ec630
@@ -347,7 +347,7 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Operações de Caráter Cultural e Artístico", "Value": self.operCultuArtistico}])], ignore_index=True )      
 
-    st.cache_data(ttl='1d')
+    
     def insencaoRedImposto(self):
 
         lalur = self.ec630
@@ -361,7 +361,7 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Isenção e Redução do Imposto", "Value": self.reducaoImposto}])], ignore_index=True )      
 
-    st.cache_data(ttl='1d')
+    
     def impostoRetFonte(self):
 
         lalur = self.ec630
@@ -375,7 +375,7 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte", "Value": self.impostRetFonte}])], ignore_index=True )      
 
-    st.cache_data(ttl='1d')
+    
     def impostoRetFonteOrgsAutarquias(self):
 
         lalur = self.ec630
@@ -390,7 +390,7 @@ class LacsLalurCSLL():
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte por Órgãos, Autarquias e Fundações Federais (Lei nº 9.430/1996, art. 64)", "Value": self.impostRetFonteOrgAut}])],
                                   ignore_index=True )      
 
-    st.cache_data(ttl='1d')
+    
     def impostoRetFonteDemaisEntidades(self):
 
         lalur = self.ec630
@@ -405,7 +405,7 @@ class LacsLalurCSLL():
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte pelas Demais Entidades da Administração Pública Federal (Lei n° 10.833/2003, art. 34)",
                                                                 "Value": self.impostRetFonteDemEnti}])], ignore_index=True )      
    
-    st.cache_data(ttl='1d')
+    
     def impostoRendaRV(self):
 
         lalur = self.ec630
@@ -420,7 +420,7 @@ class LacsLalurCSLL():
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto Pago Incidente sobre Ganhos no Mercado de Renda Variável",
                                                                 "Value": self.impostRV}])], ignore_index=True )      
 
-    st.cache_data(ttl='1d')
+    
     def impostoRendPagoEfe(self):
 
         lalur = self.ec630
@@ -435,7 +435,7 @@ class LacsLalurCSLL():
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Mensal Efetivamente Pago por Estimativa",
                                                                 "Value": self.impostRendaPago}])], ignore_index=True )      
 
-    st.cache_data(ttl='1d')
+    
     def subTotal(self):
 
         self.subtotal = (self.totalDevido - self.PAT - 
@@ -447,7 +447,7 @@ class LacsLalurCSLL():
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Sub total IRPJ a Recolher",
                                                                 "Value": self.subtotal}])], ignore_index=True )      
 
-    st.cache_data(ttl='1d')
+    
     def runPipeLacsLalurIRPJ(self):
 
         self.LucroLiquidoAntesIRPJ()
@@ -476,7 +476,7 @@ class LacsLalurCSLL():
         self.results['Value'] = self.results['Value'].apply(lambda x: f"{x:,.2f}")
         st.dataframe(self.results)
     
-    st.cache_data(ttl='1d')
+    
     def runPipeFinalTabelLacsLalur(self):
 
         self.baseCSLL()
