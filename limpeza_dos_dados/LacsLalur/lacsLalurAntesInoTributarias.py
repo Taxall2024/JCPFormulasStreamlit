@@ -18,9 +18,23 @@ class LacsLalurCSLL():
         self.lalur = LacsLalurCSLL.load_excel_file(lalur_file)
         self.ecf670 = LacsLalurCSLL.load_excel_file(ecf670_file)
         self.ec630 = LacsLalurCSLL.load_excel_file(ec630_file)
+
         dados = [self.lacs, self.lalur, self.ecf670, self.ec630]
-        for i in dados:
-            i['Data Inicial'] = pd.to_datetime(i['Data Inicial'])
+        
+        self.lacs['Data Inicial'] = pd.to_datetime(self.lacs['Data Inicial'])
+        self.lalur['Data Inicial'] = pd.to_datetime(self.lalur['Data Inicial'])
+        self.ecf670['Data Inicial'] = pd.to_datetime(self.ecf670['Data Inicial'])
+        self.ec630['Data Inicial'] = pd.to_datetime(self.ec630['Data Inicial'])
+        
+        self.lacs = self.lacs[self.lacs['Período Apuração'] == 'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
+        self.lalur = self.lalur[self.lalur['Período Apuração'] == 'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
+        self.ecf670 = self.ecf670[self.ecf670['Período Apuração'] == 'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
+        self.ec630 = self.ec630[self.ec630['Período Apuração'] == 'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
+
+
+        # for i in dados:
+        #     i['Data Inicial'] = pd.to_datetime(i['Data Inicial'])
+        #     i = i[i['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
         
         self.ano = ano
         self.mes_inicio = mes_inicio
@@ -35,7 +49,7 @@ class LacsLalurCSLL():
 
     #       CSLL ----
 
-    #As funções abaixo utilizam como base para os calculos as a planilha LACS, 
+    # ----   As funções abaixo utilizam como base para os calculos as a planilha LACS, 
     
     def lucroAntesCSLL(self):
         
@@ -117,7 +131,7 @@ class LacsLalurCSLL():
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Renteções fonte", "Value": self.retencoes}])], ignore_index=True)
     
-    #As função abaixo utiliza como base para os calculos as planilhas do ECF 670
+    # ---  As função abaixo utiliza como base para os calculos as planilhas do ECF 670
     
     def retencoesOrgPublicos(self):
 

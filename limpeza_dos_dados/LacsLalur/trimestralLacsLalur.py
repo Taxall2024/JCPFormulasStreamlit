@@ -2,12 +2,8 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 
-
-import pandas as pd
-import streamlit as st
-import numpy as np
-
-
+from dataclasses import dataclass
+@dataclass
 class LacsLalurCSLLTrimestral():
 
     @st.cache_data(ttl='1d', show_spinner=False)
@@ -24,12 +20,6 @@ class LacsLalurCSLLTrimestral():
         self.ecf670 = LacsLalurCSLLTrimestral.load_excel_file(ecf670_file)
         self.ec630 = LacsLalurCSLLTrimestral.load_excel_file(ec630_file)
 
-        # self.lacs = LacsLalurCSLLTrimestral.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JCPCalculos\limpeza_dos_dados\DightBrasil\ECF - M030, M350 - Lucro Real - Lançamentos Parte A do e-Lacs.xlsx')
-        # self.lalur = LacsLalurCSLLTrimestral.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JCPCalculos\limpeza_dos_dados\DightBrasil\ECF - M030, M300 - Lucro Real - Lançamentos Parte A do e-Lalur.xlsx')
-        # self.ecf670 = LacsLalurCSLLTrimestral.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JCPCalculos\limpeza_dos_dados\DightBrasil\ECF - N030, N670 - Apuração da CSLL Com Base no Lucro Real.xlsx')
-        # self.ec630 = LacsLalurCSLLTrimestral.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JCPCalculos\limpeza_dos_dados\DightBrasil\ECF - N030, N630 - Apuração do IRPJ Com Base no Lucro Real.xlsx')
-
-
         self.dfs = [self.lacs, self.lalur, self.ecf670, self.ec630]
 
         for df in self.dfs:
@@ -40,16 +30,6 @@ class LacsLalurCSLLTrimestral():
             df.loc[(df['Data Final'].dt.month > 4) & (df['Data Final'].dt.month < 7), 'Trimestre'] = '2º Trimestre'
             df.loc[(df['Data Final'].dt.month > 7) & (df['Data Final'].dt.month < 10), 'Trimestre'] = '3º Trimestre'
             df.loc[(df['Data Final'].dt.month >= 10) & (df['Data Final'].dt.month <= 12), 'Trimestre'] = '4º Trimestre'
-                    
-        # st.subheader('Lacs')
-        # st.dataframe(self.lacs)
-        # st.subheader('Lalur')
-        # st.dataframe(self.lalur)
-        # st.subheader('ECF 670')
-        # st.dataframe(self.ecf670)
-        # st.subheader('ECF 630')
-        # st.dataframe(self.ec630)
-
         
         self.ano = ano
         self.mes_inicio = mes_inicio
@@ -72,7 +52,9 @@ class LacsLalurCSLLTrimestral():
         self.impostoPorEstim = 0
         self.subTotalcl = 0
     
-    
+    # -- Funções auxiliares para limpeza dos código, no processo de debug alguns calculos não receberam essas funções e nescessitam 
+    #       de re-implementação, mas para uma primeira sprint e POC esta ok
+
     def filtro_dados(self, df, codigo, col='Código Lançamento e-Lacs'):
         return df[
                 (df[col] == codigo) &
@@ -104,11 +86,16 @@ class LacsLalurCSLLTrimestral():
             [self.resultsTabelaFinal, pd.DataFrame([{"Operation": operation, "Value": value}])],
             ignore_index=True
         )
-    
-    # def lucroAntesCSLL(self):
-    #     self.lucroAntCSLL = self.calcular_soma(self.lacs, 2)
-    #     self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
-    
+
+
+
+        # --- --- Cada função abaixo representa um calculo da planilha de calculos para Lacs e Lalur, as funções recebem como variaveis
+        #           ano, mes de incio do periodo, mes final do periodo de analise e o trimestre, as variaveis de mes de inicio e mes final foram adicionadas com 
+        #             com intuito de separar em trimestres para fazer análise trimestral dos dados, porém a ideia inicial não funcionou e encontrei outra maneira de separar o trimestre
+        #               mas resolvi manter as variaveis em caso de haver a nescessidade de filtragem com utilização dessas informações no futuro 
+
+
+    #      As funções abaixo sao referentes a parte da tabela Lacs e Lalur que representa os calculos de CSLL
     def lucroAntesCSLL(self):
         
         lacs = self.lacs   
@@ -232,7 +219,7 @@ class LacsLalurCSLLTrimestral():
         return self.dataframeFinal
 
     
-    #       IRPJ ----
+    #     As funções abaixo sao referentes a parte da tabela Lacs e Lalur que representa os calculos de IRPJ
 
 
 
@@ -458,7 +445,8 @@ class LacsLalurCSLLTrimestral():
         self.LucroLiquidoAntesIRPJ()
         
         self.resultsTabelaFinal['Value'] = self.resultsTabelaFinal['Value'].apply(lambda x: f"{x:,.2f}")
-
+    
+    #Função que processa todo o codigo, transforma os dados em dataframe separadamente por trimestre 
     def processarDados(self):
 
         col1, col2, col3, col4 = st.columns(4)
@@ -491,7 +479,7 @@ class LacsLalurCSLLTrimestral():
             st.dataframe(self.dfFinalLacs)
             st.dataframe(self.dfFinalLacsIRPJ)
 
-
+''' O codigo abaixo server para debugar o codigo caso precise rodar a classe isolada nesse modulo'''
 # if __name__=='__main__':
 
 #     lacs = LacsLalurCSLLTrimestral(None, None, 1, 12)

@@ -5,14 +5,11 @@ import numpy as np
 from bs4 import BeautifulSoup
 import requests
 
-
 from functools import lru_cache
 import time
 import base64
 import sys
 import os
-
-
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
@@ -21,9 +18,12 @@ from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalc
 from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral 
 
 
+#Metodo para calcular tempo de processamento da aplucação, no final do codigo contem o mesmo metodo em outra variavel e a subtração das duas variaveis
 start_time = time.time()
-#st.set_page_config(layout="wide")
-background_image ="Untitleddesign.jpg"
+
+
+# HTML com codigo para implementação da logo de fundo 
+background_image ="limpeza_dos_dados\\Untitleddesign.jpg"
 st.markdown(
     f"""
     <iframe src="data:image/jpg;base64,{base64.b64encode(open(background_image, 'rb').read()).decode(
@@ -33,7 +33,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
+#st.set_page_config(layout='wide')
+#Função que faz scrapping dos dados da TJLP do site GOV, retem os dados da tabela e trata os dados para que fiquem em formato númerico
 @st.cache_data(ttl='1d')
 @lru_cache(maxsize=1)
 def fetch_tjlp_data():
@@ -54,6 +55,9 @@ def fetch_tjlp_data():
 
     return dataframe
    
+#Classe que recebe as classes LacsLalur e FiltrandoDadosParaCalculo como herança , afim de reter os metodos e geral os calulos finais para análise anual do JCP,
+# Destaco que essa classe recebe apenas o complemente para analise anual, na análise trimestral os calculos finais para JCP estao contidos na mesma classe que recebe os calculos primarios
+# no caso, na classe(trimestralTratamentoECalculo)   
 class Calculo(FiltrandoDadosParaCalculo):
     _widget_counter = 0
     def __init__(self, ano,mes_incicio,mes_fim, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file):
@@ -94,7 +98,8 @@ class Calculo(FiltrandoDadosParaCalculo):
         else:
             st.error("Data not found in the DataFrame")
 
-
+    #Função para plotar o nome da empresa no início da pagina, e um codigo improvisado apenas para demonstração da funcionalidade, deve ser alterado enventualmente
+    # para que tenha interação com banco de dados e retenha o nome de qualquer empresa que esteja no banco de dados
     def nomeDasEmpresas(self, l100_file):
         l100 = pd.read_excel(l100_file)
         nomeEmpresa = ''        
@@ -344,6 +349,7 @@ if __name__ == "__main__":
                             st.dataframe(tabelaJCP)
                             st.dataframe(limiteDedutibili)
                             st.dataframe(economiaGerada)
+        
         elif barra == "Lacs e Lalur":
             ''
             if all([uploaded_file_l100,
@@ -365,8 +371,9 @@ if __name__ == "__main__":
                 
                 lacLalurTri.processarDados()
 
-end_time = time.time()
 
+
+end_time = time.time()
 execution_time = end_time - start_time
 
 print('#############################################')
