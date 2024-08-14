@@ -7,7 +7,7 @@ import os
 import base64
 import requests
 from bs4 import BeautifulSoup
-from dataclasses import dataclass
+
 
 # Adicione o caminho do diretório onde o módulo 'LacsLalur' está localizado
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -15,16 +15,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
 
 
-st.set_page_config(layout="wide")
-# background_image ="limpeza_dos_dados\\Untitleddesign.jpg"
-# st.markdown(
-#     f"""
-#     <iframe src="data:image/jpg;base64,{base64.b64encode(open(background_image, 'rb').read()).decode(
-
-#     )}" style="width:3000px;height:3500px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
-#     """,
-#     unsafe_allow_html=True
-# )
 
 @st.cache_data(ttl='1d')
 def fetch_tjlp_data():
@@ -47,7 +37,7 @@ def fetch_tjlp_data():
 
 
 
-@dataclass
+
 class trimestralFiltrandoDadosParaCalculo():
     _widget_counter = 0
 
@@ -79,13 +69,11 @@ class trimestralFiltrandoDadosParaCalculo():
         self.trimestre = trimestre
         self.LacsLalurTrimestral = LacsLalurCSLLTrimestral(self.trimestre, self.ano, 1, 12,lacs_file, lalur_file, ecf670_file, ec630_file)
 
-        # self.l100 = trimestralFiltrandoDadosParaCalculo.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JCPCalculos\limpeza_dos_dados\DightBrasil\ECF - L030, L100 - Balanço Patrimonial - Lucro Real.xlsx')
-        # self.l300 = trimestralFiltrandoDadosParaCalculo.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JCPCalculos\limpeza_dos_dados\DightBrasil\ECF - L030, L300 - Demonstração do Resultado do Exercício - Lucro Real.xlsx')
 
         self.l100 = trimestralFiltrandoDadosParaCalculo.load_excel_file(l100_file)
         self.l300 = trimestralFiltrandoDadosParaCalculo.load_excel_file(l300_file)
 
-
+  
         #-- Transforma as colunas de data em datetime, e agrega o trimestre correspondente aquele dado, afim de garantir que os dados estão no formato correto
         dados = [self.l100, self.l300]
         for i in dados:
@@ -132,7 +120,6 @@ class trimestralFiltrandoDadosParaCalculo():
         self.data = data         
 
     
-    
     def capitalSocial(self):
         l100 = self.l100
         l100 = l100[(l100['Descrição Conta Referencial']=='CAPITAL REALIZADO - DE RESIDENTE NO PAÍS')&
@@ -142,8 +129,6 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Trimestre'] == self.trimestre)]
         self.capSocial = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Capital Social", "Value": self.capSocial}])], ignore_index=True)
-
-
 
     
     def capitalIntegralizador(self):
@@ -218,20 +203,22 @@ class trimestralFiltrandoDadosParaCalculo():
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucro do Período", "Value": self.lucro_periodo_value}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucro do Período", "Value": self.lucro_periodo_value}])], ignore_index=True)
     
+
     def TotalFinsCalcJSPC(self):
 
         self.totalJSPC =  sum((self.capSocial,self.reservaCapital,self.lucroAcumulado,self.reservLucro,self.contaPatriNClassifica,self.prejuizoPeirod))
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
     
 
-
     def update_totalfinsparaJPC(self):
         self.totalJSPC = self.capSocial + self.reservaCapital + self.lucroAcumulado + self.reservLucro
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
     
+
     def update_reservas(self):
         self.reservLucro = self.reservLegal + self.reservEstatuaria + self.resContingencia + self.reserExp + self.outrasResLuc
         self.resultsTabelaFinal.loc[self.resultsTabelaFinal['Operation'] == 'Reservas de Lucros', 'Value'] = self.reservLucro
+
 
     def ReservaLegal(self):
         key = f'reservaLegal{self.ano,self.mes_inicio,self.trimestre}'
@@ -243,7 +230,6 @@ class trimestralFiltrandoDadosParaCalculo():
         self.reservLegal = st.number_input('Digite o valor da Reserva Legal', key=key, value=st.session_state[key])
          
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reserva legal", "Value": self.reservLegal}])], ignore_index=True)
-
 
 
     def ReservaEstatutária(self):
@@ -326,7 +312,7 @@ class trimestralFiltrandoDadosParaCalculo():
         self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Contas do Patrimônio Líquido Não Classificadas ", "Value": self.contaPatriNClassifica}])], ignore_index=True)
     
-    #@staticmethod
+
     def PrejuizoPeriodo(self):
 
         key = f'PrejuAcumulado{self.ano,self.mes_inicio,self.trimestre}'   
@@ -339,7 +325,6 @@ class trimestralFiltrandoDadosParaCalculo():
         self.prejuizoPeirod = st.number_input('Digite o valor do Prejuízo do Período',key=key,value=st.session_state[key]) * -1
          
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízo do Período", "Value": self.prejuizoPeirod}])], ignore_index=True)
-        
     
         
     def prejuizosAcumulados(self):
@@ -353,6 +338,7 @@ class trimestralFiltrandoDadosParaCalculo():
         self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum() * -1
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.contaPatriNClassifica}])], ignore_index=True)
     
+
     def calculandoJPC(self,data,trimestre):
 
         if trimestre == '1º Trimestre':
@@ -367,7 +353,7 @@ class trimestralFiltrandoDadosParaCalculo():
        
         self.taxaJuros = self.dataframe.loc[data, trimestre]
 
-        self.valorJPC = round(self.totalJSPC * (1.60 / 100), 2)
+        self.valorJPC = round(self.totalJSPC * (self.taxaJuros / 100), 2)
         self.irrfJPC = round(self.valorJPC * 0.15, 2)
         self.valorApropriar = round(self.valorJPC - self.irrfJPC, 2)
 
@@ -380,6 +366,7 @@ class trimestralFiltrandoDadosParaCalculo():
         
 
         self.resultadoJPC = pd.concat([self.resultadoJPC, pd.DataFrame(results)], ignore_index=True)
+
 
     def limiteDedutibilidade(self):
 
@@ -406,6 +393,7 @@ class trimestralFiltrandoDadosParaCalculo():
             ]
         self.resultadoLimiteDedu = pd.concat([self.resultadoLimiteDedu, pd.DataFrame(results)], ignore_index=True)
 
+
     def tabelaEconomia(self):
         self.reducaoIRPJCSLL = self.valorJPC * 0.34
         self.economia = self.reducaoIRPJCSLL - self.darf
@@ -417,7 +405,6 @@ class trimestralFiltrandoDadosParaCalculo():
         
         self.resultadoEconomiaGerada = pd.concat([self.resultadoEconomiaGerada, pd.DataFrame(results)], ignore_index=True)
 
-   
     
     def runPipe(self):
         with st.expander("Adicionar valores :"):
@@ -476,7 +463,7 @@ class trimestralFiltrandoDadosParaCalculo():
 
 
 
-
+''' O codigo abaixo server para debugar o codigo caso precise rodar a classe isolada nesse modulo'''
 # if __name__=='__main__':
 
     # uploaded_file_l100 = st.sidebar.file_uploader("Upload L100 Excel File", type="xlsx")
