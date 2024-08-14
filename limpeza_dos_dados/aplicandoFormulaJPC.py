@@ -8,6 +8,11 @@ import requests
 from functools import lru_cache
 import time
 import base64
+import io
+import xlsxwriter
+from xlsxwriter import Workbook
+
+
 
 start_time = time.time()
 st.set_page_config(layout="wide")
@@ -52,11 +57,24 @@ class Calculo(FiltrandoDadosParaCalculo):
 
         self.dataframe = fetch_tjlp_data()
 
+
+    def valorJPCRetroativo(self):
+        key = f'retroativoJCP{self.data}'
+
+        if key not in st.session_state:
+            st.session_state[key] = 0.0
+
+        st.session_state[key] = st.session_state[key]
+        self.jcpRetroativo = st.number_input('Digite o valor de JCP ja utilizado pelo cliente', key=key, value=st.session_state[key])
+        #self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Debito JCP(Cliente ja utilizou)", "Value": self.jcpRetroativo}])], ignore_index=True)
+
+
+
     def calculandoJPC(self, data):
 
         if data in self.dataframe.index:
             self.taxaJuros = self.dataframe.loc[data, 'Ano']
-            self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2)
+            self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2)-self.jcpRetroativo
             self.irrfJPC = round(self.valorJPC * 0.15, 2)
             self.valorApropriar = round(self.valorJPC - self.irrfJPC, 2)
 
@@ -99,7 +117,6 @@ class Calculo(FiltrandoDadosParaCalculo):
 
         retirarMulta = st.toggle('Retirar valor de multa da conta', key=key)
         
-        FiltrandoDadosParaCalculo._widget_counter += 1
 
         self.lucroLiquid50 = self.lucroAntIRPJ * 0.5
         self.lucroAcuEReserva = (self.reservLucro + self.lucroAcumulado) * 0.5
@@ -118,11 +135,23 @@ class Calculo(FiltrandoDadosParaCalculo):
         st.dataframe(self.resultadoLimiteDedu, use_container_width=True)   
 
     def tabelaEconomia(self):
-        self.reducaoIRPJCSLL = self.valorJPC * 0.34
+
+        key = f'alterarAliquota{year}'
+        if key not in st.session_state:
+            st.session_state[key] = False
+
+        alterarAliquiota = st.toggle('Alterar IRPJ/CSLL - 34% para 24%', key=key)
+        if alterarAliquiota:
+            valorAliquota = 24
+            self.reducaoIRPJCSLL = self.valorJPC * 0.24
+        else:
+            self.reducaoIRPJCSLL = self.valorJPC * 0.34
+            valorAliquota = 34 
+
         self.economia = self.reducaoIRPJCSLL - self.darf
 
         results = [
-                {"Operation": "REDUÇÃO NO IRPJ/CSLL - 34%", "Value": self.reducaoIRPJCSLL},
+                {"Operation": f"REDUÇÃO NO IRPJ/CSLL - {valorAliquota}%", 'Value': self.reducaoIRPJCSLL},
                 {"Operation": "Economia", "Value": self.economia},
             ]
         
@@ -135,13 +164,14 @@ class Calculo(FiltrandoDadosParaCalculo):
     def pipeCalculo(self, data):
         self.set_date(data)
         self.lucrosAcumulados()
-        self.ReservasDeCapital()
-        self.capitalSocial()
+        self.valorJPCRetroativo()
         self.TotalFinsCalcJSPC()
         self.calculandoJPC(self.data)
         self.limiteDedutibilidade()
         self.tabelaEconomia()
-
+        return self.resultadoEconomiaGerada
+        
+        
 if __name__ == "__main__":
          
   
@@ -184,38 +214,67 @@ if __name__ == "__main__":
 
         empresa_nome_placeholder.header(empresa_nome)    
          
-                                              
+                                            
 
         if barra == "Calculo JCP":
-            #calculos.
-            for col, year in zip([col1, col2, col3, col4, col5], range(2019, 2024)):
+
                 
-                with col:
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.subheader(str(year))
-                    calculos[year].runPipe()
-                    calculos[year].runPipeFinalTable()
-                    calculos[year].pipeCalculo(str(year))
+                economiaPorAno = []
+                dataFrameParaExportar1 = []
+                dataFrameParaExportar2 = []
+                dataFrameParaExportar3 = []
+
+                df = pd.DataFrame(columns=['Operation','Value'])
+                
+
+                for col, year in zip([col1, col2, col3, col4, col5], range(2019, 2024)):
+                    
+                    with col:
+     
+                        st.write('')
+                        st.write('')
+                        st.write('')
+                        st.write('')
+                        st.subheader(str(year))
+                        
+                        calculosIniciais = calculos[year].runPipe()
+                        tabelaFinal = calculos[year].runPipeFinalTable()
+                        resultadoTotal = calculos[year].pipeCalculo(str(year))
+
+                        economiaPorAno.append(resultadoTotal)
+                        dataFrameParaExportar1.append(calculosIniciais)
+                        dataFrameParaExportar2.append(tabelaFinal)
+                        dataFrameParaExportar3.append(resultadoTotal)
+                
+                dfmetricaGeral = pd.concat(economiaPorAno).reset_index(drop='index')
+                dfmetricaGeral = dfmetricaGeral.transpose().iloc[:,[1,3,5,7,9]]
+                dfmetricaGeral['Agregado do período'] = dfmetricaGeral.apply(lambda row: row.sum(), axis=1)
+
+                arquivoParaExportar = pd.concat([df.add_suffix(f'_{year}') for df, year in zip(dataFrameParaExportar1, range(2019, 2024))], axis=1)
+                arquivoParaExportar2 = pd.concat([df.add_suffix(f'_{year}') for df, year in zip(dataFrameParaExportar2, range(2019, 2024))], axis=1)
+                arquivoParaExportar3 = pd.concat([df.add_suffix(f'_{year}') for df, year in zip(dataFrameParaExportar3, range(2019, 2024))], axis=1)
+                
+                arquivoFInalParaExpostacao = pd.concat([arquivoParaExportar,arquivoParaExportar2,arquivoParaExportar3],axis=0)
+
+                st.write('')
+                st.write('')
+                st.write('')
+                st.metric("Agregado da Economia Gerada", f"R$ {dfmetricaGeral.iloc[1,-1]:,.2f}")
+
+                output8 = io.BytesIO()
+                with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JSCP',index=False)
+                output8.seek(0)
+                st.write('')
+                st.write('')
+                st.write('')
+                st.download_button(type='primary',label="Exportar tabela",data=output8,file_name=f'JSCP.xlsx',key='download_button')
+
 
         if barra == "Lacs e Lalur":
 
             for col, year in zip([col1, col2, col3, col4, col5], range(2019, 2024)):
                 with col:
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
-                    st.write('')
+
                     st.write('')
                     st.write('')
                     st.write('')

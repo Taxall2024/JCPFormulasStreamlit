@@ -63,8 +63,17 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
             l100['Descrição Conta Referencial']=='Capital Subscrito de Domiciliados e Residentes no País')&
             (l100['Data Inicial'].str.contains(self.data))]
         self.capSocial = l100['Vlr Saldo Final'].sum()
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Capital Social", "Value": self.capSocial}])], ignore_index=True)
 
+        key = f'capitalSoc{self.data}'
+
+        if key not in st.session_state:
+            st.session_state[key] = self.capSocial
+        
+        st.session_state[key] = st.session_state[key]
+
+        self.capSocial = st.number_input('Ajuste Capital Social',key=key,value=st.session_state[key])
+
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Capital Social", "Value": self.capSocial}])], ignore_index=True)
 
 
     
@@ -82,8 +91,16 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Conta Referencial']=='2.03.02.01.99')&
             (l100['Data Inicial'].str.contains(self.data))]
         self.reservaCapital = l100['Vlr Saldo Final'].sum()
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reservas de Capital", "Value": self.reservaCapital}])], ignore_index=True)
+        
+        key = f'ReservlCapital{self.data}'
 
+        if key not in st.session_state:
+            st.session_state[key] = self.reservaCapital
+        
+        st.session_state[key] = st.session_state[key]
+
+        self.reservaCapital = st.number_input('Ajuste Reserva de Capital',key=key,value=st.session_state[key])
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reservas de Capital", "Value": self.reservaCapital}])], ignore_index=True)
             
     def ajustesAvalPatrimonial(self):
         l100 = self.l100
@@ -91,6 +108,14 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Descrição Conta Referencial']=='Reavaliação de Ativos Próprios')]
         self.ajusteAvaPatrimonial = l100['Vlr Saldo Final'].sum()
+
+        key = f'ajustAvaPatri{self.data}'
+
+        if key not in st.session_state:
+            st.session_state[key] = self.ajusteAvaPatrimonial
+        st.session_state[key] = st.session_state[key]
+
+        self.ajusteAvaPatrimonial = st.number_input('Ajuste Avaliação Patrimonial',key=key,value=st.session_state[key])
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ajustes Avaliação Patrimonial", "Value": self.ajusteAvaPatrimonial}])], ignore_index=True)
 
                    
@@ -120,7 +145,18 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
         self.ajustExercAnt = l100['Vlr Saldo Final'].sum()
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ajustes Exercícios Anteriores", "Value": self.ajustExercAnt}])], ignore_index=True)
+
+        key = f'ajustExercAnte{self.data}'
+
+        if key not in st.session_state:
+            st.session_state[key] = self.ajustExercAnt
+        st.session_state[key] = st.session_state[key]
+
+        self.ajustExercAnt = st.number_input('Ajuste Exercícios Anteriores',key=key,value=st.session_state[key])
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Exercícios Anteriores", "Value": self.ajustExercAnt}])], ignore_index=True)
+
+        
+
 
     
     def lucroPeriodo(self):
@@ -135,28 +171,18 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     
     def TotalFinsCalcJSPC(self):
 
-        self.totalJSPC =  sum((self.capSocial,self.reservaCapital,self.lucroAcumulado,self.reservLucro,self.contaPatriNClassifica,self.prejuizoPeirod))
+        self.totalJSPC =  sum((self.capSocial,self.reservaCapital,self.lucroAcumulado,self.reservLucro,
+                               self.contaPatriNClassifica,self.prejuizoPeirod,self.ajustExercAnt,
+                               self.resultExercicio,self.lucroPrejAcumu))
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
     
 
-
-    # def ReservaLegal(self):
-    #     key = f'reservaLegal{self.data}'
-        
-
-    #     if key not in st.session_state:
-    #         st.session_state[key] = 0.0
-
-    #     st.session_state[key] = st.session_state[key]
-    #     self.reservLegal = st.number_input('Digite o valor da Reserva Legal', key=key, value=st.session_state[key])
-    #     self.reservLucro = self.reservLegal
-    #     self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reserva legal", "Value": self.reservLegal}])], ignore_index=True)
     def update_totalfinsparaJPC(self):
         self.totalJSPC = self.capSocial + self.reservaCapital + self.lucroAcumulado + self.reservLucro
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
     
     def update_reservas(self):
-        self.reservLucro = self.reservLegal + self.reservEstatuaria + self.resContingencia + self.reserExp + self.outrasResLuc
+        self.reservLucro = self.reservLegal + self.outrasResLuc
         self.resultsTabelaFinal.loc[self.resultsTabelaFinal['Operation'] == 'Reservas de Lucros', 'Value'] = self.reservLucro
 
     def ReservaLegal(self):
@@ -168,47 +194,8 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         st.session_state[key] = st.session_state[key]
         self.reservLegal = st.number_input('Digite o valor da Reserva Legal', key=key, value=st.session_state[key])
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reserva legal", "Value": self.reservLegal}])], ignore_index=True)
-        #self.update_totalfinsparaJPC()  # <--- Call the new method here
 
 
-
-    def ReservaEstatutária(self):
-        key = f'reservaEsta{self.data}'
-
-        if key not in st.session_state:
-            st.session_state[key] = 0.0
-
-        st.session_state[key] = st.session_state[key]
-
-        self.reservEstatuaria =  st.number_input('Digite o valor da Reserva Estatuaria',key=key,value=st.session_state[key])
-
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reserva Estatutária", "Value": self.reservEstatuaria}])], ignore_index=True)
-    
-
-    def ReservaContingencias(self):
-        key = f'reservaCont{self.data}'
-
-        if key not in st.session_state:
-            st.session_state[key] = 0.0
-
-        st.session_state[key] = st.session_state[key]
-
-        self.resContingencia =  st.number_input('Digite o valor da Reserva Reserva de contingências',key=key,value=st.session_state[key])
-
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reserva para Contingências", "Value": self.resContingencia}])], ignore_index=True)
-    
-
-    def ReservaExpansao(self):
-        key = f'reservaExpans{self.data}'
-
-        if key not in st.session_state:
-            st.session_state[key] = 0.0
-
-        st.session_state[key] = st.session_state[key]
-        self.reserExp =  st.number_input('Digite o valor da Reserva de Expansão',key=key,value=st.session_state[key])
-
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation":"Reserva de Lucros para Expansão", "Value": self.reserExp}])], ignore_index=True)
-    
 
     def OutrasReservasLucros(self):
         key = f'reservaOutras{self.data}'
@@ -221,10 +208,35 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.outrasResLuc = st.number_input('Digite o valor Outras reservas de lucros',key=key,value=st.session_state[key])
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Outras Reservas de Lucros", "Value": self.outrasResLuc}])], ignore_index=True)
+    
+
+    def ResultadoDoExercicio(self):
+        key = f'ReusltadoDoExercico{self.data}'
+
+        if key not in st.session_state:
+            st.session_state[key] = 0.0
+        
+        st.session_state[key] = st.session_state[key]
+
+        self.resultExercicio = st.number_input('Ajuste Resultado do Exercício',key=key,value=st.session_state[key])
+
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Resultado do Exercício", "Value": self.resultExercicio}])], ignore_index=True)
+
+    def lucroPrejuAcumulado(self):
+        key = f'LucroPrejuAc{self.data}'
+
+        if key not in st.session_state:
+            st.session_state[key] = 0.0
+        
+        st.session_state[key] = st.session_state[key]
+
+        self.lucroPrejAcumu = st.number_input('Lucros/Prejuízos acumulados',key=key,value=st.session_state[key])
+
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucros/Prejuízos acumulados", "Value": self.lucroPrejAcumu}])], ignore_index=True)
 
     
     def ReservasLucros(self):
-        self.reservLucro = self.reservLegal + self.reservEstatuaria + self.resContingencia + self.reserExp + self.outrasResLuc
+        self.reservLucro = self.reservLegal + self.outrasResLuc
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reservas de Lucros", "Value": self.reservLucro}])], ignore_index=True)
     
     
@@ -274,33 +286,34 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     
     
     def runPipe(self):
+           
+            with st.expander('Inputs manuais : '):
+                self.capitalSocial()
+                self.capitalIntegralizador()
+                self.ReservasDeCapital()
+                self.ajustesAvalPatrimonial()
+                self.lucroPrejuAcumulado()
+                self.ResultadoDoExercicio()
 
-        self.capitalSocial()
-        self.capitalIntegralizador()
-        self.ReservasDeCapital()
-        self.ajustesAvalPatrimonial()
+                self.ReservaLegal()
+                self.OutrasReservasLucros()
+                self.ReservasLucros()
 
-        self.ReservaLegal()
-        self.ReservaEstatutária()
-        self.ReservaContingencias()
-        self.ReservaExpansao()
-        self.OutrasReservasLucros()
-        self.ReservasLucros()
+                self.acoesTesouraria()
+                self.contPatrimonioNaoClass()
+                self.PrejuizoPeriodo()
+                self.prejuizosAcumulados()
 
-        self.acoesTesouraria()
-        self.contPatrimonioNaoClass()
-        self.PrejuizoPeriodo()
-        self.prejuizosAcumulados()
+                self.acoesTesouraria()
+                self.lucrosAcumulados()
+                self.ajustesExerAnteriores()
+                self.lucroPeriodo()
+                self.TotalFinsCalcJSPC()
+            
 
-        self.acoesTesouraria()
-        self.lucrosAcumulados()
-        self.ajustesExerAnteriores()
-        self.lucroPeriodo()
-        self.TotalFinsCalcJSPC()
-        
-
-        self.resultsCalcJcp['Value'] = self.resultsCalcJcp['Value'].apply(lambda x: "{:,.2f}".format(x))
-        st.dataframe(self.resultsCalcJcp)
+            self.resultsCalcJcp['Value'] = self.resultsCalcJcp['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+            st.dataframe(self.resultsCalcJcp)
+            return self.resultsCalcJcp
 
     
     def runPipeFinalTable(self):
@@ -315,8 +328,9 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.LucroLiquidoAntesIRPJ()
         self.baseCSLL()
 
-        self.resultsTabelaFinal['Value'] = self.resultsTabelaFinal['Value'].apply(lambda x: "{:,.2f}".format(x))
+        self.resultsTabelaFinal['Value'] = self.resultsTabelaFinal['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
         st.dataframe(self.resultsTabelaFinal)
+        return self.resultsTabelaFinal
 
 # if __name__=='__main__':
 
@@ -329,4 +343,3 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
 #     st.subheader('Lacs e Lalur ')
 #     jcp.runPipeLacsLalurIRPJ()
 #     jcp.runPipeLacsLalurCSLL()
-

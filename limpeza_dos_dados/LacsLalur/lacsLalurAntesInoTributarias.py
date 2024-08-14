@@ -24,7 +24,13 @@ class LacsLalurCSLL():
         self.lalur = LacsLalurCSLL.load_excel_file(lalur_file)
         self.ecf670 = LacsLalurCSLL.load_excel_file(ecf670_file)
         self.ec630 = LacsLalurCSLL.load_excel_file(ec630_file)
-        
+
+        self.lacsFiltrado = self.lacs[self.lacs['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
+        self.lalurFiltrado = self.lalur[self.lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
+        self.ec670Filtrado = self.ecf670[self.ecf670['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
+        self.ec630Filtrado = self.ec630[self.ec630['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
+
+
         self.resultsLacs = pd.DataFrame(columns=["Operation", "Value"])
         self.results = pd.DataFrame(columns=["Operation", "Value"])
         self.resultsTabelaFinal = pd.DataFrame(columns=["Operation", "Value"]) 
@@ -38,9 +44,9 @@ class LacsLalurCSLL():
     
     def lucroAntesCSLL(self):
         
-        lacs = self.lacs   
-        lacs = lacs[(lacs['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
-            self.lacs['Código Lançamento e-Lacs']== 2)&
+        lacs = self.lacsFiltrado   
+        lacs = lacs[(
+            lacs['Código Lançamento e-Lacs']== 2)&
             (lacs['Data Inicial'].str.contains(self.data))]
         self.lucroAntCSLL = lacs['Vlr Lançamento e-Lacs'].sum()
 
@@ -49,9 +55,9 @@ class LacsLalurCSLL():
     
     def adicoes(self):
         
-        lacs = self.lacs   
-        lacs = lacs[(lacs['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
-            self.lacs['Código Lançamento e-Lacs']== 93)&
+        lacs = self.lacsFiltrado   
+        lacs = lacs[(
+            lacs['Código Lançamento e-Lacs']== 93)&
             (lacs['Data Inicial'].str.contains(self.data))]
         self.audicoes = lacs['Vlr Lançamento e-Lacs'].sum()
 
@@ -60,9 +66,9 @@ class LacsLalurCSLL():
     
     def exclusoes(self):
         
-        lacs = self.lacs   
-        lacs = lacs[(lacs['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
-            self.lacs['Código Lançamento e-Lacs']== 168)&
+        lacs = self.lacsFiltrado   
+        lacs = lacs[(
+            lacs['Código Lançamento e-Lacs']== 168)&
             (lacs['Data Inicial'].str.contains(self.data))]
         self.exclusao = lacs['Vlr Lançamento e-Lacs'].sum()
 
@@ -75,8 +81,8 @@ class LacsLalurCSLL():
 
     
     def compensacaoPrejuizo(self):
-        lalur = self.lalur
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.lalurFiltrado
+        lalur = lalur[(
             lalur['Código Lançamento e-Lalur']== 173)&
             (lalur['Data Inicial'].str.contains(self.data))]
         self.compensacao = lalur['Vlr Lançamento e-Lalur'].sum()
@@ -97,8 +103,8 @@ class LacsLalurCSLL():
    
     def retencoesFonte(self):
 
-        lalur = self.lalur
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.lalurFiltrado
+        lalur = lalur[(
             lalur['Código Lançamento e-Lalur']== 17)&
             (lalur['Data Inicial'].str.contains(self.data))]
         self.retencoes = lalur['Vlr Lançamento e-Lalur'].sum()
@@ -109,16 +115,16 @@ class LacsLalurCSLL():
     
     def retencoesOrgPublicos(self):
 
-        lalur = self.ecf670
-        filtroUm = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.ec670Filtrado
+        filtroUm = lalur[(
             lalur['Código Lançamento']== 15)&
             (lalur['Data Inicial'].str.contains(self.data))]
 
-        filtroDois = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        filtroDois = lalur[(
             lalur['Código Lançamento']== 16)&
             (lalur['Data Inicial'].str.contains(self.data))]
 
-        filtroTres = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        filtroTres = lalur[(
             lalur['Código Lançamento']== 18)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
@@ -131,8 +137,8 @@ class LacsLalurCSLL():
 
     
     def impostoPorEstimativa(self):
-        ecf760 = self.ecf670
-        ecf760 = ecf760[(ecf760['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        ecf760 = self.ec670Filtrado
+        ecf760 = ecf760[(
             ecf760['Código Lançamento']== 19)&
             (ecf760['Data Inicial'].str.contains(self.data))]
         
@@ -165,8 +171,9 @@ class LacsLalurCSLL():
     
     def LucroLiquidoAntesIRPJ(self):
 
-        lalur = self.lalur  
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.lalurFiltrado
+
+        lalur = lalur[(
             self.lalur['Código Lançamento e-Lalur'] == 2)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
@@ -178,8 +185,8 @@ class LacsLalurCSLL():
     
     def clss(self):
 
-        lalur = self.lalur  
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.lalurFiltrado  
+        lalur = lalur[(
             self.lalur['Código Lançamento e-Lalur'] == 9)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
@@ -190,12 +197,12 @@ class LacsLalurCSLL():
     
     def demaisAdicoes(self):
 
-        lalur = self.lalur  
-        filtroUm = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.lalurFiltrado  
+        filtroUm = lalur[(
             self.lalur['Código Lançamento e-Lalur'] == 93)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
-        filtroDois = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        filtroDois = lalur[(
             self.lalur['Código Lançamento e-Lalur'] == 9)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
@@ -206,19 +213,19 @@ class LacsLalurCSLL():
     
     def adicoesIRPJ(self):
 
-        clss = self.lalur  
-        clss = clss[(clss['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        clss = self.lalurFiltrado  
+        clss = clss[(
             clss['Código Lançamento e-Lalur'] == 9)&
             (clss['Data Inicial'].str.contains(self.data))]
         
         self.contrilss = clss['Vlr Lançamento e-Lalur'].sum()
 
-        lalur = self.lalur  
-        filtroUm = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.lalurFiltrado  
+        filtroUm = lalur[(
             self.lalur['Código Lançamento e-Lalur'] == 93)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
-        filtroDois = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        filtroDois = lalur[(
             self.lalur['Código Lançamento e-Lalur'] == 9)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
@@ -232,8 +239,8 @@ class LacsLalurCSLL():
     
     def exclusoesIRPJ(self):
 
-        lalur = self.lalur  
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.lalurFiltrado  
+        lalur = lalur[(
             self.lalur['Código Lançamento e-Lalur'] == 168)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
@@ -251,10 +258,10 @@ class LacsLalurCSLL():
     
     def CompPrejuFiscal(self):
 
-        lalur = self.lalur  
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
-            lalur['Código Lançamento e-Lalur'] == 173)&
-            (lalur['Data Inicial'].str.contains(self.data))]
+        lalur = self.lalurFiltrado  
+        lalur = lalur[(
+                        lalur['Código Lançamento e-Lalur'] == 173)&
+                        (lalur['Data Inicial'].str.contains(self.data))]
         
         self.compPrejFiscal = lalur['Vlr Lançamento e-Lalur'].sum()
 
@@ -284,8 +291,8 @@ class LacsLalurCSLL():
     
     def pat(self):
 
-        lalur = self.ec630
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.ec630Filtrado
+        lalur = lalur[(
             lalur['Código Lançamento'] == 8)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
@@ -296,8 +303,8 @@ class LacsLalurCSLL():
    
     def operacoesCulturalArtistico(self):
 
-        lalur = self.ec630
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.ec630Filtrado
+        lalur = lalur[(
             lalur['Código Lançamento'] == 6)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
@@ -308,11 +315,11 @@ class LacsLalurCSLL():
     
     def insencaoRedImposto(self):
 
-        lalur = self.ec630
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
-            lalur['Código Lançamento'] == 17)&
-            (lalur['Data Inicial'].str.contains(self.data))]
-        
+        lalur = self.ec630Filtrado
+        lalur = lalur[(
+                    lalur['Código Lançamento'] == 17)&
+                    (lalur['Data Inicial'].str.contains(self.data))]
+                
         self.reducaoImposto = lalur['Vlr Lançamento'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Isenção e Redução do Imposto", "Value": self.reducaoImposto}])], ignore_index=True )      
@@ -320,11 +327,11 @@ class LacsLalurCSLL():
     
     def impostoRetFonte(self):
 
-        lalur = self.ec630
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
-            lalur['Código Lançamento'] == 20)&
-            (lalur['Data Inicial'].str.contains(self.data))]
-        
+        lalur = self.ec630Filtrado
+        lalur = lalur[(
+                    lalur['Código Lançamento'] == 20)&
+                    (lalur['Data Inicial'].str.contains(self.data))]
+                
         self.impostRetFonte = lalur['Vlr Lançamento'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte", "Value": self.impostRetFonte}])], ignore_index=True )      
@@ -332,8 +339,8 @@ class LacsLalurCSLL():
     
     def impostoRetFonteOrgsAutarquias(self):
 
-        lalur = self.ec630
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.ec630Filtrado
+        lalur = lalur[(
             lalur['Código Lançamento'] == 21)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
@@ -345,11 +352,11 @@ class LacsLalurCSLL():
     
     def impostoRetFonteDemaisEntidades(self):
 
-        lalur = self.ec630
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
-            lalur['Código Lançamento'] == 22)&
-            (lalur['Data Inicial'].str.contains(self.data))]
-        
+        lalur = self.ec630Filtrado
+        lalur = lalur[(
+                    lalur['Código Lançamento'] == 22)&
+                    (lalur['Data Inicial'].str.contains(self.data))]
+                
         self.impostRetFonteDemEnti = lalur['Vlr Lançamento'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte pelas Demais Entidades da Administração Pública Federal (Lei n° 10.833/2003, art. 34)",
@@ -358,8 +365,8 @@ class LacsLalurCSLL():
     
     def impostoRendaRV(self):
 
-        lalur = self.ec630
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
+        lalur = self.ec630Filtrado
+        lalur = lalur[(
             lalur['Código Lançamento'] == 23)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
@@ -371,11 +378,11 @@ class LacsLalurCSLL():
     
     def impostoRendPagoEfe(self):
 
-        lalur = self.ec630
-        lalur = lalur[(lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
-            lalur['Código Lançamento'] == 24)&
-            (lalur['Data Inicial'].str.contains(self.data))]
-        
+        lalur = self.ec630Filtrado
+        lalur = lalur[(
+                    lalur['Código Lançamento'] == 24)&
+                    (lalur['Data Inicial'].str.contains(self.data))]
+                
         self.impostRendaPago = lalur['Vlr Lançamento'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Mensal Efetivamente Pago por Estimativa",
