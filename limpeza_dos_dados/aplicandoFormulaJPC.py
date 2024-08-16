@@ -16,15 +16,14 @@ from xlsxwriter import Workbook
 
 start_time = time.time()
 st.set_page_config(layout="wide")
-# background_image ="Untitleddesign.jpg"
-# st.markdown(
-#     f"""
-#     <iframe src="data:image/jpg;base64,{base64.b64encode(open(background_image, 'rb').read()).decode(
+background_image ="Untitleddesign.jpg"
+st.markdown(
+     f"""
+     <iframe src="data:image/jpg;base64,{base64.b64encode(open(background_image, 'rb').read()).decode(
 
-#     )}" style="width:3000px;height:3500px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
-#     """,
-#     unsafe_allow_html=True
-# )
+    )}" style="width:3000px;height:3500px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
+     """,
+     unsafe_allow_html=True )
 
 def fetch_tjlp_data():
     url = 'https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/pagamentos-e-parcelamentos/taxa-de-juros-de-longo-prazo-tjlp'
