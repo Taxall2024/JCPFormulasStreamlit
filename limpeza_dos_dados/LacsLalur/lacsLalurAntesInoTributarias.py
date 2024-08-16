@@ -1,14 +1,19 @@
 import pandas as pd
 import streamlit as st
 import numpy as np
+import functools
+from functools import wraps
+
 
 
 class LacsLalurCSLL():
-
+    
+    @staticmethod
     @st.cache_data(ttl='1d', show_spinner=False)
     def load_excel_file(file_path):
         return pd.read_excel(file_path)
 
+    
     
     def __init__(self,data,lacs_file, lalur_file, ecf670_file, ec630_file):
         print('hello world')
@@ -19,7 +24,7 @@ class LacsLalurCSLL():
         # self.ecf670 = LacsLalurCSLL.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JPC\Inviolavel Seguranca\Declarações Federais - ECF - N - Lucro Real - Cálculo IRPJ e CSLL - N030, N670 - Apuração da CSLL Com Base no Lucro Real.xlsx')
         # self.ec630 = LacsLalurCSLL.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JPC\Inviolavel Seguranca\Declarações Federais - ECF - N - Lucro Real - Cálculo IRPJ e CSLL - N030, N630 - Apuração do IRPJ Com Base no Lucro Real.xlsx')
         
-        #----ORBENK
+
         self.lacs = LacsLalurCSLL.load_excel_file(lacs_file)
         self.lalur = LacsLalurCSLL.load_excel_file(lalur_file)
         self.ecf670 = LacsLalurCSLL.load_excel_file(ecf670_file)
@@ -41,6 +46,7 @@ class LacsLalurCSLL():
     #       CSLL ----
 
     #As funções abaixo utilizam como base para os calculos as a planilha LACS, 
+    
     
     def lucroAntesCSLL(self):
         
@@ -83,7 +89,7 @@ class LacsLalurCSLL():
     def compensacaoPrejuizo(self):
         lalur = self.lalurFiltrado
         lalur = lalur[(
-            lalur['Código Lançamento e-Lalur']== 173)&
+            lalur['Código Lançamento e-Lalur'] == 173)&
             (lalur['Data Inicial'].str.contains(self.data))]
         self.compensacao = lalur['Vlr Lançamento e-Lalur'].sum()
 
@@ -100,7 +106,7 @@ class LacsLalurCSLL():
         self.valorcSLL = np.where(self.basecSLL<0,0,self.basecSLL*0.09)
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Valor CSLL", "Value": self.valorcSLL}])], ignore_index=True)
 
-   
+    
     def retencoesFonte(self):
 
         lalur = self.lalurFiltrado
@@ -300,7 +306,7 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "PAT", "Value": self.PAT}])], ignore_index=True) 
 
-   
+    
     def operacoesCulturalArtistico(self):
 
         lalur = self.ec630Filtrado
@@ -400,7 +406,7 @@ class LacsLalurCSLL():
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Sub total IRPJ a Recolher",
                                                                 "Value": self.subtotal}])], ignore_index=True )      
 
-    
+    @functools.cache
     def runPipeLacsLalurIRPJ(self):
 
         self.LucroLiquidoAntesIRPJ()
@@ -429,7 +435,7 @@ class LacsLalurCSLL():
         self.results['Value'] = self.results['Value'].apply(lambda x: f"{x:,.2f}")
         st.dataframe(self.results)
     
-    
+    @functools.cache
     def runPipeFinalTabelLacsLalur(self):
 
         self.baseCSLL()
