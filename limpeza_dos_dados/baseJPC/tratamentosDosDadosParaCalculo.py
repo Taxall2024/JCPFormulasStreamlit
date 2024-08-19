@@ -52,13 +52,10 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         else:
             self.nomeEmpresa = 'Empresa não encontrada'             
 
-
-
     
     def set_date(self, data):
         self.data = data         
-
-    
+ 
  
     def capitalSocial(self):
         l100 = self.l100
@@ -77,7 +74,6 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.capSocial = st.number_input('Ajuste Capital Social',key=key,value=st.session_state[key])
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Capital Social", "Value": self.capSocial}])], ignore_index=True)
-
 
  
     def capitalIntegralizador(self):
@@ -160,8 +156,6 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Exercícios Anteriores", "Value": self.ajustExercAnt}])], ignore_index=True)
 
         
-
-
     def lucroPeriodo(self):
         l100 = self.l300
         l100 = l100[(l100['Descrição Conta Referencial']=='RESULTADO LÍQUIDO DO PERÍODO')&
@@ -183,6 +177,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     def update_totalfinsparaJPC(self):
         self.totalJSPC = self.capSocial + self.reservaCapital + self.lucroAcumulado + self.reservLucro
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
+
 
     def update_reservas(self):
         self.reservLucro = self.reservLegal + self.outrasResLuc
@@ -286,7 +281,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum() * -1
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.contaPatriNClassifica}])], ignore_index=True)
     
-
+    @functools.cache
     def runPipe(self):
            
             with st.expander('Inputs manuais : '):
