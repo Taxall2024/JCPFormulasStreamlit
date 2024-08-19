@@ -193,7 +193,7 @@ if __name__ == "__main__":
         uploaded_file_lalur = st.sidebar.file_uploader("Upload Lalur Excel File", type="xlsx")
         uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
         uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
-
+        
         if uploaded_file_l100 and uploaded_file_l300 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ecf670 and uploaded_file_ec630:
                   
                 filtrando_dados = FiltrandoDadosParaCalculo(
@@ -205,44 +205,44 @@ if __name__ == "__main__":
                     l100_file=uploaded_file_l100,
                     l300_file=uploaded_file_l300
                 )
-
-                calculos2019 = Calculo(data=str('2019'),
+                try:
+                    calculos2019 = Calculo(data=str('2019'),
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300) 
+                    calculos2020 = Calculo(data=str('2020'),
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300) 
+                    calculos2021 = Calculo(data=str('2021'),
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300)
+                    calculos2022 =  Calculo(data=str('2022'),
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300)                                             
+                    calculos2023 =  Calculo(data=str('2023'),
                                         lacs_file=uploaded_file_lacs,
                                         lalur_file=uploaded_file_lalur,
                                         ecf670_file=uploaded_file_ecf670,
                                         ec630_file=uploaded_file_ec630,
                                         l100_file=uploaded_file_l100,
                                         l300_file=uploaded_file_l300) 
-                calculos2020 = Calculo(data=str('2020'),
-                                        lacs_file=uploaded_file_lacs,
-                                        lalur_file=uploaded_file_lalur,
-                                        ecf670_file=uploaded_file_ecf670,
-                                        ec630_file=uploaded_file_ec630,
-                                        l100_file=uploaded_file_l100,
-                                        l300_file=uploaded_file_l300) 
-                calculos2021 = Calculo(data=str('2021'),
-                                        lacs_file=uploaded_file_lacs,
-                                        lalur_file=uploaded_file_lalur,
-                                        ecf670_file=uploaded_file_ecf670,
-                                        ec630_file=uploaded_file_ec630,
-                                        l100_file=uploaded_file_l100,
-                                        l300_file=uploaded_file_l300)
-                calculos2022 =  Calculo(data=str('2022'),
-                                        lacs_file=uploaded_file_lacs,
-                                        lalur_file=uploaded_file_lalur,
-                                        ecf670_file=uploaded_file_ecf670,
-                                        ec630_file=uploaded_file_ec630,
-                                        l100_file=uploaded_file_l100,
-                                        l300_file=uploaded_file_l300) 
-                                        
-                calculos2023 =  Calculo(data=str('2023'),
-                                        lacs_file=uploaded_file_lacs,
-                                        lalur_file=uploaded_file_lalur,
-                                        ecf670_file=uploaded_file_ecf670,
-                                        ec630_file=uploaded_file_ec630,
-                                        l100_file=uploaded_file_l100,
-                                        l300_file=uploaded_file_l300) 
-                                        
+                except:
+                    pass                        
                 empresa_nome = calculos2019.nomeDasEmpresas(uploaded_file_l100)
                 try:
                     empresa_nome_placeholder.header(empresa_nome)    
