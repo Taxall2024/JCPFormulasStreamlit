@@ -1,16 +1,20 @@
 import pandas as pd
 import streamlit as st
 import numpy as np
+from bs4 import BeautifulSoup
+import xlsxwriter
+from xlsxwriter import Workbook
+
 from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
 from LacsLalur.lacsLalurAntesInoTributarias import LacsLalurCSLL
-from bs4 import BeautifulSoup
+from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo
+
 import requests
 import functools
 import time
 import base64
 import io
-import xlsxwriter
-from xlsxwriter import Workbook
+
 
 
 
@@ -175,10 +179,12 @@ class Calculo(FiltrandoDadosParaCalculo):
         
         
 if __name__ == "__main__":
+    anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre']) 
     with st.form('form1',border=False):
         if st.form_submit_button('Gerar Dados'):           
   
             try:
+                
                 barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur"])
                 empresa_nome_placeholder = st.header("Empresa não selecionada")
             except:
@@ -195,7 +201,7 @@ if __name__ == "__main__":
         uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
         
         if uploaded_file_l100 and uploaded_file_l300 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ecf670 and uploaded_file_ec630:
-                  
+            if anualOuTrimestral == 'Ano':          
                 filtrando_dados = FiltrandoDadosParaCalculo(
                     data=None,
                     lacs_file=uploaded_file_lacs,
@@ -393,16 +399,96 @@ if __name__ == "__main__":
                             resultadoTotal_2023 = calculos2023.runPipeLacsLalurIRPJ()
                 except:
                     pass
+            if anualOuTrimestral == 'Trimestre':
 
+                try:           
+                    if barra == "Calculo JCP":
+                        colunas = st.columns(4)
+                        trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
+                        economia_gerada_por_trimestre = []
+                        arquivoFinalParaExportacaoTri = []
+                        tabelaUnicaLista = []
+                        for ano in range(2019, 2024):
+                                year_dfsLacs = []
+                                resultadoJCP = []
+                                resultadoDedu = []
+                                economiaGerada = []
+                                tabelaUnica = []
+                                for col, trimestre in zip(colunas, trimestres):
+                                    with col:
+                                        lacs = trimestralFiltrandoDadosParaCalculo(
+                                            trimestre=trimestre,
+                                            ano=ano,
+                                            mes_inicio=1,
+                                            mes_fim=12,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300,
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630
+                                        )
+
+                                        st.subheader(f'{ano}    {trimestre}')
+                                        lacs.runPipe()
+
+                                        df = lacs.dataframeFinal
+                                        df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                        year_dfsLacs.append(df)
+
+                                        df = lacs.resultadoJPC
+                                        df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                        resultadoJCP.append(df)
+
+                                        df = lacs.resultadoLimiteDedu
+                                        df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                        resultadoDedu.append(df)
+
+                                        df = lacs.resultadoEconomiaGerada
+                                        df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                        economiaGerada.append(df)
+
+                                        economia_gerada_por_trimestre.append(lacs.economia)
+
+                                dfCalculos = pd.concat(year_dfsLacs, axis=1)
+                                tabelaJCP = pd.concat(resultadoJCP, axis=1)
+                                limiteDedutibili = pd.concat(resultadoDedu, axis=1)
+                                economiaGerada = pd.concat(economiaGerada, axis=1)
+
+                                tabelaUnica = pd.concat([dfCalculos,tabelaJCP,limiteDedutibili,economiaGerada],axis=0)
+                                tabelaUnicaLista.append(tabelaUnica.add_suffix(ano))
+                    
+
+                                st.subheader(f"Resultados Anuais - {ano}")
+                                st.dataframe(dfCalculos)
+                                st.dataframe(tabelaJCP)
+                                st.dataframe(limiteDedutibili)
+                                st.dataframe(economiaGerada)
+
+                        arquivoFinalParaExportacaoTri = pd.concat(tabelaUnicaLista,axis=1)
+                        
+                except:
+                    pass
+                        
+                     
 
     try:
-        output8 = io.BytesIO()
-        with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JSCP',index=False)
-        output8.seek(0)
-        st.write('')
-        st.write('')
-        st.write('')
-        st.download_button(type='primary',label="Exportar tabela",data=output8,file_name=f'JSCP.xlsx',key='download_button')
+        if anualOuTrimestral == 'Ano':
+            output8 = io.BytesIO()
+            with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JSCP',index=False)
+            output8.seek(0)
+            st.write('')
+            st.write('')
+            st.write('')
+            st.download_button(type='primary',label="Exportar tabela",data=output8,file_name=f'JSCP.xlsx',key='download_button')
+        else:
+            output9 = io.BytesIO()
+            with pd.ExcelWriter(output9, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTri.to_excel(writer,sheet_name=f'JSCP',index=False)
+            output9.seek(0)
+            st.write('')
+            st.write('')
+            st.write('')
+            st.download_button(type='primary',label="Exportar tabela",data=output9,file_name=f'JSCP.xlsx',key='download_button')
     except:
         pass
 
