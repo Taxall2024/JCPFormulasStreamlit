@@ -157,8 +157,8 @@ class Calculo(FiltrandoDadosParaCalculo):
         self.resultadoEconomiaGerada = pd.concat([self.resultadoEconomiaGerada, pd.DataFrame(results)], ignore_index=True)
         st.dataframe(self.resultadoEconomiaGerada, use_container_width=True)
 
-        delta_color = "normal" if self.economia > 0 else "inverse"
-        st.metric("Economia Gerada", f"R$ {self.economia:,.2f}", delta_color=delta_color)
+        
+        st.metric("Economia Gerada", f"R$ {self.economia:,.2f}".replace(',','_').replace('.',',').replace('_','.'))
 
     @functools.cache
     def pipeCalculo(self, data):
@@ -352,7 +352,7 @@ if __name__ == "__main__":
                             st.write('')
                             st.write('')
                             st.write('')
-                            st.metric("Agregado da Economia Gerada", f"R$ {dfmetricaGeral.iloc[1,-1]:,.2f}")
+                            st.metric("Total da Economia Gerada", f"R$ {dfmetricaGeral.iloc[1,-1]:,.2f}".replace(',','_').replace('.',',').replace('_','.'))
 
                     if barra == "Lacs e Lalur":
 
