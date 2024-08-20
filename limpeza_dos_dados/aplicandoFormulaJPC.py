@@ -1,16 +1,22 @@
 import pandas as pd
 import streamlit as st
 import numpy as np
-from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
-from LacsLalur.lacsLalurAntesInoTributarias import LacsLalurCSLL
 from bs4 import BeautifulSoup
+import xlsxwriter
+from xlsxwriter import Workbook
+
+from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
+
+from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo
+
 import requests
 import functools
 import time
 import base64
 import io
-import xlsxwriter
-from xlsxwriter import Workbook
+import psutil
+import pstats
+
 
 
 
@@ -24,6 +30,27 @@ st.markdown(
     )}" style="width:3000px;height:3500px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
      """,
      unsafe_allow_html=True )
+
+tempoProcessamentoDasFuncoes = []
+
+def timing(f):
+    @functools.wraps(f)
+    def wrap(*args, **kw):
+        start_time = time.time()
+        result = f(*args, **kw)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        
+        # Adiciona os resultados à lista
+        tempoProcessamentoDasFuncoes.append({
+            "Function": f.__name__,
+            "Execution Time (s)": execution_time
+        })
+        
+        print(f'Function {f.__name__} took {execution_time:.2f} seconds')
+        return result
+    return wrap
+
 
 def fetch_tjlp_data():
     url = 'https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/pagamentos-e-parcelamentos/taxa-de-juros-de-longo-prazo-tjlp'
@@ -46,16 +73,18 @@ def fetch_tjlp_data():
 class Calculo(FiltrandoDadosParaCalculo):
     _widget_counter = 0
 
+    @timing
     def __init__(self, data, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file):
         super().__init__(data, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file)
         self.data = data
         self.resultadoJPC = pd.DataFrame(columns=["Operation", "Value"])
         self.resultadoLimiteDedu = pd.DataFrame(columns=["Operation", "Value"])
         self.resultadoEconomiaGerada = pd.DataFrame(columns=["Operation", "Value"])
+        self.csllAposInovacoes = pd.DataFrame(columns=["Operation", "Value"])
 
         self.dataframe = fetch_tjlp_data()
-
-
+        self.valorJPC = 0.0
+    @timing
     def valorJPCRetroativo(self):
         key = f'retroativoJCP{self.data}'
 
@@ -64,15 +93,36 @@ class Calculo(FiltrandoDadosParaCalculo):
 
         st.session_state[key] = st.session_state[key]
         self.jcpRetroativo = st.number_input('Digite o valor de JCP ja utilizado pelo cliente', key=key, value=st.session_state[key])
-        #self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Debito JCP(Cliente ja utilizou)", "Value": self.jcpRetroativo}])], ignore_index=True)
 
 
-
+    @timing
     def calculandoJPC(self, data):
+
+        lucroLiquid50 = self.lucroAntIRPJ * 0.5
+        lucroAcuEReserva = (self.reservLucro + self.lucroAcumulado) * 0.5
 
         if data in self.dataframe.index:
             self.taxaJuros = self.dataframe.loc[data, 'Ano']
+
             self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2)-self.jcpRetroativo
+
+            # '''Formula que faz checagem se o valor de JSCP não esta passando certos limites, optei for fazer utilizando np.where porem
+            # o reultado esta muito distorcido, com valores muito acima do esperado, entao vou deixar a formula de calculo simples por enquanto
+            # e retornar eventualmente para implementar a formula'''
+
+            # maior_valor = max(lucroLiquid50, lucroAcuEReserva)
+
+            # #Aplicamos as condições usando np.where
+            # self.valorJPC = np.where(
+            #     lucroLiquid50 * self.totalJSPC > 0,  # Primeira Condição
+            #     np.where(
+            #         self.totalJSPC * self.dataframe.loc[data, 'Ano'] > maior_valor,  # Segunda Condição
+            #         maior_valor,  # Se a segunda condição for verdadeira
+            #         round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2) - self.jcpRetroativo  # Se a segunda condição for falsa
+            #     ),
+            #     0 
+            # )
+
             self.irrfJPC = round(self.valorJPC * 0.15, 2)
             self.valorApropriar = round(self.valorJPC - self.irrfJPC, 2)
 
@@ -88,25 +138,25 @@ class Calculo(FiltrandoDadosParaCalculo):
         else:
             st.error("Data not found in the DataFrame")
 
-    def nomeDasEmpresas(self, l100_file):
-        l100 = pd.read_excel(l100_file)
-        nomeEmpresa = ''        
-        if l100['CNPJ'].iloc[0] == 79283065000141:
-            nomeEmpresa = 'ORBENK ADMNISTRAÇÃO E SERVIÇOS LTDA'
-        elif l100['CNPJ'].iloc[0] == 14576552000157:    
-            nomeEmpresa = 'ORBENK SERVIÇOS DE SEGURANÇA LTDA'
-        elif l100['CNPJ'].iloc[0] == 10332516000197:
-            nomeEmpresa = 'ORBENK TERCEIRIZAÇÃO E SERVIÇOS LTDA'
-        elif l100['CNPJ'].iloc[0] == 82513490000194:
-            nomeEmpresa = 'PROFISER SERVIÇOS PROFISSIONAIS LTDA'
-        elif l100['CNPJ'].iloc[0] == 3750757000190:
-            nomeEmpresa = 'SEPAT MULTI SERVICE LTDA'                          
-        else:
-            nomeEmpresa = 'Empresa não encontrada'
-        return nomeEmpresa
+    # @timing
+    # def nomeDasEmpresas(self, l100_file):
+    #     l100 = pd.read_excel(l100_file)
+    #     nomeEmpresa = ''        
+    #     if l100['CNPJ'].iloc[0] == 79283065000141:
+    #         nomeEmpresa = 'ORBENK ADMNISTRAÇÃO E SERVIÇOS LTDA'
+    #     elif l100['CNPJ'].iloc[0] == 14576552000157:    
+    #         nomeEmpresa = 'ORBENK SERVIÇOS DE SEGURANÇA LTDA'
+    #     elif l100['CNPJ'].iloc[0] == 10332516000197:
+    #         nomeEmpresa = 'ORBENK TERCEIRIZAÇÃO E SERVIÇOS LTDA'
+    #     elif l100['CNPJ'].iloc[0] == 82513490000194:
+    #         nomeEmpresa = 'PROFISER SERVIÇOS PROFISSIONAIS LTDA'
+    #     elif l100['CNPJ'].iloc[0] == 3750757000190:
+    #         nomeEmpresa = 'SEPAT MULTI SERVICE LTDA'                          
+    #     else:
+    #         nomeEmpresa = 'Empresa não encontrada'
+    #     return nomeEmpresa
                     
-
-
+    @timing
     def limiteDedutibilidade(self,data):
 
         key = f'retirar_multa_{data}'
@@ -131,9 +181,9 @@ class Calculo(FiltrandoDadosParaCalculo):
             ]
         self.resultadoLimiteDedu = pd.concat([self.resultadoLimiteDedu, pd.DataFrame(results)], ignore_index=True)
         st.dataframe(self.resultadoLimiteDedu, use_container_width=True)   
-
+    
+    @timing
     def tabelaEconomia(self,data):
-
         year = data
         key = f'alterarAliquota{year}'
         if key not in st.session_state:
@@ -160,6 +210,7 @@ class Calculo(FiltrandoDadosParaCalculo):
         
         st.metric("Economia Gerada", f"R$ {self.economia:,.2f}".replace(',','_').replace('.',',').replace('_','.'))
 
+    @timing
     @functools.cache
     def pipeCalculo(self, data):
         self.set_date(data)
@@ -171,14 +222,54 @@ class Calculo(FiltrandoDadosParaCalculo):
         self.tabelaEconomia(data)
         return self.resultadoEconomiaGerada
     
+    def pipeLacsAposInovacoes(self):
+        key = f'pisAposInovacoes{self.data}'
+
+        if key not in st.session_state:
+            st.session_state[key] = 0.0
+
+        st.session_state[key] = st.session_state[key]
+
+        self.lucroAntCSLL
+        self.audicoes
+        self.exclusao = self.exclusao+self.valorJPC
+        self.valorJPC
+        self.baseDecaculoAposInovacoes = sum([self.lucroAntCSLL,self.audicoes,self.exclusao])
+        self.compensacao
+        self.baseDeCalculoCSLLAposIno = self.baseDecaculoAposInovacoes - self.compensacao
+        self.valorCSLLAposIno = np.where(self.baseDeCalculoCSLLAposIno<0,0,self.baseDeCalculoCSLLAposIno*0.09)
+        self.parse = st.number_input('Digite o valor da PERSE', key=key, value=st.session_state[key])
+        self.retencoes
+        self.retencoesOrgPub
+        self.impostoPorEstim
+        self.subtotalCSLLAposIno = self.valorCSLLAposIno - self.retencoes - self.retencoesOrgPub
+        
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "BC do CSLL (DRE LAJIR)", "Value": self.lucroAntCSLL}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Adições", "Value": self.audicoes}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Exclusões", "Value": self.exclusao}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "(-) Juros sobre o capital próprio", "Value": self.valorJPC}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Base de cálculo", "Value": self.baseDecaculoAposInovacoes}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Compensação Prejuízo Fiscal", "Value": self.compensacao}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Base de cálculo da CSLL", "Value": self.baseDeCalculoCSLLAposIno}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Valor da CSLL", "Value": self.valorCSLLAposIno}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "(PERSE)", "Value": self.parse}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Retenções fonte", "Value": self.retencoes}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Retenções Sofridas órgãos públicos", "Value": self.retencoesOrgPub}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Imposto por estimativa", "Value": self.impostoPorEstim}])], ignore_index=True)
+        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Sub total CSLL a Recolher", "Value": self.subtotalCSLLAposIno}])], ignore_index=True)
+        
+        st.dataframe(self.csllAposInovacoes)
+    
     
         
         
 if __name__ == "__main__":
+    anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre']) 
     with st.form('form1',border=False):
         if st.form_submit_button('Gerar Dados'):           
   
             try:
+                
                 barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur"])
                 empresa_nome_placeholder = st.header("Empresa não selecionada")
             except:
@@ -195,7 +286,7 @@ if __name__ == "__main__":
         uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
         
         if uploaded_file_l100 and uploaded_file_l300 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ecf670 and uploaded_file_ec630:
-                  
+            if anualOuTrimestral == 'Ano':          
                 filtrando_dados = FiltrandoDadosParaCalculo(
                     data=None,
                     lacs_file=uploaded_file_lacs,
@@ -241,13 +332,14 @@ if __name__ == "__main__":
                                         ec630_file=uploaded_file_ec630,
                                         l100_file=uploaded_file_l100,
                                         l300_file=uploaded_file_l300) 
+                
                 except:
                     pass                        
-                empresa_nome = calculos2019.nomeDasEmpresas(uploaded_file_l100)
-                try:
-                    empresa_nome_placeholder.header(empresa_nome)    
-                except:
-                    pass
+                # empresa_nome = calculos2019.nomeDasEmpresas(uploaded_file_l100)
+                # try:
+                #     empresa_nome_placeholder.header(empresa_nome)    
+                # except:
+                #     pass
                                                     
                 try:
                     if barra == "Calculo JCP":
@@ -274,6 +366,7 @@ if __name__ == "__main__":
                                 dataFrameParaExportar1.append(calculosIniciais_2019)
                                 dataFrameParaExportar2.append(tabelaFinal_2019)
                                 dataFrameParaExportar3.append(resultadoTotal_2019)
+
 
                             with col2:
                                 st.write('')
@@ -363,6 +456,9 @@ if __name__ == "__main__":
                             st.subheader('2019')
                             resultadoTotal_2019 = calculos2019.runPipeLacsLalurCSLL()
                             resultadoTotal_2019 = calculos2019.runPipeLacsLalurIRPJ()
+                            st.write('')
+                            st.write('')
+                            calculos2019.pipeLacsAposInovacoes()
 
                         with col2:
                             st.write('')
@@ -391,18 +487,99 @@ if __name__ == "__main__":
                             st.subheader('2023')
                             resultadoTotal_2023 = calculos2023.runPipeLacsLalurCSLL()
                             resultadoTotal_2023 = calculos2023.runPipeLacsLalurIRPJ()
+                except Exception as e:
+                    st.warning(f'Error :{str(e)}')
+                    pass
+            if anualOuTrimestral == 'Trimestre':
+
+                try:           
+                    if barra == "Calculo JCP":
+                        colunas = st.columns(4)
+                        trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
+                        economia_gerada_por_trimestre = []
+                        arquivoFinalParaExportacaoTri = []
+                        tabelaUnicaLista = []
+                        for ano in range(2019, 2024):
+                                year_dfsLacs = []
+                                resultadoJCP = []
+                                resultadoDedu = []
+                                economiaGerada = []
+                                tabelaUnica = []
+                                for col, trimestre in zip(colunas, trimestres):
+                                    with col:
+                                        lacs = trimestralFiltrandoDadosParaCalculo(
+                                            trimestre=trimestre,
+                                            ano=ano,
+                                            mes_inicio=1,
+                                            mes_fim=12,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300,
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630
+                                        )
+
+                                        st.subheader(f'{ano}    {trimestre}')
+                                        lacs.runPipe()
+
+                                        df = lacs.dataframeFinal
+                                        df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                        year_dfsLacs.append(df)
+
+                                        df = lacs.resultadoJPC
+                                        df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                        resultadoJCP.append(df)
+
+                                        df = lacs.resultadoLimiteDedu
+                                        df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                        resultadoDedu.append(df)
+
+                                        df = lacs.resultadoEconomiaGerada
+                                        df.columns = [f"{col} {trimestre}" for col in df.columns]
+                                        economiaGerada.append(df)
+
+                                        economia_gerada_por_trimestre.append(lacs.economia)
+
+                                dfCalculos = pd.concat(year_dfsLacs, axis=1)
+                                tabelaJCP = pd.concat(resultadoJCP, axis=1)
+                                limiteDedutibili = pd.concat(resultadoDedu, axis=1)
+                                economiaGerada = pd.concat(economiaGerada, axis=1)
+
+                                tabelaUnica = pd.concat([dfCalculos,tabelaJCP,limiteDedutibili,economiaGerada],axis=0)
+                                tabelaUnicaLista.append(tabelaUnica.add_suffix(ano))
+                    
+
+                                st.subheader(f"Resultados Anuais - {ano}")
+                                st.dataframe(dfCalculos)
+                                st.dataframe(tabelaJCP)
+                                st.dataframe(limiteDedutibili)
+                                st.dataframe(economiaGerada)
+
+                        arquivoFinalParaExportacaoTri = pd.concat(tabelaUnicaLista,axis=1)
+                        
                 except:
                     pass
-
+                        
+                     
 
     try:
-        output8 = io.BytesIO()
-        with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JSCP',index=False)
-        output8.seek(0)
-        st.write('')
-        st.write('')
-        st.write('')
-        st.download_button(type='primary',label="Exportar tabela",data=output8,file_name=f'JSCP.xlsx',key='download_button')
+        if anualOuTrimestral == 'Ano':
+            output8 = io.BytesIO()
+            with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JSCP',index=False)
+            output8.seek(0)
+            st.write('')
+            st.write('')
+            st.write('')
+            st.download_button(type='primary',label="Exportar tabela",data=output8,file_name=f'JSCP.xlsx',key='download_button')
+        else:
+            output9 = io.BytesIO()
+            with pd.ExcelWriter(output9, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTri.to_excel(writer,sheet_name=f'JSCP',index=False)
+            output9.seek(0)
+            st.write('')
+            st.write('')
+            st.write('')
+            st.download_button(type='primary',label="Exportar tabela",data=output9,file_name=f'JSCP.xlsx',key='download_button')
     except:
         pass
 
@@ -410,6 +587,17 @@ end_time = time.time()
 
 execution_time = end_time - start_time
 
-print('#############################################')
-print('TEMPO DE EXECUÇÃO DO PROGRAMA')
-print(f"Tempo de execução: {execution_time} segundos")
+
+
+      
+with st.sidebar.expander('Dados Processamento'):
+    st.write(f"Tempo de execução: {execution_time} segundos")
+    cpu_usage = psutil.cpu_percent(interval=1)
+    memory_usage = psutil.virtual_memory().percent
+    st.write(f"Uso de CPU: {cpu_usage}%")
+    st.write(f"Uso de Memória: {memory_usage}%")
+
+    df_tempo_processamento = pd.DataFrame(tempoProcessamentoDasFuncoes)
+    st.dataframe(df_tempo_processamento)
+
+
