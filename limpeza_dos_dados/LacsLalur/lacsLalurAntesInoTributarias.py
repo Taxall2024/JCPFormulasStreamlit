@@ -18,13 +18,6 @@ class LacsLalurCSLL():
     def __init__(self,data,lacs_file, lalur_file, ecf670_file, ec630_file):
         print('hello world')
 
-        #---Inviolavel Segurança
-        # self.lacs = LacsLalurCSLL.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JPC\Inviolavel Seguranca\Declarações Federais - ECF - M - Lucro Real - e-Lalur e e-Lacs - M030, M350 - Lucro Real - Lançamentos Parte A do e-Lacs.xlsx')
-        # self.lalur = LacsLalurCSLL.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JPC\Inviolavel Seguranca\Declarações Federais - ECF - M - Lucro Real - e-Lalur e e-Lacs - M030, M300 - Lucro Real - Lançamentos Parte A do e-Lalur.xlsx')
-        # self.ecf670 = LacsLalurCSLL.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JPC\Inviolavel Seguranca\Declarações Federais - ECF - N - Lucro Real - Cálculo IRPJ e CSLL - N030, N670 - Apuração da CSLL Com Base no Lucro Real.xlsx')
-        # self.ec630 = LacsLalurCSLL.load_excel_file(r'C:\Users\lauro.loyola\Desktop\JPC\Inviolavel Seguranca\Declarações Federais - ECF - N - Lucro Real - Cálculo IRPJ e CSLL - N030, N630 - Apuração do IRPJ Com Base no Lucro Real.xlsx')
-        
-
         self.lacs = LacsLalurCSLL.load_excel_file(lacs_file)
         self.lalur = LacsLalurCSLL.load_excel_file(lalur_file)
         self.ecf670 = LacsLalurCSLL.load_excel_file(ecf670_file)

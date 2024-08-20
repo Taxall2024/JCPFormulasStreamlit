@@ -8,6 +8,9 @@ import base64
 import requests
 from bs4 import BeautifulSoup
 import functools
+import time
+
+
 
 # Adicione o caminho do diretório onde o módulo 'LacsLalur' está localizado
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -37,7 +40,6 @@ def fetch_tjlp_data():
 
 
 
-
 class trimestralFiltrandoDadosParaCalculo():
     _widget_counter = 0
 
@@ -45,7 +47,6 @@ class trimestralFiltrandoDadosParaCalculo():
     @st.cache_data(ttl='1d', show_spinner=False)
     def load_excel_file(file_path):
         return pd.read_excel(file_path)
-    
     
     def __init__(self, trimestre,ano,mes_inicio,mes_fim,l100_file, l300_file,lacs_file, lalur_file, ecf670_file, ec630_file):
         self.data = ano
@@ -113,7 +114,7 @@ class trimestralFiltrandoDadosParaCalculo():
     def set_date(self, data):
         self.data = data         
 
-    
+
     def capitalSocial(self):
         l100 = self.l100
         l100 = l100[(l100['Descrição Conta Referencial']=='CAPITAL REALIZADO - DE RESIDENTE NO PAÍS')&
@@ -134,7 +135,7 @@ class trimestralFiltrandoDadosParaCalculo():
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Capital Social", "Value": self.capSocial}])], ignore_index=True)
 
-    
+
     def capitalIntegralizador(self):
     
         key = f'capitalIntregalizador{self.ano,self.mes_inicio,self.trimestre}'
@@ -414,7 +415,7 @@ class trimestralFiltrandoDadosParaCalculo():
             self.calculandoJPC(str(self.ano), self.trimestre)
             self.limiteDedutibilidade()
             self.tabelaEconomia()
-        
+            
         
         self.resultsCalcJcp['Value'] = self.resultsCalcJcp['Value'].apply(lambda x: "{:,.2f}".format(float(x)) if isinstance(x, (int, float)) or x.replace(',', '').replace('.', '').isdigit() else x)
 
