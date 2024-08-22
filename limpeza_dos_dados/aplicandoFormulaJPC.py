@@ -490,7 +490,7 @@ if __name__ == "__main__":
                 except Exception as e:
                     #st.warning(f'Error :{str(e)}')
                     st.warning('Clique em "Gerar Dados"')
-                     pass
+                    #pass
             if anualOuTrimestral == 'Trimestre':
 
                 try:           
