@@ -488,8 +488,9 @@ if __name__ == "__main__":
                             resultadoTotal_2023 = calculos2023.runPipeLacsLalurCSLL()
                             resultadoTotal_2023 = calculos2023.runPipeLacsLalurIRPJ()
                 except Exception as e:
-                    st.warning(f'Error :{str(e)}')
-                    pass
+                    #st.warning(f'Error :{str(e)}')
+                    st.warning('Clique em "Gerar Dados"')
+                     pass
             if anualOuTrimestral == 'Trimestre':
 
                 try:           
