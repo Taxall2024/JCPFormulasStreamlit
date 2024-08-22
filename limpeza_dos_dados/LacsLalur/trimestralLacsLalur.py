@@ -5,7 +5,7 @@ import functools
 from dataclasses import dataclass
 
 
-@dataclass
+
 class LacsLalurCSLLTrimestral():
 
     @staticmethod
@@ -217,7 +217,7 @@ class LacsLalurCSLLTrimestral():
         self.retencoesOrgPublicos()
         self.impostoPorEstimativa()
         self.subTotalCSLLRecolher()
-        self.resultsLacs['Value'] = self.resultsLacs['Value'].apply(lambda x: f"{x:,.2f}")
+        self.resultsLacs['Value'] = self.resultsLacs['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
         
         self.dataframeFinal = pd.DataFrame(self.resultsLacs)
         return self.dataframeFinal
@@ -439,7 +439,7 @@ class LacsLalurCSLLTrimestral():
         self.impostoRendPagoEfe()
         self.subTotal()
 
-        self.results['Value'] = self.results['Value'].apply(lambda x: f"{x:,.2f}")
+        self.results['Value'] = self.results['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
         self.dataframeFinalIRPJ = pd.DataFrame(self.results)
 
         return self.dataframeFinalIRPJ
@@ -477,8 +477,8 @@ class LacsLalurCSLLTrimestral():
                     year_dfsLalurIRPJ.append(df2)
 
 
-            self.dfFinalLacs = pd.concat(year_dfsLacs, axis=1)
-            self.dfFinalLacsIRPJ = pd.concat(year_dfsLalurIRPJ, axis=1)
+                self.dfFinalLacs = pd.concat(year_dfsLacs, axis=1)
+                self.dfFinalLacsIRPJ = pd.concat(year_dfsLalurIRPJ, axis=1)
 
             st.subheader(f"Resultados Anuais - {ano}")
             st.dataframe(self.dfFinalLacs)

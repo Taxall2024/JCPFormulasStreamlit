@@ -163,8 +163,9 @@ class LacsLalurCSLL():
         self.retencoesOrgPublicos()
         self.impostoPorEstimativa()
         self.subTotalCSLLRecolher()
-        self.resultsLacs['Value'] = self.resultsLacs['Value'].apply(lambda x: f"{x:,.2f}")
+        self.resultsLacs['Value'] =  self.resultsLacs['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
         st.dataframe(self.resultsLacs)
+        return self.resultsLacs
     
     #       IRPJ ----
     
@@ -425,8 +426,9 @@ class LacsLalurCSLL():
 
 
 
-        self.results['Value'] = self.results['Value'].apply(lambda x: f"{x:,.2f}")
+        self.results['Value'] = self.results['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
         st.dataframe(self.results)
+        return self.results
     
     @functools.cache
     def runPipeFinalTabelLacsLalur(self):

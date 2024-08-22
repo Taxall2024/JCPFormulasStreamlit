@@ -6,8 +6,8 @@ import xlsxwriter
 from xlsxwriter import Workbook
 
 from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
-
 from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo
+from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
 
 import requests
 import functools
@@ -27,7 +27,7 @@ st.markdown(
      f"""
      <iframe src="data:image/jpg;base64,{base64.b64encode(open(background_image, 'rb').read()).decode(
 
-    )}" style="width:3000px;height:3500px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
+    )}" style="width:3000px;height:6000px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
      """,
      unsafe_allow_html=True )
 
@@ -112,16 +112,14 @@ class Calculo(FiltrandoDadosParaCalculo):
 
             # maior_valor = max(lucroLiquid50, lucroAcuEReserva)
 
-            # #Aplicamos as condições usando np.where
-            # self.valorJPC = np.where(
-            #     lucroLiquid50 * self.totalJSPC > 0,  # Primeira Condição
-            #     np.where(
-            #         self.totalJSPC * self.dataframe.loc[data, 'Ano'] > maior_valor,  # Segunda Condição
-            #         maior_valor,  # Se a segunda condição for verdadeira
-            #         round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2) - self.jcpRetroativo  # Se a segunda condição for falsa
-            #     ),
-            #     0 
-            # )
+            # #self.valorJPC = 0
+
+            # if lucroLiquid50 * self.totalJSPC > 0:
+
+            #     if self.totalJSPC * self.dataframe.loc[data, 'Ano'] > maior_valor:
+            #         self.valorJPC = maior_valor
+            #     else:
+            #         self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2) - self.jcpRetroativo
 
             self.irrfJPC = round(self.valorJPC * 0.15, 2)
             self.valorApropriar = round(self.valorJPC - self.irrfJPC, 2)
@@ -222,56 +220,18 @@ class Calculo(FiltrandoDadosParaCalculo):
         self.tabelaEconomia(data)
         return self.resultadoEconomiaGerada
     
-    def pipeLacsAposInovacoes(self):
-        key = f'pisAposInovacoes{self.data}'
-
-        if key not in st.session_state:
-            st.session_state[key] = 0.0
-
-        st.session_state[key] = st.session_state[key]
-
-        self.lucroAntCSLL
-        self.audicoes
-        self.exclusao = self.exclusao+self.valorJPC
-        self.valorJPC
-        self.baseDecaculoAposInovacoes = sum([self.lucroAntCSLL,self.audicoes,self.exclusao])
-        self.compensacao
-        self.baseDeCalculoCSLLAposIno = self.baseDecaculoAposInovacoes - self.compensacao
-        self.valorCSLLAposIno = np.where(self.baseDeCalculoCSLLAposIno<0,0,self.baseDeCalculoCSLLAposIno*0.09)
-        self.parse = st.number_input('Digite o valor da PERSE', key=key, value=st.session_state[key])
-        self.retencoes
-        self.retencoesOrgPub
-        self.impostoPorEstim
-        self.subtotalCSLLAposIno = self.valorCSLLAposIno - self.retencoes - self.retencoesOrgPub
-        
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "BC do CSLL (DRE LAJIR)", "Value": self.lucroAntCSLL}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Adições", "Value": self.audicoes}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Exclusões", "Value": self.exclusao}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "(-) Juros sobre o capital próprio", "Value": self.valorJPC}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Base de cálculo", "Value": self.baseDecaculoAposInovacoes}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Compensação Prejuízo Fiscal", "Value": self.compensacao}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Base de cálculo da CSLL", "Value": self.baseDeCalculoCSLLAposIno}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Valor da CSLL", "Value": self.valorCSLLAposIno}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "(PERSE)", "Value": self.parse}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Retenções fonte", "Value": self.retencoes}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Retenções Sofridas órgãos públicos", "Value": self.retencoesOrgPub}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Imposto por estimativa", "Value": self.impostoPorEstim}])], ignore_index=True)
-        self.csllAposInovacoes = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Sub total CSLL a Recolher", "Value": self.subtotalCSLLAposIno}])], ignore_index=True)
-        
-        st.dataframe(self.csllAposInovacoes)
-    
-    
         
         
 if __name__ == "__main__":
-    anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre']) 
+    anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre'])
+    barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur"]) 
     with st.form('form1',border=False):
         if st.form_submit_button('Gerar Dados'):           
   
             try:
                 
-                barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur"])
-                empresa_nome_placeholder = st.header("Empresa não selecionada")
+                ''
+                #empresa_nome_placeholder = st.header("Empresa não selecionada")
             except:
                 st.write('Clique em "Gerar Dados')    
 
@@ -334,12 +294,15 @@ if __name__ == "__main__":
                                         l300_file=uploaded_file_l300) 
                 
                 except:
-                    pass                        
+                    pass 
+                #'''Execução do metódo que atribui os nomes da empresa no topo da tela, porem estava cobrando muita memoria e demorando muito para executar,
+                # ate que alteções sejam concluidas e melhoras no tempo de execução'''     
+                                 
                 # empresa_nome = calculos2019.nomeDasEmpresas(uploaded_file_l100)
                 # try:
                 #     empresa_nome_placeholder.header(empresa_nome)    
                 # except:
-                #     pass
+                #     pas
                                                     
                 try:
                     if barra == "Calculo JCP":
@@ -366,7 +329,6 @@ if __name__ == "__main__":
                                 dataFrameParaExportar1.append(calculosIniciais_2019)
                                 dataFrameParaExportar2.append(tabelaFinal_2019)
                                 dataFrameParaExportar3.append(resultadoTotal_2019)
-
 
                             with col2:
                                 st.write('')
@@ -449,44 +411,71 @@ if __name__ == "__main__":
 
                     if barra == "Lacs e Lalur":
 
+                        dataFrameParaExportarCSLL = []
+                        dataFrameParaExportarIRPJJ = []
+                        dfLacsLalur = pd.DataFrame(columns=['Operation','Value'])
+
                         with col1:
 
                             st.write('')
                             st.write('')
                             st.subheader('2019')
                             resultadoTotal_2019 = calculos2019.runPipeLacsLalurCSLL()
-                            resultadoTotal_2019 = calculos2019.runPipeLacsLalurIRPJ()
-                            st.write('')
-                            st.write('')
-                            calculos2019.pipeLacsAposInovacoes()
+                            resultadoTotal_2019IR = calculos2019.runPipeLacsLalurIRPJ()
+                            dataFrameParaExportarCSLL.append(resultadoTotal_2019)
+                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2019IR)
 
                         with col2:
                             st.write('')
                             st.write('')
                             st.subheader('2020')
                             resultadoTotal_2020 = calculos2020.runPipeLacsLalurCSLL()
-                            resultadoTotal_2020 = calculos2020.runPipeLacsLalurIRPJ()
-    
+                            resultadoTotal_2020IR = calculos2020.runPipeLacsLalurIRPJ()
+                            dataFrameParaExportarCSLL.append(resultadoTotal_2020)
+                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2020IR)
+
+
                         with col3:
                             st.write('')
                             st.write('')
                             st.subheader('2021')
                             resultadoTotal_2021 = calculos2021.runPipeLacsLalurCSLL()
-                            resultadoTotal_2021 = calculos2021.runPipeLacsLalurIRPJ()
-     
+                            resultadoTotal_2021IR = calculos2021.runPipeLacsLalurIRPJ()
+                            dataFrameParaExportarCSLL.append(resultadoTotal_2021)
+                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2021IR)
+
                         with col4:
                             st.write('')
                             st.write('')
                             st.subheader('2022')
                             resultadoTotal_2022 = calculos2022.runPipeLacsLalurCSLL()
-                            resultadoTotal_2022 = calculos2022.runPipeLacsLalurIRPJ()
+                            resultadoTotal_2022IR = calculos2022.runPipeLacsLalurIRPJ()
+                            dataFrameParaExportarCSLL.append(resultadoTotal_2022)
+                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2022IR)
 
                         with col5:
                             st.write('')
                             st.write('')
                             st.subheader('2023')
                             resultadoTotal_2023 = calculos2023.runPipeLacsLalurCSLL()
-                            resultadoTotal_2023 = calculos2023.runPipeLacsLalurIRPJ()
+                            resultadoTotal_2023IR = calculos2023.runPipeLacsLalurIRPJ()
+                            dataFrameParaExportarCSLL.append(resultadoTotal_2023)
+                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2023IR)
+                    try:
+
+                        arquivoParaExportarCSLL = pd.concat([resultadoTotal_2019.add_suffix('_2019'), resultadoTotal_2020.add_suffix('_2020'), 
+                                                        resultadoTotal_2021.add_suffix('_2021'), resultadoTotal_2022.add_suffix('_2022'), 
+                                                        resultadoTotal_2023.add_suffix('_2023')], axis=1)
+                        
+                        arquivoParaExportarIRPJ = pd.concat([resultadoTotal_2019IR.add_suffix('_2019'), resultadoTotal_2020IR.add_suffix('_2020'), 
+                                                        resultadoTotal_2021IR.add_suffix('_2021'), resultadoTotal_2022IR.add_suffix('_2022'), 
+                                                        resultadoTotal_2023IR.add_suffix('_2023')], axis=1)
+                        
+                        exportarLacsLalur = pd.concat([arquivoParaExportarCSLL,arquivoParaExportarIRPJ])
+
+                    except:
+                        pass
+
                 except Exception as e:
                     #st.warning(f'Error :{str(e)}')
                     st.warning('Clique em "Gerar Dados"')
@@ -558,29 +547,102 @@ if __name__ == "__main__":
                                 st.dataframe(economiaGerada)
 
                         arquivoFinalParaExportacaoTri = pd.concat(tabelaUnicaLista,axis=1)
-                        
-                except:
+      
+                    if barra == "Lacs e Lalur":
+                        col1, col2, col3, col4 = st.columns(4)
+                        trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
+                        tabelaFinalLacsLalurUnificad = []
+                        for ano in range(2019, 2024):
+                            year_dfsLacs = []
+                            year_dfsLalurIRPJ = []
+                            tabelaFinalLacsLalur = []
+
+                            for col, trimestre in zip([col1, col2, col3, col4], trimestres):
+                                with col:
+
+                                    lacs = trimestralFiltrandoDadosParaCalculo(
+                                            trimestre=trimestre,
+                                            ano=ano,
+                                            mes_inicio=1,
+                                            mes_fim=12,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300,
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630
+                                        )
+
+                                    lacs.LacsLalurTrimestral.runPipeLacsLalurCSLL()
+                                    df = lacs.LacsLalurTrimestral.dataframeFinal
+                                    df.columns = [f"{col} {trimestre}" for col in df.columns] 
+                                    year_dfsLacs.append(df)
+
+
+                                    lacs.LacsLalurTrimestral.runPipeLacsLalurIRPJ() 
+                                    df2 = lacs.LacsLalurTrimestral.dataframeFinalIRPJ
+                                    df2.columns = [f"{col} {trimestre}" for col in df2.columns] 
+                                    year_dfsLalurIRPJ.append(df2)
+
+
+                            dfFinalLacs = pd.concat(year_dfsLacs, axis=1)
+                            dfFinalLacsIRPJ = pd.concat(year_dfsLalurIRPJ, axis=1)
+
+                            tabelaFinalLacsLalur = pd.concat([dfFinalLacs,dfFinalLacsIRPJ],axis=0)
+                            tabelaFinalLacsLalurUnificad.append(tabelaFinalLacsLalur.add_suffix(ano))
+                    
+                                
+                            st.subheader(f"Resultados Anuais - {ano}")
+                            st.dataframe(dfFinalLacs)
+                            st.dataframe(dfFinalLacsIRPJ)
+                        arquivoFinalParaExportacaoTriLacs = pd.concat(tabelaFinalLacsLalurUnificad,axis=1)    
+                        st.dataframe(arquivoFinalParaExportacaoTriLacs)
+
+
+
+                except Exception as e:
+                    st.warning(f'Error :{str(e)}')
+                    
                     pass
                         
                      
 
     try:
         if anualOuTrimestral == 'Ano':
-            output8 = io.BytesIO()
-            with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JSCP',index=False)
-            output8.seek(0)
-            st.write('')
-            st.write('')
-            st.write('')
-            st.download_button(type='primary',label="Exportar tabela",data=output8,file_name=f'JSCP.xlsx',key='download_button')
-        else:
-            output9 = io.BytesIO()
-            with pd.ExcelWriter(output9, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTri.to_excel(writer,sheet_name=f'JSCP',index=False)
-            output9.seek(0)
-            st.write('')
-            st.write('')
-            st.write('')
-            st.download_button(type='primary',label="Exportar tabela",data=output9,file_name=f'JSCP.xlsx',key='download_button')
+            if barra == 'Calculo JCP':
+                output8 = io.BytesIO()
+                with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JSCP',index=False)
+                output8.seek(0)
+                st.write('')
+                st.write('')
+                st.write('')
+                st.download_button(type='primary',label="Exportar tabela",data=output8,file_name=f'JCP.xlsx',key='download_button')
+            elif barra == 'Lacs e Lalur':
+                output7 = io.BytesIO()
+                with pd.ExcelWriter(output7, engine='xlsxwriter') as writer:exportarLacsLalur.to_excel(writer,sheet_name=f'JSCP',index=False)
+                output7.seek(0)
+                st.write('')
+                st.write('')
+                st.write('')
+                st.download_button(type='primary',label="Exportar tabela",data=output7,file_name=f'JCP.xlsx',key='download_button')                    
+        elif anualOuTrimestral == 'Trimestre':
+            if barra == 'Calculo JCP':
+                output9 = io.BytesIO()
+                with pd.ExcelWriter(output9, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTri.to_excel(writer,sheet_name=f'JSCP',index=False)
+                output9.seek(0)
+                st.write('')
+                st.write('')
+                st.write('')
+                st.download_button(type='primary',label="Exportar tabela",data=output9,file_name=f'JCP.xlsx',key='download_button')
+            elif barra == 'Lacs e Lalur':
+                output10 = io.BytesIO()
+                with pd.ExcelWriter(output10, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTriLacs.to_excel(writer,sheet_name=f'JSCP',index=False)
+                output10.seek(0)
+                st.write('')
+                st.write('')
+                st.write('')
+                st.download_button(type='primary',label="Exportar tabela",data=output10,file_name=f'JCP.xlsx',key='download_button')
+    
     except:
         pass
 

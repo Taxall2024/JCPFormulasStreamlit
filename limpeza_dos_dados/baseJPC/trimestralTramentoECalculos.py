@@ -417,7 +417,7 @@ class trimestralFiltrandoDadosParaCalculo():
             self.tabelaEconomia()
             
         
-        self.resultsCalcJcp['Value'] = self.resultsCalcJcp['Value'].apply(lambda x: "{:,.2f}".format(float(x)) if isinstance(x, (int, float)) or x.replace(',', '').replace('.', '').isdigit() else x)
+        self.resultsCalcJcp['Value'] = self.resultsCalcJcp['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
 
         self.dataframeFinal = pd.DataFrame(self.resultsCalcJcp)
         self.dataframJCP = pd.DataFrame(self.resultadoJPC)
