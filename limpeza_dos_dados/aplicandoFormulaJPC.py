@@ -8,6 +8,7 @@ from xlsxwriter import Workbook
 from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
 from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo
 from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
+from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
 
 import requests
 import functools
@@ -16,7 +17,7 @@ import base64
 import io
 import psutil
 import pstats
-
+from io import BytesIO
 
 
 
@@ -223,8 +224,32 @@ class Calculo(FiltrandoDadosParaCalculo):
         
         
 if __name__ == "__main__":
-    anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre'])
-    barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur"]) 
+    anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre'])  
+    barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur",'Relátorio']) 
+    
+if __name__ == '__main__':
+    if barra == "Relátorio":
+        col1,col2,col3,col4,col5,col6 = st.columns(6)
+        with col1:
+            uploaded_file_resultados = st.file_uploader("Coloque o arquivo de resultado", type="xlsx")
+        
+        if uploaded_file_resultados is not None:
+
+            with col1:
+                nomeDaEmepresa = st.text_input('Digite o nome da empresa')
+                aliquotaImposto = st.text_input('Digite o valor da alíquota de imposto, ex(24,34)')
+                dataAssinatura = st.text_input('Escreva a data da assinatura do contrato, ex. 23 de agosto de 2024 ')
+            observacoesDoAnlista = st.text_input('Digite aqui suas observações :')
+            
+            # Botão para gerar o PDF
+
+            pdf = RelatorioPDFJSCP()
+            pdf.valorTotal(uploaded_file_resultados)
+            pdf_buffer = pdf.create_pdf(nomeDaEmepresa, aliquotaImposto, observacoesDoAnlista, dataAssinatura)
+                
+                # Botão de download para o PDF gerado
+            st.download_button(label="Baixar PDF",data=pdf_buffer,file_name="relatorio.pdf",mime="application/pdf")
+
     with st.form('form1',border=False):
         if st.form_submit_button('Gerar Dados'):           
   
@@ -461,8 +486,8 @@ if __name__ == "__main__":
                             resultadoTotal_2023IR = calculos2023.runPipeLacsLalurIRPJ()
                             dataFrameParaExportarCSLL.append(resultadoTotal_2023)
                             dataFrameParaExportarIRPJJ.append(resultadoTotal_2023IR)
+                    
                     try:
-
                         arquivoParaExportarCSLL = pd.concat([resultadoTotal_2019.add_suffix('_2019'), resultadoTotal_2020.add_suffix('_2020'), 
                                                         resultadoTotal_2021.add_suffix('_2021'), resultadoTotal_2022.add_suffix('_2022'), 
                                                         resultadoTotal_2023.add_suffix('_2023')], axis=1)
@@ -472,12 +497,12 @@ if __name__ == "__main__":
                                                         resultadoTotal_2023IR.add_suffix('_2023')], axis=1)
                         
                         exportarLacsLalur = pd.concat([arquivoParaExportarCSLL,arquivoParaExportarIRPJ])
-
                     except:
                         pass
 
                 except Exception as e:
-                    st.warning(f'Error :{str(e)}')
+                    #st.warning(f'Error :{str(e)}')
+                    st.warning('Aperte "Gerar Dados"')
                     pass
             if anualOuTrimestral == 'Trimestre':
 
@@ -595,16 +620,12 @@ if __name__ == "__main__":
                             st.dataframe(dfFinalLacs)
                             st.dataframe(dfFinalLacsIRPJ)
                         arquivoFinalParaExportacaoTriLacs = pd.concat(tabelaFinalLacsLalurUnificad,axis=1)    
-                        st.dataframe(arquivoFinalParaExportacaoTriLacs)
-
-
 
                 except Exception as e:
                     st.warning(f'Error :{str(e)}')
                     
                     pass
-                        
-                     
+            
 
     try:
         if anualOuTrimestral == 'Ano':
@@ -645,8 +666,10 @@ if __name__ == "__main__":
     except:
         pass
 
-end_time = time.time()
 
+
+
+end_time = time.time()
 execution_time = end_time - start_time
 
 
