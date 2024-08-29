@@ -9,7 +9,6 @@ from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
 from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo
 from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
 from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
-from arquivosSPED.pipeArquivosECF import SpedProcessor
 
 
 import requests
