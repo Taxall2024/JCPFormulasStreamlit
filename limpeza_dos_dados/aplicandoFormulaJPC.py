@@ -11,8 +11,7 @@ from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
 from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
 from arquivosSPED.pipeArquivosECF import SpedProcessor
 
-import os
-import tempfile
+
 import requests
 import functools
 import time
@@ -349,12 +348,6 @@ if __name__ == "__main__":
         uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
         uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
 
-        uploaded_file_l100 =   uploaded_file_l100
-        uploaded_file_l300 =   uploaded_file_l300
-        uploaded_file_lacs =   uploaded_file_lacs
-        uploaded_file_lalur =  uploaded_file_lalur
-        uploaded_file_ecf670 = uploaded_file_ecf670
-        uploaded_file_ec630 =  uploaded_file_ec630
         if uploaded_file_l100 and uploaded_file_ec630 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ec630 and uploaded_file_ecf670:
             if anualOuTrimestral == 'Ano':          
                 filtrando_dados = FiltrandoDadosParaCalculo(
@@ -623,7 +616,7 @@ if __name__ == "__main__":
                     pass
             if anualOuTrimestral == 'Trimestre':
 
-                #try:           
+                try:           
                     if barra == "Calculo JCP":
                         colunas = st.columns(4)
                         trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
@@ -764,8 +757,8 @@ if __name__ == "__main__":
                             st.dataframe(dfFinalLacsIRPJ)
                         arquivoFinalParaExportacaoTriLacs = pd.concat(tabelaFinalLacsLalurUnificad,axis=1)    
 
-                # except Exception as e:
-                #     st.warning(f'Error :{str(e)}')
+                except Exception as e:
+                    st.warning(f'Error :{str(e)}')
                     
                 #     pass
             
