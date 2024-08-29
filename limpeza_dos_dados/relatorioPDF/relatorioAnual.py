@@ -55,14 +55,14 @@ class RelatorioPDFJSCP():
 
         self.valorTotalPeriodo = "{:,.2f}".format(round(sum([valorTotal['Value_2019'], valorTotal['Value_2020'],
                                                        valorTotal['Value_2021'], valorTotal['Value_2022'],
-                                                       valorTotal['Value_2023'],]), 2))
+                                                       valorTotal['Value_2023'],]), 2)).replace('.','_').replace(',','.').replace('_',',')
         
         valor_somado = round(resultados[['Value_2019', 'Value_2020', 'Value_2021', 'Value_2022', 'Value_2023']].sum().sum(), 2)
-        self.valorAntesImpostos = "{:,.2f}".format(valor_somado, grouping=True)
+        self.valorAntesImpostos = "{:,.2f}".format(valor_somado, grouping=True).replace('.','_').replace(',','.').replace('_',',')
                         
         self.valorImpostos = "{:,.2f}".format(sum([valorImposto['Value_2019'],valorImposto['Value_2020'],
                                                                valorImposto['Value_2021'],valorImposto['Value_2022'],
-                                                               valorImposto['Value_2023'],]), grouping=True)
+                                                               valorImposto['Value_2023'],]), grouping=True).replace('.','_').replace(',','.').replace('_',',')
 
         
         self.tabelaFinalDf = resultados.rename(columns={
@@ -80,18 +80,18 @@ class RelatorioPDFJSCP():
         
         colunasParaFormatar = ['2019','2020','2021','2022','2023','Total']
         for col in colunasParaFormatar:
-            self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: "{:,.2f}".format( x, grouping=True))
+            self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: "{:,.2f}".format( x, grouping=True).replace('.','_').replace(',','.').replace('_',','))
         
 
 
     
     def valorTotal(self,uploaded_file_resultados):
         colunas = ['Value_2019','Value_2020','Value_2021','Value_2022','Value_2023']
-
+        
         resultados = pd.read_excel(uploaded_file_resultados).fillna(np.nan)
         resultados = resultados.apply(lambda x: x.dropna().reset_index(drop=True))
         resultados = resultados.iloc[24:,:]
-
+        
         for col in colunas:
             resultados[col] = resultados[col].replace('.','_').replace(',','.').replace('_',',').astype(float)
             
@@ -101,14 +101,16 @@ class RelatorioPDFJSCP():
 
         self.valorTotalPeriodo = "{:,.2f}".format(round(sum([valorTotal['Value_2019'],valorTotal['Value_2020'],
                                                                valorTotal['Value_2021'],valorTotal['Value_2022'],
-                                                               valorTotal['Value_2023'],]),2), grouping=True)
+                                                               valorTotal['Value_2023'],]),2), grouping=True).replace('.','_').replace(',','.').replace('_',',')
         
         valor_somado = round(resultados[['Value_2019', 'Value_2020', 'Value_2021', 'Value_2022', 'Value_2023']].sum().sum(), 2)
-        self.valorAntesImpostos = "{:,.2f}".format( valor_somado, grouping=True)
+        self.valorAntesImpostos = "{:,.2f}".format(valor_somado).replace('.','_').replace(',','.').replace('_',',')
                         
-        self.valorImpostos = "{:,.2f}".format(round(sum([valorImposto['Value_2019'],valorImposto['Value_2020'],
-                                                               valorImposto['Value_2021'],valorImposto['Value_2022'],
-                                                               valorImposto['Value_2023'],]),2), grouping=True)
+        valor_impuestos_sum = round(sum([
+            valorImposto['Value_2019'],valorImposto['Value_2020'],valorImposto['Value_2021'],
+            valorImposto['Value_2022'],valorImposto['Value_2023'],]), 2)
+
+        self.valorImpostos = "{:,.2f}".format(valor_impuestos_sum).replace('.', '_').replace(',', '.').replace('_', ',')
         resultados.at[24,'Operation_2019'] = 'Redução no IRPJ/CSLL'
         
         self.tabelaFinalDf = resultados.iloc[:,[0,1,3,5,7,9]].rename(columns={'Operation_2019':'',
@@ -118,6 +120,7 @@ class RelatorioPDFJSCP():
                                                                       'Value_2022':'2022',
                                                                       'Value_2023':'2023',})
         
+        
         self.tabelaFinalDf['Total'] = sum([self.tabelaFinalDf['2019'],
                                           self.tabelaFinalDf['2020'],
                                           self.tabelaFinalDf['2021'],
@@ -126,7 +129,8 @@ class RelatorioPDFJSCP():
         
         colunasParaFormatar = ['2019','2020','2021','2022','2023','Total']
         for col in colunasParaFormatar:
-            self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: '%.2f'.format( x, grouping=True))
+            self.tabelaFinalDf[col] = self.tabelaFinalDf[col].map(lambda x: "{:,.2f}".format(x).replace('.','_').replace(',','.').replace('_',','))
+       
 
 
     def create_pdf(self,nomeEmpresa,aliquota,observacoesDoAnalista,textoData):
