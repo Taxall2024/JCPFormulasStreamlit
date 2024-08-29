@@ -69,7 +69,7 @@ class trimestralFiltrandoDadosParaCalculo():
         self.mes_fim = mes_fim
         self.trimestre = trimestre
         self.LacsLalurTrimestral = LacsLalurCSLLTrimestral(self.trimestre, self.ano, 1, 12,lacs_file, lalur_file, ecf670_file, ec630_file)
-
+        self.trimestralLacsLalurAposInovacoes = pd.DataFrame(columns=["Operation", "Value"])
 
         self.l100 = trimestralFiltrandoDadosParaCalculo.load_excel_file(l100_file)
         self.l300 = trimestralFiltrandoDadosParaCalculo.load_excel_file(l300_file)
@@ -123,7 +123,6 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
         self.capSocial = l100['Vlr Saldo Final'].sum()
-
         key = f'capitalSoc{self.data,self.trimestre,self.mes_fim}'
 
         if key not in st.session_state:
@@ -137,10 +136,19 @@ class trimestralFiltrandoDadosParaCalculo():
 
 
     def capitalIntegralizador(self):
+
+
+        l100 = self.l100
+        l100 = l100[(l100['Conta Referencial']=='2.03.01.01.21')|(l100['Conta Referencial']=='2.03.01.02.10')&
+            (l100['Data Inicial'].dt.year == self.ano) &
+            (l100['Data Inicial'].dt.month >= self.mes_inicio) &
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
+        self.capitalIntegra = l100['Vlr Saldo Final'].sum()
     
         key = f'capitalIntregalizador{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
-            st.session_state[key] = 0.0
+            st.session_state[key] = self.capitalIntegra
         st.session_state[key] = st.session_state[key]    
         
         self.capitalIntegra = st.number_input('Digite o valor do Capital Integralizador', key=key, value=st.session_state[key])
@@ -150,9 +158,17 @@ class trimestralFiltrandoDadosParaCalculo():
 
     def ReservasDeCapital(self):
 
+        l100 = self.l100
+        l100 = l100[(l100['Conta Referencial']=='2.03.02.01')&
+            (l100['Data Inicial'].dt.year == self.ano) &
+            (l100['Data Inicial'].dt.month >= self.mes_inicio) &
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
+        self.reservaCapital = l100['Vlr Saldo Final'].sum()
+    
         key = f'reservasDeCapital{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
-            st.session_state[key] = 0.0
+            st.session_state[key] = self.reservaCapital
         st.session_state[key] = st.session_state[key]    
         
         self.reservaCapital = st.number_input('Digite o valor das Reservas de Capital', key=key, value=st.session_state[key])
@@ -161,9 +177,17 @@ class trimestralFiltrandoDadosParaCalculo():
 
             
     def ajustesAvalPatrimonial(self):
+        l100 = self.l100
+        l100 = l100[(l100['Conta Referencial']=='2.03.03')&
+            (l100['Data Inicial'].dt.year == self.ano) &
+            (l100['Data Inicial'].dt.month >= self.mes_inicio) &
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
+        self.ajusteAvaPatrimonial = l100['Vlr Saldo Final'].sum()
+
         key = f'ajustesPatrimonial{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
-            st.session_state[key] = 0.0
+            st.session_state[key] = self.ajusteAvaPatrimonial
         st.session_state[key] = st.session_state[key]    
         
         self.ajusteAvaPatrimonial = st.number_input('Digite o valor dos Ajustes de Avaliação Patrimonial', key=key, value=st.session_state[key])
@@ -173,9 +197,17 @@ class trimestralFiltrandoDadosParaCalculo():
                     
     def lucrosAcumulados(self):
 
+        l100 = self.l100
+        l100 = l100[(l100['Conta Referencial']=='2.03.04.01.01')&
+            (l100['Data Inicial'].dt.year == self.ano) &
+            (l100['Data Inicial'].dt.month >= self.mes_inicio) &
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
+        self.lucroAcumulado = l100['Vlr Saldo Final'].sum()        
+
         key = f'lucrosAcumulados{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
-            st.session_state[key] = 0.0
+            st.session_state[key] = self.lucroAcumulado 
         st.session_state[key] = st.session_state[key]    
         
         self.lucroAcumulado = st.number_input('Digite o valor dos Lucros Acumulados', key=key, value=st.session_state[key])
@@ -185,6 +217,13 @@ class trimestralFiltrandoDadosParaCalculo():
       
     
     def ajustesExerAnteriores(self):
+        l100 = self.l100
+        l100 = l100[(l100['Conta Referencial']=='2.03.04.01.10')&
+            (l100['Data Inicial'].dt.year == self.ano) &
+            (l100['Data Inicial'].dt.month >= self.mes_inicio) &
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
+        self.ajustExercAnt = l100['Vlr Saldo Final'].sum()        
 
         key = f'ajustesExerAnteirores{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
@@ -211,9 +250,9 @@ class trimestralFiltrandoDadosParaCalculo():
 
     def TotalFinsCalcJSPC(self):
 
-        self.totalJSPC =  sum((self.capSocial,self.reservaCapital,self.lucroAcumulado,self.reservLucro,self.contaPatriNClassifica,self.prejuizoPeirod))
+        self.totalJSPC =  sum((self.capSocial,self.reservaCapital,self.lucroAcumulado,self.reservLucro,self.contaPatriNClassifica))
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
-    
+        self.trimestralLacsLalurAposInovacoes = pd.concat([self.LacsLalurTrimestral.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
 
     def update_totalfinsparaJPC(self):
         self.totalJSPC = self.capSocial + self.reservaCapital + self.lucroAcumulado + self.reservLucro
@@ -226,22 +265,37 @@ class trimestralFiltrandoDadosParaCalculo():
 
 
     def ReservaLegal(self):
+        l100 = self.l100
+        l100 = l100[(l100['Conta Referencial']=='2.03.02.03.01')&
+            (l100['Data Inicial'].dt.year == self.ano) &
+            (l100['Data Inicial'].dt.month >= self.mes_inicio) &
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
+        self.reservLegal = l100['Vlr Saldo Final'].sum()
+        
         key = f'reservaLegal{self.ano,self.mes_inicio,self.trimestre}'
 
         if key not in st.session_state:
-            st.session_state[key] = 0.0
+            st.session_state[key] = self.reservLegal
 
         st.session_state[key] = st.session_state[key]
         self.reservLegal = st.number_input('Digite o valor da Reserva Legal', key=key, value=st.session_state[key])
          
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reserva legal", "Value": self.reservLegal}])], ignore_index=True)
-
-
+   
     def OutrasReservasLucros(self):
+        l100 = self.l100
+        l100 = l100[(l100['Conta Referencial']=='2.03.02.03.99')&
+            (l100['Data Inicial'].dt.year == self.ano) &
+            (l100['Data Inicial'].dt.month >= self.mes_inicio) &
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
+        self.outrasResLuc = l100['Vlr Saldo Final'].sum()
+
         key = f'reservaOutras{self.ano,self.mes_inicio,self.trimestre}'
 
         if key not in st.session_state:
-            st.session_state[key] = 0.0
+            st.session_state[key] = self.outrasResLuc
         
         st.session_state[key] = st.session_state[key]
 
@@ -262,8 +316,8 @@ class trimestralFiltrandoDadosParaCalculo():
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.12')&
             (l100['Data Inicial'].dt.year == self.ano) &
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
-            (l100['Data Inicial'].dt.month <= self.mes_fim)&(
-            l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
         self.acosTesouraria = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ações em Tesouraria", "Value": self.acosTesouraria}])], ignore_index=True)
     
@@ -274,25 +328,36 @@ class trimestralFiltrandoDadosParaCalculo():
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.90')&
             (l100['Data Inicial'].dt.year == self.ano) &
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
-            (l100['Data Inicial'].dt.month <= self.mes_fim)&(
-            l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
         self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Contas do Patrimônio Líquido Não Classificadas ", "Value": self.contaPatriNClassifica}])], ignore_index=True)
     
 
     def PrejuizoPeriodo(self):
-
+        l100 = self.l300
+        l100 = l100[(l100['Conta Referencial']=='3')&
+            (l100['Data Inicial'].dt.year == self.ano) &
+            (l100['Data Inicial'].dt.month >= self.mes_inicio) &
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
+        self.prejuizoPeirod = l100['Vlr Saldo Final'].sum()
+        st.warning(self.prejuizoPeirod)
+        st.dataframe(l100)
+        if (l100['D/C Saldo Final'] == 'C').any():
+            lucroPrejuizo = 'Lucro do Período'
+        else:
+            lucroPrejuizo = 'Prejuízo do Período'    
         key = f'PrejuAcumulado{self.ano,self.mes_inicio,self.trimestre}'   
 
         if key not in st.session_state:
-            st.session_state[key] = 0.0
+            st.session_state[key] = self.prejuizoPeirod
         
         st.session_state[key] = st.session_state[key]
+        self.prejuizoPeirod = st.number_input(f'Digite o valor do {lucroPrejuizo}',key=key,value=st.session_state[key])
+  
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": f"{lucroPrejuizo} ", "Value": self.prejuizoPeirod}])], ignore_index=True)
 
-        self.prejuizoPeirod = st.number_input('Digite o valor do Prejuízo do Período',key=key,value=st.session_state[key]) * -1
-         
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízo do Período", "Value": self.prejuizoPeirod}])], ignore_index=True)
-    
         
     def prejuizosAcumulados(self):
 
@@ -300,11 +365,19 @@ class trimestralFiltrandoDadosParaCalculo():
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.11')&
             (l100['Data Inicial'].dt.year == self.ano) &
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
-            (l100['Data Inicial'].dt.month <= self.mes_fim)&(
-            l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
-        self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum() * -1
+            (l100['Data Inicial'].dt.month <= self.mes_fim)&
+            (l100['Trimestre'] == self.trimestre)]
+        self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum()
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.contaPatriNClassifica}])], ignore_index=True)
-    
+        
+        key = f'prejuizoAcumulado{self.data,self.trimestre,self.mes_fim}'
+
+        if key not in st.session_state:
+            st.session_state[key] = self.contaPatriNClassifica
+        
+        st.session_state[key] = st.session_state[key]
+
+        self.contaPatriNClassifica = st.number_input('Ajuste Prejuízos Acumulados',key=key,value=st.session_state[key])
 
     def calculandoJPC(self,data,trimestre):
 
@@ -319,8 +392,11 @@ class trimestralFiltrandoDadosParaCalculo():
 
        
         self.taxaJuros = self.dataframe.loc[data, trimestre]
-
-        self.valorJPC = round(self.totalJSPC * (self.taxaJuros / 100), 2)
+        
+        if self.totalJSPC < 0:
+            self.valorJPC = 0
+        else:     
+            self.valorJPC = round(self.totalJSPC * (self.taxaJuros / 100), 2)
         self.irrfJPC = round(self.valorJPC * 0.15, 2)
         self.valorApropriar = round(self.valorJPC - self.irrfJPC, 2)
 
@@ -418,11 +494,15 @@ class trimestralFiltrandoDadosParaCalculo():
             
         
         self.resultsCalcJcp['Value'] = self.resultsCalcJcp['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
-
+        self.resultadoEconomiaGerada['Value'] = self.resultadoEconomiaGerada['Value'].apply(lambda x: "{:,.2f}".format(x).replace(',','_').replace('.',',').replace('_','.'))
+        self.resultadoJPC['Value'] = self.resultadoJPC['Value'].apply(lambda x: "{:,.2f}".format(x).replace(',','_').replace('.',',').replace('_','.'))
+        self.resultadoLimiteDedu['Value'] = self.resultadoLimiteDedu['Value'].apply(lambda x: "{:,.2f}".format(x).replace(',','_').replace('.',',').replace('_','.'))
+        
+    
         self.dataframeFinal = pd.DataFrame(self.resultsCalcJcp)
         self.dataframJCP = pd.DataFrame(self.resultadoJPC)
+        self.dfLacsLalurApos = pd.DataFrame(self.trimestralLacsLalurAposInovacoes)
 
-    
     def runPipeFinalTable(self):
 
         self.lucrosAcumulados()

@@ -31,7 +31,8 @@ class LacsLalurCSLL():
 
         self.resultsLacs = pd.DataFrame(columns=["Operation", "Value"])
         self.results = pd.DataFrame(columns=["Operation", "Value"])
-        self.resultsTabelaFinal = pd.DataFrame(columns=["Operation", "Value"]) 
+        self.resultsTabelaFinal = pd.DataFrame(columns=["Operation", "Value"])
+        self.LacsLalurAposInovacoes = pd.DataFrame(columns=["Operation", "Value"])
 
         self.lucro_periodo_value = 0 
         self.data = data
@@ -48,8 +49,9 @@ class LacsLalurCSLL():
             lacs['Código Lançamento e-Lacs']== 2)&
             (lacs['Data Inicial'].str.contains(self.data))]
         self.lucroAntCSLL = lacs['Vlr Lançamento e-Lacs'].sum()
-
+        
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
 
     
     def adicoes(self):
@@ -61,6 +63,7 @@ class LacsLalurCSLL():
         self.audicoes = lacs['Vlr Lançamento e-Lacs'].sum()
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Adições", "Value": self.audicoes}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Adições", "Value": self.audicoes}])], ignore_index=True)
     
     
     def exclusoes(self):
@@ -72,12 +75,13 @@ class LacsLalurCSLL():
         self.exclusao = lacs['Vlr Lançamento e-Lacs'].sum()
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Exclusões", "Value": self.exclusao}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Exclusões", "Value": self.exclusao}])], ignore_index=True)
 
     
     def baseDeCalculo(self):
         self.baseCalculoCls = self.lucroAntCSLL + self.audicoes - self.exclusao
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Base de Cálculo", "Value": self.baseCalculoCls}])], ignore_index=True)         
-
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Base de Cálculo", "Value": self.baseCalculoCls}])], ignore_index=True)
     
     def compensacaoPrejuizo(self):
         lalur = self.lalurFiltrado
@@ -87,18 +91,18 @@ class LacsLalurCSLL():
         self.compensacao = lalur['Vlr Lançamento e-Lalur'].sum()
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Compensação de Prejuízo", "Value": self.compensacao}])], ignore_index=True)
-
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Compensação de Prejuízo", "Value": self.compensacao}])], ignore_index=True)
     
     def baseCSLL(self):
         self.basecSLL = self.baseCalculoCls - self.compensacao
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Base CSLL", "Value": self.basecSLL}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Base CSLL", "Value": self.basecSLL}])], ignore_index=True)
-
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Base CSLL", "Value": self.basecSLL}])], ignore_index=True)
     
     def valorCSLL(self):
         self.valorcSLL = np.where(self.basecSLL<0,0,self.basecSLL*0.09)
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Valor CSLL", "Value": self.valorcSLL}])], ignore_index=True)
-
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Valor CSLL", "Value": self.valorcSLL}])], ignore_index=True)
     
     def retencoesFonte(self):
 
@@ -109,7 +113,7 @@ class LacsLalurCSLL():
         self.retencoes = lalur['Vlr Lançamento e-Lalur'].sum()
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Renteções fonte", "Value": self.retencoes}])], ignore_index=True)
-    
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Renteções fonte", "Value": self.retencoes}])], ignore_index=True)
     #As função abaixo utiliza como base para os calculos as planilhas do ECF 670
     
     def retencoesOrgPublicos(self):
@@ -133,6 +137,7 @@ class LacsLalurCSLL():
                                 filtroTres['Vlr Lançamento'].sum()])
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Retenções orgãos publicos", "Value": self.retencoesOrgPub}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Retenções orgãos publicos", "Value": self.retencoesOrgPub}])], ignore_index=True)
 
     
     def impostoPorEstimativa(self):
@@ -143,12 +148,14 @@ class LacsLalurCSLL():
         
         self.impostoPorEstim = ecf760['Vlr Lançamento'].sum()
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Imposto por estimativa", "Value": self.impostoPorEstim}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Imposto por estimativa", "Value": self.impostoPorEstim}])], ignore_index=True)
 
     
     def subTotalCSLLRecolher(self):
         self.subTotalcl = self.valorcSLL - self.retencoes - self.retencoesOrgPub - self.impostoPorEstim
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Subtotal CSLL a recolher", "Value": self.subTotalcl}])], ignore_index=True)
-    
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Subtotal CSLL a recolher", "Value": self.subTotalcl}])], ignore_index=True)
+      
     
     def runPipeLacsLalurCSLL(self):
 
@@ -163,10 +170,14 @@ class LacsLalurCSLL():
         self.retencoesOrgPublicos()
         self.impostoPorEstimativa()
         self.subTotalCSLLRecolher()
+        
         self.resultsLacs['Value'] =  self.resultsLacs['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+   
         st.dataframe(self.resultsLacs)
+
         return self.resultsLacs
-    
+
+        
     #       IRPJ ----
     
     def LucroLiquidoAntesIRPJ(self):
@@ -181,6 +192,7 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
 
     
     def clss(self):
@@ -193,6 +205,7 @@ class LacsLalurCSLL():
         self.contrilss = lalur['Vlr Lançamento e-Lalur'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Contribuição Social Sobre o Lucro Líquido - CSLL", "Value": self.contrilss}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Contribuição Social Sobre o Lucro Líquido - CSLL", "Value": self.contrilss}])], ignore_index=True)
 
     
     def demaisAdicoes(self):
@@ -209,6 +222,7 @@ class LacsLalurCSLL():
         self.demaisAd = filtroUm['Vlr Lançamento e-Lalur'].sum() - filtroDois['Vlr Lançamento e-Lalur'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Demais Adições", "Value": self.demaisAd}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Demais Adições", "Value": self.demaisAd}])], ignore_index=True)
 
     
     def adicoesIRPJ(self):
@@ -235,6 +249,7 @@ class LacsLalurCSLL():
         self.adicoesIRPj = self.contrilss + self.demaisAd
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Adições IRPJ", "Value": self.adicoesIRPj}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Adições IRPJ", "Value": self.adicoesIRPj}])], ignore_index=True)
 
     
     def exclusoesIRPJ(self):
@@ -247,6 +262,7 @@ class LacsLalurCSLL():
         self.exclusoeS = lalur['Vlr Lançamento e-Lalur'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Exclusoes", "Value": self.exclusoeS}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Exclusoes", "Value": self.exclusoeS}])], ignore_index=True)
 
     
     def baseCalculoIRPJ(self):
@@ -254,6 +270,7 @@ class LacsLalurCSLL():
         self.baseCalIRPJ = self.lucroAntIRPJ + self.adicoesIRPj - self.exclusoeS
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Base de cálculo", "Value": self.baseCalIRPJ}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Base de cálculo", "Value": self.baseCalIRPJ}])], ignore_index=True)
     
     
     def CompPrejuFiscal(self):
@@ -266,26 +283,31 @@ class LacsLalurCSLL():
         self.compPrejFiscal = lalur['Vlr Lançamento e-Lalur'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Compensação Prejuízo fiscal", "Value": self.compPrejFiscal}])], ignore_index=True)        
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Compensação Prejuízo fiscal", "Value": self.compPrejFiscal}])], ignore_index=True)        
 
     
     def lucroReal(self):
         self.lucroRel= self.baseCalIRPJ - self.compPrejFiscal
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Lucro Real", "Value": self.lucroRel}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Lucro Real", "Value": self.lucroRel}])], ignore_index=True)
 
     
     def valorIRPJ(self):
         self.valorIRPj = np.where(self.lucroRel<0,0,self.lucroRel*0.15)
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Valor IRPJ", "Value": self.valorIRPj}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Valor IRPJ", "Value": self.valorIRPj}])], ignore_index=True)
 
     
     def valorIRPJadicionais(self):
         self.valorIRPJAd = np.where(self.lucroRel>240000,(self.lucroRel-240000)*0.10,0)
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Valor IRPJ Adicionais", "Value": self.valorIRPJAd}])], ignore_index=True)
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Valor IRPJ Adicionais", "Value": self.valorIRPJAd}])], ignore_index=True)
 
     
     def totalDevidoIRPJantesRetencao(self):
         self.totalDevido = self.valorIRPj + self.valorIRPJAd
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Total devido IRPJ antes da retenção", "Value": self.totalDevido}])], ignore_index=True)    
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Total devido IRPJ antes da retenção", "Value": self.totalDevido}])], ignore_index=True)    
 
     #A função abaixo utiliza como base para os calculos as planilhas do ECF 630
     
@@ -299,6 +321,7 @@ class LacsLalurCSLL():
         self.PAT = lalur['Vlr Lançamento'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "PAT", "Value": self.PAT}])], ignore_index=True) 
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "PAT", "Value": self.PAT}])], ignore_index=True) 
 
     
     def operacoesCulturalArtistico(self):
@@ -311,6 +334,7 @@ class LacsLalurCSLL():
         self.operCultuArtistico = lalur['Vlr Lançamento'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Operações de Caráter Cultural e Artístico", "Value": self.operCultuArtistico}])], ignore_index=True )      
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "(-)Operações de Caráter Cultural e Artístico", "Value": self.operCultuArtistico}])], ignore_index=True )      
 
     
     def insencaoRedImposto(self):
@@ -323,6 +347,7 @@ class LacsLalurCSLL():
         self.reducaoImposto = lalur['Vlr Lançamento'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Isenção e Redução do Imposto", "Value": self.reducaoImposto}])], ignore_index=True )      
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "(-)Isenção e Redução do Imposto", "Value": self.reducaoImposto}])], ignore_index=True )      
 
     
     def impostoRetFonte(self):
@@ -335,6 +360,7 @@ class LacsLalurCSLL():
         self.impostRetFonte = lalur['Vlr Lançamento'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte", "Value": self.impostRetFonte}])], ignore_index=True )      
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte", "Value": self.impostRetFonte}])], ignore_index=True )      
 
     
     def impostoRetFonteOrgsAutarquias(self):
@@ -347,6 +373,8 @@ class LacsLalurCSLL():
         self.impostRetFonteOrgAut = lalur['Vlr Lançamento'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte por Órgãos, Autarquias e Fundações Federais (Lei nº 9.430/1996, art. 64)", "Value": self.impostRetFonteOrgAut}])],
+                                  ignore_index=True )      
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte por Órgãos, Autarquias e Fundações Federais (Lei nº 9.430/1996, art. 64)", "Value": self.impostRetFonteOrgAut}])],
                                   ignore_index=True )      
 
     
@@ -361,6 +389,8 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte pelas Demais Entidades da Administração Pública Federal (Lei n° 10.833/2003, art. 34)",
                                                                 "Value": self.impostRetFonteDemEnti}])], ignore_index=True )      
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte pelas Demais Entidades da Administração Pública Federal (Lei n° 10.833/2003, art. 34)",
+                                                                "Value": self.impostRetFonteDemEnti}])], ignore_index=True )      
    
     
     def impostoRendaRV(self):
@@ -374,6 +404,8 @@ class LacsLalurCSLL():
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto Pago Incidente sobre Ganhos no Mercado de Renda Variável",
                                                                 "Value": self.impostRV}])], ignore_index=True )      
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "(-)Imposto Pago Incidente sobre Ganhos no Mercado de Renda Variável",
+                                                                "Value": self.impostRV}])], ignore_index=True )      
 
     
     def impostoRendPagoEfe(self):
@@ -386,6 +418,8 @@ class LacsLalurCSLL():
         self.impostRendaPago = lalur['Vlr Lançamento'].sum()
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Mensal Efetivamente Pago por Estimativa",
+                                                                "Value": self.impostRendaPago}])], ignore_index=True )      
+        self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "(-)Imposto de Renda Mensal Efetivamente Pago por Estimativa",
                                                                 "Value": self.impostRendaPago}])], ignore_index=True )      
 
     
@@ -430,6 +464,44 @@ class LacsLalurCSLL():
         st.dataframe(self.results)
         return self.results
     
+
+    def runPipeAposInovacoesLacsLalurCSLL(self):
+
+        self.lucroAntesCSLL()
+        self.adicoes()
+        self.exclusoes()
+        self.baseDeCalculo()
+        self.compensacaoPrejuizo()
+        self.baseCSLL()
+        self.valorCSLL()
+        self.retencoesFonte()
+        self.retencoesOrgPublicos()
+        self.impostoPorEstimativa()
+        self.subTotalCSLLRecolher()
+        self.LucroLiquidoAntesIRPJ()
+        self.adicoesIRPJ()
+        self.clss()
+        self.demaisAdicoes()
+        self.exclusoesIRPJ()
+        self.baseCalculoIRPJ()
+        self.CompPrejuFiscal()
+        self.lucroReal()
+        self.valorIRPJ()
+        self.valorIRPJadicionais()
+        self.totalDevidoIRPJantesRetencao()
+        self.pat()
+        self.operacoesCulturalArtistico()
+        self.insencaoRedImposto()
+        self.impostoRetFonte()
+        self.impostoRetFonteOrgsAutarquias()
+        self.impostoRetFonteDemaisEntidades()
+        self.impostoRendaRV()
+        self.impostoRendPagoEfe()
+        self.subTotal()        
+        #self.LacsLalurAposInovacoes['Value'] = self.LacsLalurAposInovacoes['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+
+        return self.LacsLalurAposInovacoes  
+      
     @functools.cache
     def runPipeFinalTabelLacsLalur(self):
 

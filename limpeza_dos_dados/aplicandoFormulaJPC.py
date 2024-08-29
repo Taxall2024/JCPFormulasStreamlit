@@ -8,6 +8,8 @@ from xlsxwriter import Workbook
 from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
 from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo
 from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
+from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
+
 
 import requests
 import functools
@@ -16,7 +18,7 @@ import base64
 import io
 import psutil
 import pstats
-
+from io import BytesIO
 
 
 
@@ -27,7 +29,7 @@ st.markdown(
      f"""
      <iframe src="data:image/jpg;base64,{base64.b64encode(open(background_image, 'rb').read()).decode(
 
-    )}" style="width:3000px;height:6000px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
+    )}" style="width:3000px;height:9000px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
      """,
      unsafe_allow_html=True )
 
@@ -69,13 +71,103 @@ def fetch_tjlp_data():
     dataframe['Ano'] = round(dataframe[['1º Tri', '2º Tri', '3º Tri', '4º Tri']].sum(axis=1), 2)
     return dataframe
 
-    
+def LacsLalurAposInovacoes(dataframe):
+            lacsLalurAposInovacoesDF = pd.DataFrame(dataframe)
+            ganbiarraParaPegarPrejuizoIRPJ = lacsLalurAposInovacoesDF.loc[12].to_frame().T
+            lacsLalurAposInovacoesDF = lacsLalurAposInovacoesDF.drop([8,9,10,11,12,13,19,24]).reset_index(drop='index').iloc[[2,1,0,7,3,4,6,8,9,10,11,
+                                                                                                    12,5,15,16,18,19,20,21,22,
+                                                                                                    23,24,25,26,27,28,29],:].reset_index(drop='index')
+            #Calculo das exclusoes, (Adicionando valor de JCP)
+            lacsLalurAposInovacoesDF.at[2,'Value'] = lacsLalurAposInovacoesDF.at[2,'Value'] + lacsLalurAposInovacoesDF.at[3,'Value']
+            #Calculo da base CSLL
+            lacsLalurAposInovacoesDF.at[4,'Value'] = (lacsLalurAposInovacoesDF.at[0,'Value'] + lacsLalurAposInovacoesDF.at[1,'Value']) - lacsLalurAposInovacoesDF.at[2,'Value']
+            #Calclulo da Base de Calculo CSLL
+            lacsLalurAposInovacoesDF.at[6,'Value'] = lacsLalurAposInovacoesDF.at[4,'Value'] + lacsLalurAposInovacoesDF.at[5,'Value']
+            #Calclulo do valor  CSLL
+            if lacsLalurAposInovacoesDF.at[6,'Value'] > 0 :
+                lacsLalurAposInovacoesDF.at[7,'Value'] = lacsLalurAposInovacoesDF.at[6,'Value'] * 0.09
+            else:
+                0    
+            #Calculando Subtotal CSLL Recolher
+            lacsLalurAposInovacoesDF.at[11,'Value'] = lacsLalurAposInovacoesDF.at[7,'Value'] - lacsLalurAposInovacoesDF.at[8,'Value'] - lacsLalurAposInovacoesDF.at[9,'Value'] - lacsLalurAposInovacoesDF.at[10,'Value']                
+            #Calculo Base IRPJ
+            lacsLalurAposInovacoesDF.at[12,'Value'] = lacsLalurAposInovacoesDF.at[0,'Value'] - lacsLalurAposInovacoesDF.at[7,'Value']
+
+            #Calculo Base de Calculo IRPJ
+            lacsLalurAposInovacoesDF.at[27,'Value'] = lacsLalurAposInovacoesDF.at[12,'Value'] + lacsLalurAposInovacoesDF.at[13,'Value'] -lacsLalurAposInovacoesDF.at[2,'Value']
+            lacsLalurAposInovacoesDF.at[27,'Operation'] = 'Base de calculo IRPJ'
+            #Calculo Lucro Real IRPJ
+            #lacsLalurAposInovacoesDF = pd.concat([lacsLalurAposInovacoesDF ,ganbiarraParaPegarPrejuizoIRPJ],ignore_index=True).reset_index(drop='index')
+            lacsLalurAposInovacoesDF.at[15,'Value'] = lacsLalurAposInovacoesDF.at[4,'Value'] #- lacsLalurAposInovacoesDF.at[28,'Value']
+            #Calculo valor do IRPJ
+            #lacsLalurAposInovacoesDF.at[16,'Value'] = lacsLalurAposInovacoesDF.at[15,'Value'] * 0.15
+            lacsLalurAposInovacoesDF.at[16,'Value'] = np.where(lacsLalurAposInovacoesDF.at[15,'Value']>0,
+                                                                lacsLalurAposInovacoesDF.at[15,'Value'] * 0.15,0)
+            
+
+            #Calculo valor do IRPJ Adicional
+            lacsLalurAposInovacoesDF.at[17,'Value'] = np.where(lacsLalurAposInovacoes.at[15,'Value']< 240000,
+                                                                (lacsLalurAposInovacoesDF.at[15,'Value'] - 240000)*0.1,0)
+
+            #Calculo Total Devido IRPJ
+            lacsLalurAposInovacoesDF.at[18,'Value'] = lacsLalurAposInovacoesDF.at[16,'Value'] + lacsLalurAposInovacoesDF.at[17,'Value']
+            #Calculo PAT
+            lacsLalurAposInovacoesDF.at[19,'Value'] = lacsLalurAposInovacoesDF.at[16,'Value'] * 0.04
+            #Sub total IRPJ a recolher
+            lacsLalurAposInovacoesDF.at[28,'Value'] = (lacsLalurAposInovacoesDF.at[18,'Value']-
+                                                            lacsLalurAposInovacoesDF.at[19,'Value']-
+                                                            lacsLalurAposInovacoesDF.at[20,'Value']-
+                                                            lacsLalurAposInovacoesDF.at[21,'Value']-
+                                                                lacsLalurAposInovacoesDF.at[22,'Value']-
+                                                                lacsLalurAposInovacoesDF.at[23,'Value']-
+                                                                lacsLalurAposInovacoesDF.at[24,'Value']-
+                                                                    lacsLalurAposInovacoesDF.at[25,'Value']-
+                                                                    lacsLalurAposInovacoesDF.at[26,'Value'])
+            lacsLalurAposInovacoesDF.at[28,'Operation'] = 'Sub total IRPJ a Recolher'                                                  
+            return lacsLalurAposInovacoesDF                      
+
+def LacsLalurAposInovacoesTrimestral(dataframe,resultJSCP):
+    df = pd.concat([dataframe,resultJSCP]).reset_index(drop='index')
+    df = df.iloc[[1,2,3,34,4,5,6,7,9,10,11,12,15,13,14,18,19,20,
+                    21,22,23,24,25,26,27,28,29,30,31,32,33,],:]
+    #Calculo exclusoes
+    df.at[3,'Value'] = df.at[3,'Value'] + df.at[34,'Value'] 
+    #Calculo Base 
+    df.at[4,'Value'] = df.at[2,'Value'] + df.at[1,'Value'] - df.at[3,'Value'] + df.at[1,'Value']
+    #Calculo base CSLL
+    df.at[6,'Value'] = df.at[4,'Value'] - df.at[5,'Value'] 
+    #Valor CSLL
+    df.at[7,'Value'] = np.where(df.at[6,'Value']>0,df.at[6,'Value']*0.09,0) 
+    #Valor Sub total CSLL a Recolher
+    df.at[11,'Value'] = df.at[7,'Value'] - df.at[9,'Value'] 
+    #Valor Sub total Base IRPJ
+    df.at[19,'Value'] = (df.at[13,'Value'] + df.at[14,'Value']+df.at[12,'Value']) - df.at[3,'Value']
+    #Calculando Lucro Real
+    df.at[21,'Value'] = df.at[19,'Value'] - df.at[20,'Value']
+    #Valor IRPJ
+    df.at[22,'Value'] = np.where(df.at[21,'Value']>0,df.at[21,'Value']*0.15,0) 
+    #Valor IRPJ Adicionais
+    df.at[23,'Value'] = np.where(df.at[21,'Value']>60000,(df.at[21,'Value']-60000)*0.10,0) 
+    #Total devido IRPJ antes retenções
+    df.at[24,'Value'] = df.at[22,'Value'] + df.at[23,'Value'] 
+    #Total devido IRPJ antes retenções
+    df.at[33,'Value'] = df.at[24,'Value'] - (df.at[25,'Value'] - df.at[26,'Value'] - df.at[27,'Value']
+                                                -df.at[28,'Value'] - df.at[29,'Value']-df.at[30,'Value'] -
+                                                    df.at[31,'Value']-df.at[32,'Value'])  
+    df = df.reset_index(drop='index')
+    df['Value'] =  df['Value'].apply(lambda x: "{:,.2f}".format(x).replace(',','_').replace('.',',').replace('_','.'))
+
+    return df
+
+
 class Calculo(FiltrandoDadosParaCalculo):
     _widget_counter = 0
 
     @timing
     def __init__(self, data, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file):
         super().__init__(data, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file)
+        
+        
         self.data = data
         self.resultadoJPC = pd.DataFrame(columns=["Operation", "Value"])
         self.resultadoLimiteDedu = pd.DataFrame(columns=["Operation", "Value"])
@@ -84,6 +176,7 @@ class Calculo(FiltrandoDadosParaCalculo):
 
         self.dataframe = fetch_tjlp_data()
         self.valorJPC = 0.0
+
     @timing
     def valorJPCRetroativo(self):
         key = f'retroativoJCP{self.data}'
@@ -103,9 +196,12 @@ class Calculo(FiltrandoDadosParaCalculo):
 
         if data in self.dataframe.index:
             self.taxaJuros = self.dataframe.loc[data, 'Ano']
-
-            self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2)-self.jcpRetroativo
-
+            
+            if self.totalJSPC<0:
+                self.valorJPC = 0
+            else:    
+                self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2)-self.jcpRetroativo
+            
             # '''Formula que faz checagem se o valor de JSCP não esta passando certos limites, optei for fazer utilizando np.where porem
             # o reultado esta muito distorcido, com valores muito acima do esperado, entao vou deixar a formula de calculo simples por enquanto
             # e retornar eventualmente para implementar a formula'''
@@ -132,28 +228,11 @@ class Calculo(FiltrandoDadosParaCalculo):
                 {"Operation": "Valor do JSCP", "Value": self.valorApropriar}
             ]
             self.resultadoJPC = pd.concat([self.resultadoJPC, pd.DataFrame(results)], ignore_index=True)
+            self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Valor JSCP", "Value": self.valorJPC}])], ignore_index=True)
             st.dataframe(self.resultadoJPC, use_container_width=True)
         else:
             st.error("Data not found in the DataFrame")
-
-    # @timing
-    # def nomeDasEmpresas(self, l100_file):
-    #     l100 = pd.read_excel(l100_file)
-    #     nomeEmpresa = ''        
-    #     if l100['CNPJ'].iloc[0] == 79283065000141:
-    #         nomeEmpresa = 'ORBENK ADMNISTRAÇÃO E SERVIÇOS LTDA'
-    #     elif l100['CNPJ'].iloc[0] == 14576552000157:    
-    #         nomeEmpresa = 'ORBENK SERVIÇOS DE SEGURANÇA LTDA'
-    #     elif l100['CNPJ'].iloc[0] == 10332516000197:
-    #         nomeEmpresa = 'ORBENK TERCEIRIZAÇÃO E SERVIÇOS LTDA'
-    #     elif l100['CNPJ'].iloc[0] == 82513490000194:
-    #         nomeEmpresa = 'PROFISER SERVIÇOS PROFISSIONAIS LTDA'
-    #     elif l100['CNPJ'].iloc[0] == 3750757000190:
-    #         nomeEmpresa = 'SEPAT MULTI SERVICE LTDA'                          
-    #     else:
-    #         nomeEmpresa = 'Empresa não encontrada'
-    #     return nomeEmpresa
-                    
+                   
     @timing
     def limiteDedutibilidade(self,data):
 
@@ -204,7 +283,6 @@ class Calculo(FiltrandoDadosParaCalculo):
         
         self.resultadoEconomiaGerada = pd.concat([self.resultadoEconomiaGerada, pd.DataFrame(results)], ignore_index=True)
         st.dataframe(self.resultadoEconomiaGerada, use_container_width=True)
-
         
         st.metric("Economia Gerada", f"R$ {self.economia:,.2f}".replace(',','_').replace('.',',').replace('_','.'))
 
@@ -220,11 +298,36 @@ class Calculo(FiltrandoDadosParaCalculo):
         self.tabelaEconomia(data)
         return self.resultadoEconomiaGerada
     
-        
-        
+    
+
 if __name__ == "__main__":
-    anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre'])
-    barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur"]) 
+    anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre'])  
+    barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur",'Lacs e Lalur Após Inovações','Relátorio']) 
+    
+if __name__ == '__main__':
+    if barra == "Relátorio":
+        col1,col2,col3,col4,col5,col6 = st.columns(6)
+        with col1:
+            uploaded_file_resultados = st.file_uploader("Coloque o arquivo de resultado", type="xlsx")
+        
+        if uploaded_file_resultados is not None:
+
+            with col1:
+                nomeDaEmepresa = st.text_input('Digite o nome da empresa')
+                aliquotaImposto = st.text_input('Digite o valor da alíquota de imposto, ex(24,34)')
+                dataAssinatura = st.text_input('Escreva a data da assinatura do contrato, ex. 23 de agosto de 2024 ')
+            observacoesDoAnlista = st.text_input('Digite aqui suas observações :')
+            
+
+            pdf = RelatorioPDFJSCP()
+            try:
+                pdf.valorTotal(uploaded_file_resultados)
+            except:
+                pdf.valorTotalTrimestral(uploaded_file_resultados)
+
+            pdf_buffer = pdf.create_pdf(nomeDaEmepresa, aliquotaImposto, observacoesDoAnlista, dataAssinatura)          
+            st.download_button(label="Baixar PDF para Relatorio Anula",data=pdf_buffer,file_name="relatorio.pdf",mime="application/pdf")
+
     with st.form('form1',border=False):
         if st.form_submit_button('Gerar Dados'):           
   
@@ -329,7 +432,13 @@ if __name__ == "__main__":
                                 dataFrameParaExportar1.append(calculosIniciais_2019)
                                 dataFrameParaExportar2.append(tabelaFinal_2019)
                                 dataFrameParaExportar3.append(resultadoTotal_2019)
-
+                                st.write('')
+                                st.subheader('Lacas Lalur após inovações')
+                                lacsLalurAposInovacoes = calculos2019.runPipeAposInovacoesLacsLalurCSLL()
+                                lacsLalurAposInovacoesDFFinal2019 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
+                                lacsLalurAposInovacoesDFFinal2019['Value'] = lacsLalurAposInovacoesDFFinal2019['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+                                st.dataframe(lacsLalurAposInovacoesDFFinal2019)
+                                
                             with col2:
                                 st.write('')
                                 st.write('')
@@ -343,7 +452,12 @@ if __name__ == "__main__":
                                 dataFrameParaExportar1.append(calculosIniciais_2020)
                                 dataFrameParaExportar2.append(tabelaFinal_2020)
                                 dataFrameParaExportar3.append(resultadoTotal_2020)
-
+                                st.write('')
+                                st.subheader('Lacas Lalur após inovações')
+                                lacsLalurAposInovacoes = calculos2020.runPipeAposInovacoesLacsLalurCSLL()
+                                lacsLalurAposInovacoesDFFinal2020 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
+                                lacsLalurAposInovacoesDFFinal2020['Value'] = lacsLalurAposInovacoesDFFinal2020['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+                                st.dataframe(lacsLalurAposInovacoesDFFinal2020)
                             with col3:
                                 st.write('')
                                 st.write('')
@@ -357,7 +471,12 @@ if __name__ == "__main__":
                                 dataFrameParaExportar1.append(calculosIniciais_2021)
                                 dataFrameParaExportar2.append(tabelaFinal_2021)
                                 dataFrameParaExportar3.append(resultadoTotal_2021)
-
+                                st.write('')
+                                st.subheader('Lacas Lalur após inovações')
+                                lacsLalurAposInovacoes = calculos2021.runPipeAposInovacoesLacsLalurCSLL()
+                                lacsLalurAposInovacoesDFFinal2021 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
+                                lacsLalurAposInovacoesDFFinal2021['Value'] = lacsLalurAposInovacoesDFFinal2021['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+                                st.dataframe(lacsLalurAposInovacoesDFFinal2021)
                             with col4:
                                 st.write('')
                                 st.write('')
@@ -371,7 +490,12 @@ if __name__ == "__main__":
                                 dataFrameParaExportar1.append(calculosIniciais_2022)
                                 dataFrameParaExportar2.append(tabelaFinal_2022)
                                 dataFrameParaExportar3.append(resultadoTotal_2022)
-
+                                st.write('')
+                                st.subheader('Lacas Lalur após inovações')
+                                lacsLalurAposInovacoes = calculos2022.runPipeAposInovacoesLacsLalurCSLL()
+                                lacsLalurAposInovacoesDFFinal2022 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
+                                lacsLalurAposInovacoesDFFinal2022['Value'] = lacsLalurAposInovacoesDFFinal2022['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+                                st.dataframe(lacsLalurAposInovacoesDFFinal2022)
                             with col5:
                                 st.write('')
                                 st.write('')
@@ -385,7 +509,12 @@ if __name__ == "__main__":
                                 dataFrameParaExportar1.append(calculosIniciais_2023)
                                 dataFrameParaExportar2.append(tabelaFinal_2023)
                                 dataFrameParaExportar3.append(resultadoTotal_2023)
-
+                                st.write('')
+                                st.subheader('Lacas Lalur após inovações')
+                                lacsLalurAposInovacoes = calculos2023.runPipeAposInovacoesLacsLalurCSLL()
+                                lacsLalurAposInovacoesDFFinal2023 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
+                                lacsLalurAposInovacoesDFFinal2023['Value'] = lacsLalurAposInovacoesDFFinal2023['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+                                st.dataframe(lacsLalurAposInovacoesDFFinal2023)
                             dfmetricaGeral = pd.concat(economiaPorAno).reset_index(drop='index')
                             dfmetricaGeral = dfmetricaGeral.transpose().iloc[:,[1,3,5,7,9]]
                             dfmetricaGeral['Agregado do período'] = dfmetricaGeral.apply(lambda row: row.sum(), axis=1)
@@ -403,7 +532,12 @@ if __name__ == "__main__":
                                                             resultadoTotal_2021.add_suffix('_2023')])
                             
                             arquivoFInalParaExpostacao = pd.concat([arquivoParaExportar,arquivoParaExportar2,arquivoParaExportar3],axis=0)
-
+                            exportaLacsLalurAposInovacoes = pd.concat([lacsLalurAposInovacoesDFFinal2019.add_suffix('2019'),
+                                                                       lacsLalurAposInovacoesDFFinal2020.add_suffix('2020'),
+                                                                        lacsLalurAposInovacoesDFFinal2021.add_suffix('2021'),
+                                                                        lacsLalurAposInovacoesDFFinal2022.add_suffix('2022'),
+                                                                        lacsLalurAposInovacoesDFFinal2023.add_suffix('2023')],axis=1)
+        
                             st.write('')
                             st.write('')
                             st.write('')
@@ -423,8 +557,8 @@ if __name__ == "__main__":
                             resultadoTotal_2019 = calculos2019.runPipeLacsLalurCSLL()
                             resultadoTotal_2019IR = calculos2019.runPipeLacsLalurIRPJ()
                             dataFrameParaExportarCSLL.append(resultadoTotal_2019)
-                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2019IR)
-
+                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2019IR)                         
+                            
                         with col2:
                             st.write('')
                             st.write('')
@@ -433,7 +567,6 @@ if __name__ == "__main__":
                             resultadoTotal_2020IR = calculos2020.runPipeLacsLalurIRPJ()
                             dataFrameParaExportarCSLL.append(resultadoTotal_2020)
                             dataFrameParaExportarIRPJJ.append(resultadoTotal_2020IR)
-
 
                         with col3:
                             st.write('')
@@ -461,8 +594,10 @@ if __name__ == "__main__":
                             resultadoTotal_2023IR = calculos2023.runPipeLacsLalurIRPJ()
                             dataFrameParaExportarCSLL.append(resultadoTotal_2023)
                             dataFrameParaExportarIRPJJ.append(resultadoTotal_2023IR)
+                    
+                    if barra == 'Lacs e Lalur Após Inovações': 
+                            calculos2019.runPipeAposInovacoesLacsLalurCSLL()
                     try:
-
                         arquivoParaExportarCSLL = pd.concat([resultadoTotal_2019.add_suffix('_2019'), resultadoTotal_2020.add_suffix('_2020'), 
                                                         resultadoTotal_2021.add_suffix('_2021'), resultadoTotal_2022.add_suffix('_2022'), 
                                                         resultadoTotal_2023.add_suffix('_2023')], axis=1)
@@ -472,17 +607,18 @@ if __name__ == "__main__":
                                                         resultadoTotal_2023IR.add_suffix('_2023')], axis=1)
                         
                         exportarLacsLalur = pd.concat([arquivoParaExportarCSLL,arquivoParaExportarIRPJ])
-
                     except:
                         pass
 
                 except Exception as e:
+
                     #st.warning(f'Error :{str(e)}')
                     st.warning('Clique em "Gerar Dados"')
                     #pass
+
             if anualOuTrimestral == 'Trimestre':
 
-                try:           
+                #try:           
                     if barra == "Calculo JCP":
                         colunas = st.columns(4)
                         trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
@@ -490,11 +626,13 @@ if __name__ == "__main__":
                         arquivoFinalParaExportacaoTri = []
                         tabelaUnicaLista = []
                         for ano in range(2019, 2024):
+                                lacsLalurApos = []
                                 year_dfsLacs = []
                                 resultadoJCP = []
                                 resultadoDedu = []
                                 economiaGerada = []
                                 tabelaUnica = []
+                                tabelaUnicaLacsLalurAposInocacoes = []
                                 for col, trimestre in zip(colunas, trimestres):
                                     with col:
                                         lacs = trimestralFiltrandoDadosParaCalculo(
@@ -531,13 +669,31 @@ if __name__ == "__main__":
 
                                         economia_gerada_por_trimestre.append(lacs.economia)
 
+                                        resultJSCP = lacs.dfLacsLalurApos
+                                        lacs.LacsLalurTrimestral.trimestralLacsLalurAposInovacoesFn()
+                                        
+                                        df = lacs.LacsLalurTrimestral.triLacsLalurFinal
+                                        df = LacsLalurAposInovacoesTrimestral(df,resultJSCP)
+
+
+
+                                        df.columns = [f"{col} {trimestre}" for col in df.columns] 
+                                        lacsLalurApos.append(df)
+
+
+
+
                                 dfCalculos = pd.concat(year_dfsLacs, axis=1)
                                 tabelaJCP = pd.concat(resultadoJCP, axis=1)
                                 limiteDedutibili = pd.concat(resultadoDedu, axis=1)
                                 economiaGerada = pd.concat(economiaGerada, axis=1)
 
+                                LacasLalurAposTrimestres = pd.concat(lacsLalurApos,axis=1)
                                 tabelaUnica = pd.concat([dfCalculos,tabelaJCP,limiteDedutibili,economiaGerada],axis=0)
+                                
                                 tabelaUnicaLista.append(tabelaUnica.add_suffix(ano))
+
+                                
                     
 
                                 st.subheader(f"Resultados Anuais - {ano}")
@@ -546,7 +702,13 @@ if __name__ == "__main__":
                                 st.dataframe(limiteDedutibili)
                                 st.dataframe(economiaGerada)
 
-                        arquivoFinalParaExportacaoTri = pd.concat(tabelaUnicaLista,axis=1)
+                                with st.expander('Ver Lacs e lalur após inovações'):
+                                        st.subheader('Lacs Lalur Após Inovações')
+                                        st.dataframe(LacasLalurAposTrimestres)
+                    
+                        arquivoFinalParaExportacaoTri = pd.concat(tabelaUnicaLista,axis=1, ignore_index=True)
+                        
+
       
                     if barra == "Lacs e Lalur":
                         col1, col2, col3, col4 = st.columns(4)
@@ -596,16 +758,12 @@ if __name__ == "__main__":
                             st.dataframe(dfFinalLacs)
                             st.dataframe(dfFinalLacsIRPJ)
                         arquivoFinalParaExportacaoTriLacs = pd.concat(tabelaFinalLacsLalurUnificad,axis=1)    
-                        st.dataframe(arquivoFinalParaExportacaoTriLacs)
 
-
-
-                except Exception as e:
-                    st.warning(f'Error :{str(e)}')
+                # except Exception as e:
+                #     st.warning(f'Error :{str(e)}')
                     
-                    pass
-                        
-                     
+                #     pass
+            
 
     try:
         if anualOuTrimestral == 'Ano':
@@ -616,7 +774,15 @@ if __name__ == "__main__":
                 st.write('')
                 st.write('')
                 st.write('')
-                st.download_button(type='primary',label="Exportar tabela",data=output8,file_name=f'JCP.xlsx',key='download_button')
+                st.download_button(type='primary',label="Exportar tabela JSCP",data=output8,file_name=f'JCP.xlsx',key='download_button')
+                
+                output14 = io.BytesIO()
+                with pd.ExcelWriter(output14, engine='xlsxwriter') as writer:exportaLacsLalurAposInovacoes.to_excel(writer,sheet_name=f'LacsLalur',index=False)
+                output14.seek(0)
+                st.write('')
+                st.write('')
+                st.write('')
+                st.download_button(type='secondary',label="Exportar Lacs e Lalur Apos Inovacoes",data=output14,file_name=f'LacsLalur Após Inovacoes.xlsx',key='botaoLacsn')
             elif barra == 'Lacs e Lalur':
                 output7 = io.BytesIO()
                 with pd.ExcelWriter(output7, engine='xlsxwriter') as writer:exportarLacsLalur.to_excel(writer,sheet_name=f'Lacs Lalur',index=False)
@@ -646,8 +812,10 @@ if __name__ == "__main__":
     except:
         pass
 
-end_time = time.time()
 
+
+
+end_time = time.time()
 execution_time = end_time - start_time
 
 
