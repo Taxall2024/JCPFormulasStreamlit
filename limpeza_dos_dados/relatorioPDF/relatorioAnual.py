@@ -17,8 +17,8 @@ Essa metodologia possui respaldo legal no artigo 9º, da Lei nº 9.249/1995, com
 
 """
 def add_background(canvas, doc):
-    caminho_imagem = os.path.join(os.path.dirname(__file__), 'relatorioPDF', 'Cabecalho.png')
-    canvas.drawImage(r"relatorioPDF\Cabecalho.png", 0, 0, width=doc.pagesize[0], height=doc.pagesize[1])
+    
+    canvas.drawImage("Cabecalho.png", 0, 0, width=doc.pagesize[0], height=doc.pagesize[1])
 
 
 class RelatorioPDFJSCP():
