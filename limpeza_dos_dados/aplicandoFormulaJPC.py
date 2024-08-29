@@ -257,6 +257,7 @@ class Calculo(FiltrandoDadosParaCalculo):
                 {"Operation": "DARF Cód. 5706 IRRF s/ JSCP", "Value": self.darf},
             ]
         self.resultadoLimiteDedu = pd.concat([self.resultadoLimiteDedu, pd.DataFrame(results)], ignore_index=True)
+        self.resultadoLimiteDedu['Value'] = self.resultadoLimiteDedu['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
         st.dataframe(self.resultadoLimiteDedu, use_container_width=True)   
     
     @timing
@@ -282,6 +283,7 @@ class Calculo(FiltrandoDadosParaCalculo):
             ]
         
         self.resultadoEconomiaGerada = pd.concat([self.resultadoEconomiaGerada, pd.DataFrame(results)], ignore_index=True)
+        self.resultadoEconomiaGerada['Value'] = self.resultadoEconomiaGerada['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
         st.dataframe(self.resultadoEconomiaGerada, use_container_width=True)
         
         st.metric("Economia Gerada", f"R$ {self.economia:,.2f}".replace(',','_').replace('.',',').replace('_','.'))
