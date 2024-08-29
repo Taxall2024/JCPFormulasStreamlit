@@ -611,9 +611,11 @@ if __name__ == '__main__':
                         pass
 
                 except Exception as e:
-                    st.warning(f'Error :{str(e)}')
-                    st.warning('Aperte "Gerar Dados"')
-                    pass
+
+                    #st.warning(f'Error :{str(e)}')
+                    st.warning('Clique em "Gerar Dados"')
+                    #pass
+
             if anualOuTrimestral == 'Trimestre':
 
                 #try:           
@@ -767,7 +769,7 @@ if __name__ == '__main__':
         if anualOuTrimestral == 'Ano':
             if barra == 'Calculo JCP':
                 output8 = io.BytesIO()
-                with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JSCP',index=False)
+                with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JCP',index=False)
                 output8.seek(0)
                 st.write('')
                 st.write('')
@@ -783,29 +785,29 @@ if __name__ == '__main__':
                 st.download_button(type='secondary',label="Exportar Lacs e Lalur Apos Inovacoes",data=output14,file_name=f'LacsLalur Após Inovacoes.xlsx',key='botaoLacsn')
             elif barra == 'Lacs e Lalur':
                 output7 = io.BytesIO()
-                with pd.ExcelWriter(output7, engine='xlsxwriter') as writer:exportarLacsLalur.to_excel(writer,sheet_name=f'JSCP',index=False)
+                with pd.ExcelWriter(output7, engine='xlsxwriter') as writer:exportarLacsLalur.to_excel(writer,sheet_name=f'Lacs Lalur',index=False)
                 output7.seek(0)
                 st.write('')
                 st.write('')
                 st.write('')
-                st.download_button(type='primary',label="Exportar tabela",data=output7,file_name=f'JCP.xlsx',key='download_button')                    
+                st.download_button(type='primary',label="Exportar tabela",data=output7,file_name=f'Lacs Lalur.xlsx',key='download_button')                    
         elif anualOuTrimestral == 'Trimestre':
             if barra == 'Calculo JCP':
                 output9 = io.BytesIO()
-                with pd.ExcelWriter(output9, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTri.to_excel(writer,sheet_name=f'JSCP',index=False)
+                with pd.ExcelWriter(output9, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTri.to_excel(writer,sheet_name=f'JCP',index=False)
                 output9.seek(0)
                 st.write('')
                 st.write('')
                 st.write('')
-                st.download_button(type='primary',label="Exportar tabela",data=output9,file_name=f'JCP.xlsx',key='download_button')
+                st.download_button(type='primary',label="Exportar tabela",data=output9,file_name=f'JCP Trimestral.xlsx',key='download_button')
             elif barra == 'Lacs e Lalur':
                 output10 = io.BytesIO()
-                with pd.ExcelWriter(output10, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTriLacs.to_excel(writer,sheet_name=f'JSCP',index=False)
+                with pd.ExcelWriter(output10, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTriLacs.to_excel(writer,sheet_name=f'Lacs Lalur',index=False)
                 output10.seek(0)
                 st.write('')
                 st.write('')
                 st.write('')
-                st.download_button(type='primary',label="Exportar tabela",data=output10,file_name=f'JCP.xlsx',key='download_button')
+                st.download_button(type='primary',label="Exportar tabela",data=output10,file_name=f'LacsLalus Trimestral.xlsx',key='download_button')
     
     except:
         pass
