@@ -1,7 +1,6 @@
 import pandas as pd
 import streamlit as st
 import numpy as np
-import locale
 from io import BytesIO
 
 from reportlab.lib.pagesizes import letter
@@ -53,18 +52,17 @@ class RelatorioPDFJSCP():
        
         valorTotal = resultados.iloc[-1,:]
         valorImposto = resultados.iloc[-2,:]
-        locale.setlocale(locale.LC_ALL, 'pt_BR')  # ou outro locale que use vírgula como separador de casas decimais
 
-        self.valorTotalPeriodo = locale.format_string('%.2f', round(sum([valorTotal['Value_2019'],valorTotal['Value_2020'],
-                                                               valorTotal['Value_2021'],valorTotal['Value_2022'],
-                                                               valorTotal['Value_2023'],]),2), grouping=True)
+        self.valorTotalPeriodo = "{:,.2f}".format(round(sum([valorTotal['Value_2019'], valorTotal['Value_2020'],
+                                                       valorTotal['Value_2021'], valorTotal['Value_2022'],
+                                                       valorTotal['Value_2023'],]), 2))
         
         valor_somado = round(resultados[['Value_2019', 'Value_2020', 'Value_2021', 'Value_2022', 'Value_2023']].sum().sum(), 2)
-        self.valorAntesImpostos = locale.format_string('%.2f', valor_somado, grouping=True)
+        self.valorAntesImpostos = "{:,.2f}".format(valor_somado, grouping=True)
                         
-        self.valorImpostos = locale.format_string('%.2f', round(sum([valorImposto['Value_2019'],valorImposto['Value_2020'],
+        self.valorImpostos = "{:,.2f}".format(sum([valorImposto['Value_2019'],valorImposto['Value_2020'],
                                                                valorImposto['Value_2021'],valorImposto['Value_2022'],
-                                                               valorImposto['Value_2023'],]),2), grouping=True)
+                                                               valorImposto['Value_2023'],]), grouping=True)
 
         
         self.tabelaFinalDf = resultados.rename(columns={
@@ -82,7 +80,7 @@ class RelatorioPDFJSCP():
         
         colunasParaFormatar = ['2019','2020','2021','2022','2023','Total']
         for col in colunasParaFormatar:
-            self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: locale.format_string('%.2f', x, grouping=True))
+            self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: "{:,.2f}".format( x, grouping=True))
         
 
 
@@ -99,16 +97,16 @@ class RelatorioPDFJSCP():
             
         valorTotal = resultados.iloc[-1,:]
         valorImposto = resultados.iloc[-2,:]
-        locale.setlocale(locale.LC_ALL, 'pt_BR')  # ou outro locale que use vírgula como separador de casas decimais
 
-        self.valorTotalPeriodo = locale.format_string('%.2f', round(sum([valorTotal['Value_2019'],valorTotal['Value_2020'],
+
+        self.valorTotalPeriodo = "{:,.2f}".format(round(sum([valorTotal['Value_2019'],valorTotal['Value_2020'],
                                                                valorTotal['Value_2021'],valorTotal['Value_2022'],
                                                                valorTotal['Value_2023'],]),2), grouping=True)
         
         valor_somado = round(resultados[['Value_2019', 'Value_2020', 'Value_2021', 'Value_2022', 'Value_2023']].sum().sum(), 2)
-        self.valorAntesImpostos = locale.format_string('%.2f', valor_somado, grouping=True)
+        self.valorAntesImpostos = "{:,.2f}".format( valor_somado, grouping=True)
                         
-        self.valorImpostos = locale.format_string('%.2f', round(sum([valorImposto['Value_2019'],valorImposto['Value_2020'],
+        self.valorImpostos = "{:,.2f}".format(round(sum([valorImposto['Value_2019'],valorImposto['Value_2020'],
                                                                valorImposto['Value_2021'],valorImposto['Value_2022'],
                                                                valorImposto['Value_2023'],]),2), grouping=True)
         resultados.at[24,'Operation_2019'] = 'Redução no IRPJ/CSLL'
@@ -128,7 +126,7 @@ class RelatorioPDFJSCP():
         
         colunasParaFormatar = ['2019','2020','2021','2022','2023','Total']
         for col in colunasParaFormatar:
-            self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: locale.format_string('%.2f', x, grouping=True))
+            self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: '%.2f'.format( x, grouping=True))
 
 
     def create_pdf(self,nomeEmpresa,aliquota,observacoesDoAnalista,textoData):
