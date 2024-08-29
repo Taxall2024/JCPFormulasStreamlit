@@ -9,8 +9,10 @@ from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
 from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo
 from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
 from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
+from arquivosSPED.pipeArquivosECF import SpedProcessor
 
-
+import os
+import tempfile
 import requests
 import functools
 import time
@@ -302,9 +304,8 @@ class Calculo(FiltrandoDadosParaCalculo):
 
 if __name__ == "__main__":
     anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre'])  
-    barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur",'Lacs e Lalur Após Inovações','Relátorio']) 
+    barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur",'Relátorio']) 
     
-if __name__ == '__main__':
     if barra == "Relátorio":
         col1,col2,col3,col4,col5,col6 = st.columns(6)
         with col1:
@@ -347,8 +348,14 @@ if __name__ == '__main__':
         uploaded_file_lalur = st.sidebar.file_uploader("Upload Lalur Excel File", type="xlsx")
         uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
         uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
-        
-        if uploaded_file_l100 and uploaded_file_l300 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ecf670 and uploaded_file_ec630:
+
+        uploaded_file_l100 =   uploaded_file_l100
+        uploaded_file_l300 =   uploaded_file_l300
+        uploaded_file_lacs =   uploaded_file_lacs
+        uploaded_file_lalur =  uploaded_file_lalur
+        uploaded_file_ecf670 = uploaded_file_ecf670
+        uploaded_file_ec630 =  uploaded_file_ec630
+        if uploaded_file_l100 and uploaded_file_ec630 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ec630 and uploaded_file_ecf670:
             if anualOuTrimestral == 'Ano':          
                 filtrando_dados = FiltrandoDadosParaCalculo(
                     data=None,
