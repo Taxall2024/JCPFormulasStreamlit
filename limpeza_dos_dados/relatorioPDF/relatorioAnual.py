@@ -23,6 +23,70 @@ def add_background(canvas, doc):
 
 class RelatorioPDFJSCP():
 
+    def valorTotalTrimestral(self,uploaded_file_resultados):
+
+        resultados = pd.read_excel(uploaded_file_resultados).fillna(np.nan)
+        resultados = resultados.apply(lambda x: x.dropna().reset_index(drop=True))
+        resultados = resultados.iloc[24:,[0,1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39]]
+        
+        colunas = [1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39]
+        for col in colunas:
+            resultados[col] = resultados[col].str.replace('.','_').str.replace(',','.').str.replace('_','').astype(float)
+            
+        resultados.at[25,'Value_2019'] = resultados.at[25,1]+resultados.at[25,3]+resultados.at[25,5]+resultados.at[25,7]
+        resultados.at[24,'Value_2019'] = resultados.at[24,1]+resultados.at[24,3]+resultados.at[24,5]+resultados.at[24,7]
+        
+        resultados.at[25,'Value_2020'] = resultados.at[25,9]+resultados.at[25,11]+resultados.at[25,13]+resultados.at[25,15]
+        resultados.at[24,'Value_2020'] = resultados.at[24,9]+resultados.at[24,11]+resultados.at[24,13]+resultados.at[24,15]  
+
+        resultados.at[25,'Value_2021'] = resultados.at[25,17]+resultados.at[25,19]+resultados.at[25,21]+resultados.at[25,23]
+        resultados.at[24,'Value_2021'] = resultados.at[24,17]+resultados.at[24,19]+resultados.at[24,21]+resultados.at[24,23]   
+
+        resultados.at[25,'Value_2022'] = resultados.at[25,25]+resultados.at[25,27]+resultados.at[25,29]+resultados.at[25,31]
+        resultados.at[24,'Value_2022'] = resultados.at[24,25]+resultados.at[24,27]+resultados.at[24,29]+resultados.at[24,31] 
+
+        resultados.at[25,'Value_2023'] = resultados.at[25,33]+resultados.at[25,35]+resultados.at[25,37]+resultados.at[25,39]
+        resultados.at[24,'Value_2023'] = resultados.at[24,33]+resultados.at[24,35]+resultados.at[24,37]+resultados.at[24,39] 
+
+        resultados = resultados.iloc[:,[0,-5,-4,-3,-2,-1]].rename(columns={0:''}).reset_index(drop='index')
+
+       
+        valorTotal = resultados.iloc[-1,:]
+        valorImposto = resultados.iloc[-2,:]
+        locale.setlocale(locale.LC_ALL, 'pt_BR')  # ou outro locale que use vírgula como separador de casas decimais
+
+        self.valorTotalPeriodo = locale.format_string('%.2f', round(sum([valorTotal['Value_2019'],valorTotal['Value_2020'],
+                                                               valorTotal['Value_2021'],valorTotal['Value_2022'],
+                                                               valorTotal['Value_2023'],]),2), grouping=True)
+        
+        valor_somado = round(resultados[['Value_2019', 'Value_2020', 'Value_2021', 'Value_2022', 'Value_2023']].sum().sum(), 2)
+        self.valorAntesImpostos = locale.format_string('%.2f', valor_somado, grouping=True)
+                        
+        self.valorImpostos = locale.format_string('%.2f', round(sum([valorImposto['Value_2019'],valorImposto['Value_2020'],
+                                                               valorImposto['Value_2021'],valorImposto['Value_2022'],
+                                                               valorImposto['Value_2023'],]),2), grouping=True)
+
+        
+        self.tabelaFinalDf = resultados.rename(columns={
+                                                                      'Value_2019':'2019',
+                                                                      'Value_2020':'2020',
+                                                                      'Value_2021':'2021',
+                                                                      'Value_2022':'2022',
+                                                                      'Value_2023':'2023',})
+        
+        self.tabelaFinalDf['Total'] = sum([self.tabelaFinalDf['2019'],
+                                          self.tabelaFinalDf['2020'],
+                                          self.tabelaFinalDf['2021'],
+                                          self.tabelaFinalDf['2022'],
+                                          self.tabelaFinalDf['2023']])
+        
+        colunasParaFormatar = ['2019','2020','2021','2022','2023','Total']
+        for col in colunasParaFormatar:
+            self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: locale.format_string('%.2f', x, grouping=True))
+        
+
+
+    
     def valorTotal(self,uploaded_file_resultados):
         colunas = ['Value_2019','Value_2020','Value_2021','Value_2022','Value_2023']
 
@@ -65,7 +129,6 @@ class RelatorioPDFJSCP():
         colunasParaFormatar = ['2019','2020','2021','2022','2023','Total']
         for col in colunasParaFormatar:
             self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: locale.format_string('%.2f', x, grouping=True))
-
 
 
     def create_pdf(self,nomeEmpresa,aliquota,observacoesDoAnalista,textoData):
@@ -186,7 +249,7 @@ class RelatorioPDFJSCP():
 
         story.append(Spacer(1, 32)) 
 
-        col_widths = [1.5*inch, 1*inch, 1*inch, 1*inch, 1*inch, 1*inch,1*inch]
+        col_widths = [2.1*inch, 1*inch, 1*inch, 1*inch, 1*inch, 1*inch,1*inch]
         data = [self.tabelaFinalDf.columns.tolist()] + self.tabelaFinalDf.values.tolist()
 
         table = Table(data,colWidths=col_widths)
@@ -195,7 +258,7 @@ class RelatorioPDFJSCP():
                                 ('ALIGN', (0, 0), (1, -1), 'CENTER'),
                                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                                # ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),  # Definindo a fonte
-                                ('FONTSIZE', (0, 0), (-1, -1), 10), 
+                                ('FONTSIZE', (0, 0), (-1, -1), 9), 
                                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
                                 ('BACKGROUND', (0, 1), (-1, -1), colors.transparent),
                                 ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
@@ -327,54 +390,8 @@ class RelatorioPDFJSCP():
         doc.build(story, onFirstPage=add_background, onLaterPages=add_background)
         pdf_buffer.seek(0)
         return pdf_buffer
-    # def valorTotal(self,uploaded_file_resultados):
-    #     colunas = ['Value_2019','Value_2020','Value_2021','Value_2022','Value_2023']
-
-    #     resultados = pd.read_excel(uploaded_file_resultados).fillna(np.nan)
-    #     resultados = resultados.apply(lambda x: x.dropna().reset_index(drop=True))
-    #     resultados = resultados.iloc[24:,:]
-
-    #     for col in colunas:
-    #         resultados[col] = resultados[col].replace('.','_').replace(',','.').replace('_',',').astype(float)
-            
-    #     valorTotal = resultados.iloc[-1,:]
-    #     valorImposto = resultados.iloc[-2,:]
-    #     locale.setlocale(locale.LC_ALL, 'pt_BR')  # ou outro locale que use vírgula como separador de casas decimais
-
-    #     self.valorTotalPeriodo = locale.format_string('%.2f', round(sum([valorTotal['Value_2019'],valorTotal['Value_2020'],
-    #                                                            valorTotal['Value_2021'],valorTotal['Value_2022'],
-    #                                                            valorTotal['Value_2023'],]),2), grouping=True)
-        
-    #     valor_somado = round(resultados[['Value_2019', 'Value_2020', 'Value_2021', 'Value_2022', 'Value_2023']].sum().sum(), 2)
-    #     self.valorAntesImpostos = locale.format_string('%.2f', valor_somado, grouping=True)
-                        
-    #     self.valorImpostos = locale.format_string('%.2f', round(sum([valorImposto['Value_2019'],valorImposto['Value_2020'],
-    #                                                            valorImposto['Value_2021'],valorImposto['Value_2022'],
-    #                                                            valorImposto['Value_2023'],]),2), grouping=True)
-    #     resultados.at[24,'Operation_2019'] = 'Redução no IRPJ/CSLL'
-        
-    #     self.tabelaFinalDf = resultados.iloc[:,[0,1,3,5,7,9]].rename(columns={'Operation_2019':'',
-    #                                                                   'Value_2019':'2019',
-    #                                                                   'Value_2020':'2020',
-    #                                                                   'Value_2021':'2021',
-    #                                                                   'Value_2022':'2022',
-    #                                                                   'Value_2023':'2023',})
-        
-    #     self.tabelaFinalDf['Total'] = sum([self.tabelaFinalDf['2019'],
-    #                                       self.tabelaFinalDf['2020'],
-    #                                       self.tabelaFinalDf['2021'],
-    #                                       self.tabelaFinalDf['2022'],
-    #                                       self.tabelaFinalDf['2023']])
-        
-    #     colunasParaFormatar = ['2019','2020','2021','2022','2023','Total']
-    #     for col in colunasParaFormatar:
-    #         self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: locale.format_string('%.2f', x, grouping=True))
-
-
-    #     st.dataframe(resultados)
-
-
-
+   
+ 
 if __name__=='__main__':
 
     st.set_page_config(layout='wide')

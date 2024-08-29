@@ -318,14 +318,15 @@ if __name__ == '__main__':
                 dataAssinatura = st.text_input('Escreva a data da assinatura do contrato, ex. 23 de agosto de 2024 ')
             observacoesDoAnlista = st.text_input('Digite aqui suas observações :')
             
-            # Botão para gerar o PDF
 
             pdf = RelatorioPDFJSCP()
-            pdf.valorTotal(uploaded_file_resultados)
-            pdf_buffer = pdf.create_pdf(nomeDaEmepresa, aliquotaImposto, observacoesDoAnlista, dataAssinatura)
-                
-                # Botão de download para o PDF gerado
-            st.download_button(label="Baixar PDF",data=pdf_buffer,file_name="relatorio.pdf",mime="application/pdf")
+            try:
+                pdf.valorTotal(uploaded_file_resultados)
+            except:
+                pdf.valorTotalTrimestral(uploaded_file_resultados)
+
+            pdf_buffer = pdf.create_pdf(nomeDaEmepresa, aliquotaImposto, observacoesDoAnlista, dataAssinatura)          
+            st.download_button(label="Baixar PDF para Relatorio Anula",data=pdf_buffer,file_name="relatorio.pdf",mime="application/pdf")
 
     with st.form('form1',border=False):
         if st.form_submit_button('Gerar Dados'):           
