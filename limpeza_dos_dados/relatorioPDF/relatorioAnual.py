@@ -17,7 +17,7 @@ Essa metodologia possui respaldo legal no artigo 9º, da Lei nº 9.249/1995, com
 """
 def add_background(canvas, doc):
 
-    canvas.drawImage("limpeza_dos_dados\\relatorioPDF\\Cabecalho.png", 0, 0, width=doc.pagesize[0], height=doc.pagesize[1])
+    canvas.drawImage("limpeza_dos_dados\relatorioPDF\Cabecalho.png", 0, 0, width=doc.pagesize[0], height=doc.pagesize[1])
 
 
 class RelatorioPDFJSCP():
@@ -160,7 +160,7 @@ class RelatorioPDFJSCP():
         """
         story.append(Paragraph(texto, styles["Normal"]))  
         story.append(Spacer(1, 12))
-        img_path = "limpeza_dos_dados\\relatorioPDF\\RespaldoJuridico1.png"
+        img_path = "limpeza_dos_dados\relatorioPDF\RespaldoJuridico1.png"
         img = Image(img_path, width=3.8*inch, height=0.9*inch)
         img.hAlign = 'RIGHT'
         story.append(img) 
@@ -176,7 +176,7 @@ class RelatorioPDFJSCP():
         story.append(Paragraph(texto, styles["Normal"]))
 
         story.append(Spacer(1, 12))
-        img_path = "limpeza_dos_dados\\relatorioPDF\\RespaldoJuridico2.png"
+        img_path = "limpeza_dos_dados\relatorioPDF\RespaldoJuridico2.png"
         img = Image(img_path, width=3.8*inch, height=3.5*inch)
         img.hAlign = 'RIGHT'
         story.append(img) 
