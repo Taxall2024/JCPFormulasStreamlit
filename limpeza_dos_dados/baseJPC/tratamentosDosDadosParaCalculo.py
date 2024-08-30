@@ -13,10 +13,11 @@ from LacsLalur.lacsLalurAntesInoTributarias import LacsLalurCSLL
 class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     _widget_counter = 0
 
-    @staticmethod
+
     @st.cache_data(ttl='1d', show_spinner=False)
-    def load_excel_file(file_path):
-        return pd.read_excel(file_path)
+    @staticmethod
+    def load_excel_file(df):
+        return df  
     
     #@st.cache_data(ttl='1d')
     def __init__(self, data, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file):
@@ -63,11 +64,11 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
             l100['Descrição Conta Referencial']=='Capital Subscrito de Domiciliados e Residentes no País')&
             (l100['Data Inicial'].str.contains(self.data))]
         self.capSocial = l100['Vlr Saldo Final'].sum()
-
+        
         key = f'capitalSoc{self.data}'
 
         if key not in st.session_state:
-            st.session_state[key] = self.capSocial
+            st.session_state[key] = float(self.capSocial)
         
         st.session_state[key] = st.session_state[key]
 

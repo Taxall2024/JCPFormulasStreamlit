@@ -8,11 +8,10 @@ from dataclasses import dataclass
 
 class LacsLalurCSLLTrimestral():
 
-    @staticmethod
     @st.cache_data(ttl='1d', show_spinner=False)
-    def load_excel_file(file_path):
-        return pd.read_excel(file_path)
-
+    @staticmethod
+    def load_excel_file(df):
+        return df  
     
     def __init__(self,trimestre,ano,mes_inicio,mes_fim,lacs_file, lalur_file, ecf670_file, ec630_file):
         print('hello world')

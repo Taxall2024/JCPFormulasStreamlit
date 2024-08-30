@@ -11,7 +11,6 @@ from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
 from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
 from arquivosSPED.pipeArquivosECF import SpedProcessor
 
-
 import requests
 import functools
 import time
@@ -341,14 +340,55 @@ if __name__ == "__main__":
 
         col1, col2, col3, col4, col5 = st.columns(5)
 
-        uploaded_file_l100 = st.sidebar.file_uploader("Upload L100 Excel File", type="xlsx")
-        uploaded_file_l300 = st.sidebar.file_uploader("Upload L300 Excel File", type="xlsx")
-        uploaded_file_lacs = st.sidebar.file_uploader("Upload Lacs Excel File", type="xlsx")
-        uploaded_file_lalur = st.sidebar.file_uploader("Upload Lalur Excel File", type="xlsx")
-        uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
-        uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
 
-        if uploaded_file_l100 and uploaded_file_ec630 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ec630 and uploaded_file_ecf670:
+        uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
+
+        if uploaded_files:
+            file_paths = []
+            for uploaded_file in uploaded_files:
+                file_path = uploaded_file.name
+                with open(file_path, 'wb') as f:
+                    f.write(uploaded_file.getbuffer())
+                file_paths.append(file_path)
+
+            sped_processor = SpedProcessor(file_paths)
+            sped_processor.processar_arquivos()
+            dfs_concatenados = sped_processor.concatenar_dfs()
+
+            L100_final = dfs_concatenados["L100"]
+            L100_final['Vlr Saldo Final'] = L100_final['Vlr Saldo Final'].str.replace(',','.').astype(float)
+  
+            L300_final = dfs_concatenados["L300"]
+            L300_final['Vlr Saldo Final'] = L300_final['Vlr Saldo Final'].str.replace(',','.').astype(float)
+
+            M300_final = dfs_concatenados["M300"]
+            M300_final['Vlr Lançamento e-Lalur'] = (M300_final['Vlr Lançamento e-Lalur'].str.replace(',', '.').replace('', np.nan))
+            M300_final['Vlr Lançamento e-Lalur'] = pd.to_numeric(M300_final['Vlr Lançamento e-Lalur'], errors='coerce')
+            M300_final['Vlr Lançamento e-Lalur'].fillna(0, inplace=True)
+
+            M350_final = dfs_concatenados["M350"]
+            M350_final['Vlr Lançamento e-Lacs'] = (M350_final['Vlr Lançamento e-Lacs'].str.replace(',', '.').replace('', np.nan))
+            M350_final['Vlr Lançamento e-Lacs'] = pd.to_numeric(M350_final['Vlr Lançamento e-Lacs'], errors='coerce')
+            M350_final['Vlr Lançamento e-Lacs'].fillna(0, inplace=True)
+
+            N630_final = dfs_concatenados["N630"]
+            N630_final['Vlr Lançamento'] = (N630_final['Vlr Lançamento'].str.replace(',', '.').replace('', np.nan))
+            N630_final['Vlr Lançamento'] = pd.to_numeric(N630_final['Vlr Lançamento'], errors='coerce')
+            N630_final['Vlr Lançamento'].fillna(0, inplace=True)
+
+            N670_final = dfs_concatenados["N670"]
+            N670_final['Vlr Lançamento'] = (N670_final['Vlr Lançamento'].str.replace(',', '.').replace('', np.nan))
+            N670_final['Vlr Lançamento'] = pd.to_numeric(N670_final['Vlr Lançamento'], errors='coerce')
+            N670_final['Vlr Lançamento'].fillna(0, inplace=True)
+            
+        uploaded_file_l100 =  L100_final  #st.sidebar.file_uploader("Upload L100 Excel File", type="xlsx")
+        uploaded_file_l300 = L300_final   #st.sidebar.file_uploader("Upload L300 Excel File", type="xlsx")
+        uploaded_file_lacs =   M350_final #st.sidebar.file_uploader("Upload Lacs Excel File", type="xlsx")
+        uploaded_file_lalur =  M300_final #st.sidebar.file_uploader("Upload Lalur Excel File", type="xlsx")
+        uploaded_file_ecf670 = N670_final #st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
+        uploaded_file_ec630 =  N630_final #st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
+
+        if uploaded_files:
             if anualOuTrimestral == 'Ano':          
                 filtrando_dados = FiltrandoDadosParaCalculo(
                     data=None,
@@ -359,36 +399,36 @@ if __name__ == "__main__":
                     l100_file=uploaded_file_l100,
                     l300_file=uploaded_file_l300
                 )
-                try:
-                    calculos2019 = Calculo(data=str('2019'),
-                                            lacs_file=uploaded_file_lacs,
-                                            lalur_file=uploaded_file_lalur,
-                                            ecf670_file=uploaded_file_ecf670,
-                                            ec630_file=uploaded_file_ec630,
-                                            l100_file=uploaded_file_l100,
-                                            l300_file=uploaded_file_l300) 
-                    calculos2020 = Calculo(data=str('2020'),
-                                            lacs_file=uploaded_file_lacs,
-                                            lalur_file=uploaded_file_lalur,
-                                            ecf670_file=uploaded_file_ecf670,
-                                            ec630_file=uploaded_file_ec630,
-                                            l100_file=uploaded_file_l100,
-                                            l300_file=uploaded_file_l300) 
-                    calculos2021 = Calculo(data=str('2021'),
-                                            lacs_file=uploaded_file_lacs,
-                                            lalur_file=uploaded_file_lalur,
-                                            ecf670_file=uploaded_file_ecf670,
-                                            ec630_file=uploaded_file_ec630,
-                                            l100_file=uploaded_file_l100,
-                                            l300_file=uploaded_file_l300)
-                    calculos2022 =  Calculo(data=str('2022'),
-                                            lacs_file=uploaded_file_lacs,
-                                            lalur_file=uploaded_file_lalur,
-                                            ecf670_file=uploaded_file_ecf670,
-                                            ec630_file=uploaded_file_ec630,
-                                            l100_file=uploaded_file_l100,
-                                            l300_file=uploaded_file_l300)                                             
-                    calculos2023 =  Calculo(data=str('2023'),
+                #try:
+                calculos2019 = Calculo(data=str('2019'),
+                                        lacs_file=uploaded_file_lacs,
+                                        lalur_file=uploaded_file_lalur,
+                                        ecf670_file=uploaded_file_ecf670,
+                                        ec630_file=uploaded_file_ec630,
+                                        l100_file=uploaded_file_l100,
+                                        l300_file=uploaded_file_l300) 
+                calculos2020 = Calculo(data=str('2020'),
+                                        lacs_file=uploaded_file_lacs,
+                                        lalur_file=uploaded_file_lalur,
+                                        ecf670_file=uploaded_file_ecf670,
+                                        ec630_file=uploaded_file_ec630,
+                                        l100_file=uploaded_file_l100,
+                                        l300_file=uploaded_file_l300) 
+                calculos2021 = Calculo(data=str('2021'),
+                                        lacs_file=uploaded_file_lacs,
+                                        lalur_file=uploaded_file_lalur,
+                                        ecf670_file=uploaded_file_ecf670,
+                                        ec630_file=uploaded_file_ec630,
+                                        l100_file=uploaded_file_l100,
+                                        l300_file=uploaded_file_l300)
+                calculos2022 =  Calculo(data=str('2022'),
+                                        lacs_file=uploaded_file_lacs,
+                                        lalur_file=uploaded_file_lalur,
+                                        ecf670_file=uploaded_file_ecf670,
+                                        ec630_file=uploaded_file_ec630,
+                                        l100_file=uploaded_file_l100,
+                                        l300_file=uploaded_file_l300)                                             
+                calculos2023 =  Calculo(data=str('2023'),
                                         lacs_file=uploaded_file_lacs,
                                         lalur_file=uploaded_file_lalur,
                                         ecf670_file=uploaded_file_ecf670,
@@ -396,8 +436,8 @@ if __name__ == "__main__":
                                         l100_file=uploaded_file_l100,
                                         l300_file=uploaded_file_l300) 
                 
-                except:
-                    pass 
+                #except:
+                    #pass 
                 #'''Execução do metódo que atribui os nomes da empresa no topo da tela, porem estava cobrando muita memoria e demorando muito para executar,
                 # ate que alteções sejam concluidas e melhoras no tempo de execução'''     
                                  
@@ -407,8 +447,8 @@ if __name__ == "__main__":
                 # except:
                 #     pas
                                                     
-                try:
-                    if barra == "Calculo JCP":
+                #try:
+                if barra == "Calculo JCP":
 
                             
                             economiaPorAno = []
@@ -543,7 +583,7 @@ if __name__ == "__main__":
                             st.write('')
                             st.metric("Total da Economia Gerada", f"R$ {dfmetricaGeral.iloc[1,-1]:,.2f}".replace(',','_').replace('.',',').replace('_','.'))
 
-                    if barra == "Lacs e Lalur":
+                if barra == "Lacs e Lalur":
 
                         dataFrameParaExportarCSLL = []
                         dataFrameParaExportarIRPJJ = []
@@ -595,9 +635,9 @@ if __name__ == "__main__":
                             dataFrameParaExportarCSLL.append(resultadoTotal_2023)
                             dataFrameParaExportarIRPJJ.append(resultadoTotal_2023IR)
                     
-                    if barra == 'Lacs e Lalur Após Inovações': 
+                if barra == 'Lacs e Lalur Após Inovações': 
                             calculos2019.runPipeAposInovacoesLacsLalurCSLL()
-                    try:
+                try:
                         arquivoParaExportarCSLL = pd.concat([resultadoTotal_2019.add_suffix('_2019'), resultadoTotal_2020.add_suffix('_2020'), 
                                                         resultadoTotal_2021.add_suffix('_2021'), resultadoTotal_2022.add_suffix('_2022'), 
                                                         resultadoTotal_2023.add_suffix('_2023')], axis=1)
@@ -607,13 +647,13 @@ if __name__ == "__main__":
                                                         resultadoTotal_2023IR.add_suffix('_2023')], axis=1)
                         
                         exportarLacsLalur = pd.concat([arquivoParaExportarCSLL,arquivoParaExportarIRPJ])
-                    except:
+                except:
                         pass
 
-                except Exception as e:
-                    st.warning(f'Error :{str(e)}')
-                    st.warning('Aperte "Gerar Dados"')
-                    pass
+                #except Exception as e:
+                    # st.warning(f'Error :{str(e)}')
+                    # st.warning('Aperte "Gerar Dados"')
+                    # pass
             if anualOuTrimestral == 'Trimestre':
 
                 try:           
