@@ -324,7 +324,7 @@ if __name__ == "__main__":
             try:
                 pdf.valorTotal(uploaded_file_resultados)
             except:
-                pdf.valorTotalTrimestral(uploaded_file_resultados)
+               pdf.valorTotalTrimestral(uploaded_file_resultados)
 
             pdf_buffer = pdf.create_pdf(nomeDaEmepresa, aliquotaImposto, observacoesDoAnlista, dataAssinatura)          
             st.download_button(label="Baixar PDF para Relatorio Anula",data=pdf_buffer,file_name="relatorio.pdf",mime="application/pdf")

@@ -92,13 +92,20 @@ class RelatorioPDFJSCP():
         resultados = pd.read_excel(uploaded_file_resultados).fillna(np.nan)
         resultados = resultados.apply(lambda x: x.dropna().reset_index(drop=True))
         resultados = resultados.iloc[24:,:]
-        
-        for col in colunas:
-            resultados[col] = resultados[col].replace('.','_').replace(',','.').replace('_',',').astype(float)
-            
-        valorTotal = resultados.iloc[-1,:]
-        valorImposto = resultados.iloc[-2,:]
-
+        try:
+            for col in colunas:
+                resultados[col] = resultados[col].astype(str)
+                resultados[col] = resultados[col].astype(float)
+                resultados[col] = pd.to_numeric(resultados[col]) 
+            valorTotal = resultados.iloc[-1,:]
+            valorImposto = resultados.iloc[-2,:]
+        except:
+            for col in colunas:
+                resultados[col] = resultados[col].astype(str)
+                resultados[col] = resultados[col].str.replace('.','_').str.replace(',','.').str.replace('_','').astype(float)
+                resultados[col] = pd.to_numeric(resultados[col]) 
+            valorTotal = resultados.iloc[-1,:]
+            valorImposto = resultados.iloc[-2,:]
 
         self.valorTotalPeriodo = "{:,.2f}".format(round(sum([valorTotal['Value_2019'],valorTotal['Value_2020'],
                                                                valorTotal['Value_2021'],valorTotal['Value_2022'],
