@@ -344,8 +344,8 @@ if __name__ == "__main__":
 
         uploaded_file_l100 = st.sidebar.file_uploader("Upload L100 Excel File", type="xlsx")
         uploaded_file_l300 = st.sidebar.file_uploader("Upload L300 Excel File", type="xlsx")
-        uploaded_file_lacs = st.sidebar.file_uploader("Upload Lacs Excel File", type="xlsx")
-        uploaded_file_lalur = st.sidebar.file_uploader("Upload Lalur Excel File", type="xlsx")
+        uploaded_file_lacs = st.sidebar.file_uploader("Upload M350 Excel File", type="xlsx")
+        uploaded_file_lalur = st.sidebar.file_uploader("Upload M300 Excel File", type="xlsx")
         uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
         uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
 
