@@ -28,10 +28,16 @@ class LacsLalurCSLLTrimestral():
             df['Data Inicial'] = pd.to_datetime(df['Data Inicial'])
             df['Data Final'] = pd.to_datetime(df['Data Final'])
             df['Trimestre'] = ''
-            df.loc[(df['Data Final'].dt.month >= 1) & (df['Data Final'].dt.month <= 4), 'Trimestre'] = '1º Trimestre'
-            df.loc[(df['Data Final'].dt.month > 4) & (df['Data Final'].dt.month < 7), 'Trimestre'] = '2º Trimestre'
-            df.loc[(df['Data Final'].dt.month > 7) & (df['Data Final'].dt.month < 10), 'Trimestre'] = '3º Trimestre'
-            df.loc[(df['Data Final'].dt.month >= 10) & (df['Data Final'].dt.month <= 12), 'Trimestre'] = '4º Trimestre'
+
+                     
+            conditions = [
+                df['Período Apuração Trimestral'] == 'T01 – 1º Trimestre',
+                df['Período Apuração Trimestral'] == 'T02 – 2º Trimestre',
+                df['Período Apuração Trimestral'] == 'T03 – 3º Trimestre',
+                df['Período Apuração Trimestral'] == 'T04 – 4º Trimestre']
+            
+            choices = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
+            df['Trimestre'] = np.select(conditions, choices, default='')  
         
         self.ano = ano
         self.mes_inicio = mes_inicio
@@ -109,7 +115,6 @@ class LacsLalurCSLLTrimestral():
             (lacs['Trimestre'] == self.trimestre)]
         
         self.lucroAntCSLL = lacs['Vlr Lançamento e-Lacs'].sum()
-
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
     
@@ -170,7 +175,7 @@ class LacsLalurCSLLTrimestral():
 
         lalur = self.ecf670
         filtroUm = lalur[
-            (lalur['Código Lançamento']== 15)&
+            (lalur['Código Lançamento']== 15)|(lalur['Código Lançamento']== 16)|(lalur['Código Lançamento']== 18)&
             (lalur['Data Inicial'].dt.year == self.ano) &
             (lalur['Data Inicial'].dt.month >= self.mes_inicio) &
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&

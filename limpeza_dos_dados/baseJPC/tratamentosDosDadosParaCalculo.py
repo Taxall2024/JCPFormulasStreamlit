@@ -64,7 +64,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
             l100['Descrição Conta Referencial']=='Capital Subscrito de Domiciliados e Residentes no País')&
             (l100['Data Inicial'].str.contains(self.data))]
         self.capSocial = l100['Vlr Saldo Final'].sum()
-        
+
         key = f'capitalSoc{self.data}'
 
         if key not in st.session_state:
@@ -89,9 +89,9 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     def ReservasDeCapital(self):
         l100 = self.l100
         l100 = l100[(l100['Conta Referencial']=='2.03.02.01.99')&
+        (l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&
             (l100['Data Inicial'].str.contains(self.data))]
         self.reservaCapital = l100['Vlr Saldo Final'].sum()
-        
         key = f'ReservlCapital{self.data}'
 
         if key not in st.session_state:
