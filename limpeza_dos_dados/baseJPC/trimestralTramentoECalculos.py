@@ -23,7 +23,7 @@ from scrapping import ScrappingTJPL
 class trimestralFiltrandoDadosParaCalculo():
     _widget_counter = 0
 
-    @st.cache_data(ttl='1d', show_spinner=False)
+    @st.cache_data(ttl='3m', show_spinner=False)
     @staticmethod
     def load_excel_file(df):
         return df  
