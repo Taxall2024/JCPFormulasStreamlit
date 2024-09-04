@@ -3,7 +3,7 @@ import streamlit as st
 import numpy as np
 import functools
 from functools import wraps
-
+import gc
 
 
 class LacsLalurCSLL():
@@ -28,6 +28,9 @@ class LacsLalurCSLL():
         self.ec670Filtrado = self.ecf670[self.ecf670['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
         self.ec630Filtrado = self.ec630[self.ec630['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
 
+        gc.collect()
+        print("GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR")
+        print(gc.get_stats())
 
         self.resultsLacs = pd.DataFrame(columns=["Operation", "Value"])
         self.results = pd.DataFrame(columns=["Operation", "Value"])
@@ -48,7 +51,7 @@ class LacsLalurCSLL():
         lacs = lacs[(
             lacs['Código Lançamento e-Lacs']== 2)&
             (lacs['Data Inicial'].str.contains(self.data))]
-        self.lucroAntCSLL = lacs['Vlr Lançamento e-Lacs'].sum()
+        self.lucroAntCSLL = np.sum(lacs['Vlr Lançamento e-Lacs'].values)
         
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
         self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
@@ -60,7 +63,7 @@ class LacsLalurCSLL():
         lacs = lacs[(
             lacs['Código Lançamento e-Lacs']== 93)&
             (lacs['Data Inicial'].str.contains(self.data))]
-        self.audicoes = lacs['Vlr Lançamento e-Lacs'].sum()
+        self.audicoes = np.sum(lacs['Vlr Lançamento e-Lacs'].values)
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Adições", "Value": self.audicoes}])], ignore_index=True)
         self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Adições", "Value": self.audicoes}])], ignore_index=True)
@@ -72,7 +75,7 @@ class LacsLalurCSLL():
         lacs = lacs[(
             lacs['Código Lançamento e-Lacs']== 168)&
             (lacs['Data Inicial'].str.contains(self.data))]
-        self.exclusao = lacs['Vlr Lançamento e-Lacs'].sum()
+        self.exclusao = np.sum(lacs['Vlr Lançamento e-Lacs'].values)
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Exclusões", "Value": self.exclusao}])], ignore_index=True)
         self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Exclusões", "Value": self.exclusao}])], ignore_index=True)
@@ -88,7 +91,7 @@ class LacsLalurCSLL():
         lalur = lalur[(
             lalur['Código Lançamento e-Lalur'] == 173)&
             (lalur['Data Inicial'].str.contains(self.data))]
-        self.compensacao = lalur['Vlr Lançamento e-Lalur'].sum()
+        self.compensacao = np.sum(lalur['Vlr Lançamento e-Lalur'].values)
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Compensação de Prejuízo", "Value": self.compensacao}])], ignore_index=True)
         self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Compensação de Prejuízo", "Value": self.compensacao}])], ignore_index=True)
@@ -110,7 +113,7 @@ class LacsLalurCSLL():
         lalur = lalur[(
             lalur['Código Lançamento e-Lalur']== 17)&
             (lalur['Data Inicial'].str.contains(self.data))]
-        self.retencoes = lalur['Vlr Lançamento e-Lalur'].sum()
+        self.retencoes = np.sum(lalur['Vlr Lançamento e-Lalur'].values)
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Renteções fonte", "Value": self.retencoes}])], ignore_index=True)
         self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Renteções fonte", "Value": self.retencoes}])], ignore_index=True)
@@ -188,7 +191,7 @@ class LacsLalurCSLL():
             self.lalur['Código Lançamento e-Lalur'] == 2)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
-        self.lucroAntIRPJ = lalur['Vlr Lançamento e-Lalur'].sum()
+        self.lucroAntIRPJ = np.sum(lalur['Vlr Lançamento e-Lalur'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
@@ -202,7 +205,7 @@ class LacsLalurCSLL():
             self.lalur['Código Lançamento e-Lalur'] == 9)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
-        self.contrilss = lalur['Vlr Lançamento e-Lalur'].sum()
+        self.contrilss = np.sum(lalur['Vlr Lançamento e-Lalur'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Contribuição Social Sobre o Lucro Líquido - CSLL", "Value": self.contrilss}])], ignore_index=True)
         self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Contribuição Social Sobre o Lucro Líquido - CSLL", "Value": self.contrilss}])], ignore_index=True)
@@ -259,7 +262,7 @@ class LacsLalurCSLL():
             self.lalur['Código Lançamento e-Lalur'] == 168)&
             (lalur['Data Inicial'].str.contains(self.data))]
         
-        self.exclusoeS = lalur['Vlr Lançamento e-Lalur'].sum()
+        self.exclusoeS = np.sum(lalur['Vlr Lançamento e-Lalur'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Exclusoes", "Value": self.exclusoeS}])], ignore_index=True)
         self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Exclusoes", "Value": self.exclusoeS}])], ignore_index=True)
@@ -280,7 +283,7 @@ class LacsLalurCSLL():
                         lalur['Código Lançamento e-Lalur'] == 173)&
                         (lalur['Data Inicial'].str.contains(self.data))]
         
-        self.compPrejFiscal = lalur['Vlr Lançamento e-Lalur'].sum()
+        self.compPrejFiscal = np.sum(lalur['Vlr Lançamento e-Lalur'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "Compensação Prejuízo fiscal", "Value": self.compPrejFiscal}])], ignore_index=True)        
         self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Compensação Prejuízo fiscal", "Value": self.compPrejFiscal}])], ignore_index=True)        

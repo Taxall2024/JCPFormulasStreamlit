@@ -1,6 +1,9 @@
 import pandas as pd
 import streamlit as st
 import numpy as np
+import tracemalloc, json
+import gc
+
 
 from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
 from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo
@@ -15,7 +18,7 @@ import base64
 import io
 import psutil
 
-
+#gc.set_threshold(1000, 1000, 1000)
 
 start_time = time.time()
 st.set_page_config(layout="wide")
@@ -664,9 +667,10 @@ execution_time = end_time - start_time
 with st.sidebar.expander('Dados Processamento'):
     st.write(f"Tempo de execução: {execution_time} segundos")
     cpu_usage = psutil.cpu_percent(interval=1)
-    memory_usage = psutil.virtual_memory().percent
+    memory_usagePercent = psutil.virtual_memory().percent
+    memory_usage = psutil.virtual_memory().used
     st.write(f"Uso de CPU: {cpu_usage}%")
+    st.write(f"Uso de Memória: {memory_usagePercent}%")
     st.write(f"Uso de Memória: {memory_usage}%")
-
     df_tempo_processamento = pd.DataFrame(tempoProcessamentoDasFuncoes)
     st.dataframe(df_tempo_processamento)

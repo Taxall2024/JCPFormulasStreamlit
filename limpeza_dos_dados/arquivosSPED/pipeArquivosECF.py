@@ -3,7 +3,7 @@ import streamlit as st
 import functools
 import numpy as np
 from calendar import monthrange
-
+import gc
 class SpedProcessor:
    
     def __init__(self, file_paths):
@@ -77,7 +77,7 @@ class SpedProcessor:
                     except:
                         pass
         return arquivo
-    
+
     @functools.cache
     def gerandoArquivosECF(self, caminho):
         df_sped = self.lendoELimpandoDadosSped(caminho)
@@ -102,6 +102,8 @@ class SpedProcessor:
         df_sped_n670['Período Apuração'] = 'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual'
 
         return df_sped_l100, df_sped_l300, df_sped_m300, df_sped_m350, df_sped_n630, df_sped_n670
+    gc.collect()
+    print(gc.get_stats())
 
     def processar_arquivos(self):
         for file_path in self.file_paths:
@@ -160,6 +162,9 @@ class SpedProcessor:
             "N630": N630_final,
             "N670": N670_final
         }
+    gc.collect()
+    print("GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR")
+    print(gc.get_stats())
 
     def tratandoTiposDeDados(self,dfs_concatenados):
             

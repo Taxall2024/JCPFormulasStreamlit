@@ -3,7 +3,7 @@ import streamlit as st
 import numpy as np
 import openpyxl as op
 import functools
-
+import gc
 
 from LacsLalur.lacsLalurAntesInoTributarias import LacsLalurCSLL
 
@@ -39,19 +39,11 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.resultsCalcJcp = pd.DataFrame(columns=["Operation", "Value"])
         self.resultsTabelaFinal = pd.DataFrame(columns=["Operation", "Value"]) 
         self.lucro_periodo_value = 0
-    
-    def nomeDasEmpresas(self):
 
-        l100 = self.l100
-        self.nomeEmpresa = ''        
-        if l100['CNPJ'].iloc[0] == '82513490000194':
-            self.nomeEmpresa = 'PROFISER SERVIÇOS PROFISSIONAIS LTDA'
-        elif l100['CNPJ'].iloc[0] == '10332516000197':    
-            self.nomeEmpresa = 'ORBENK TERCEIRIZAÇÃO E SERVIÇOS LTDA'
-        elif l100['CNPJ'].iloc[0] == '04048628000118':
-            self.nomeEmpresa = 'INVIOLAVEL SEGURANÇA ELETRONICA LTDA'
-        else:
-            self.nomeEmpresa = 'Empresa não encontrada'             
+        gc.collect()
+        print("GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR")
+        print(gc.get_stats())
+         
 
     
     def set_date(self, data):
@@ -63,7 +55,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
             l100['Descrição Conta Referencial']=='Capital Subscrito de Domiciliados e Residentes no País')&
             (l100['Data Inicial'].str.contains(self.data))]
-        self.capSocial = l100['Vlr Saldo Final'].sum()
+        self.capSocial = np.sum(l100['Vlr Saldo Final'].values)
 
         key = f'capitalSoc{self.data}'
 
@@ -82,7 +74,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Conta Referencial']=='2.03.01.01.21')&(
             l100['Conta Referencial']=='2.03.01.02.10')&
             (l100['Data Inicial'].str.contains(self.data))]
-        self.capitalIntegra = l100['Vlr Saldo Final'].sum()
+        self.capitalIntegra = np.sum(l100['Vlr Saldo Final'].values)
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Capital Integralizador", "Value": self.capitalIntegra}])], ignore_index=True)
     
     
@@ -91,7 +83,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Conta Referencial']=='2.03.02.01.99')&
         (l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&
             (l100['Data Inicial'].str.contains(self.data))]
-        self.reservaCapital = l100['Vlr Saldo Final'].sum()
+        self.reservaCapital = np.sum(l100['Vlr Saldo Final'].values)
         key = f'ReservlCapital{self.data}'
 
         if key not in st.session_state:
@@ -108,7 +100,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Descrição Conta Referencial']=='Reavaliação de Ativos Próprios')]
-        self.ajusteAvaPatrimonial = l100['Vlr Saldo Final'].sum()
+        self.ajusteAvaPatrimonial = np.sum(l100['Vlr Saldo Final'].values)
 
         key = f'ajustAvaPatri{self.data}'
 
@@ -134,7 +126,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
         
-        self.lucroAcumulado = np.where(l100['Vlr Saldo Final'].sum()-lucroperio<0,0,l100['Vlr Saldo Final'].sum()-lucroperio)
+        self.lucroAcumulado = np.where(np.sum(l100['Vlr Saldo Final'].values)-lucroperio<0,0,np.sum(l100['Vlr Saldo Final'].values)-lucroperio)
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
@@ -145,7 +137,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.10')&
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
-        self.ajustExercAnt = l100['Vlr Saldo Final'].sum()
+        self.ajustExercAnt = np.sum(l100['Vlr Saldo Final'].values)
 
         key = f'ajustExercAnte{self.data}'
 
@@ -162,7 +154,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Descrição Conta Referencial']=='RESULTADO LÍQUIDO DO PERÍODO')&
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
-        self.lucro_periodo_value = l100['Vlr Saldo Final'].sum()
+        self.lucro_periodo_value = np.sum(l100['Vlr Saldo Final'].values)
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucro do Período", "Value": self.lucro_periodo_value}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucro do Período", "Value": self.lucro_periodo_value}])], ignore_index=True)
 
@@ -245,7 +237,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.12')&
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
-        self.acosTesouraria = l100['Vlr Saldo Final'].sum()
+        self.acosTesouraria = np.sum(l100['Vlr Saldo Final'].values)
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ações em Tesouraria", "Value": self.acosTesouraria}])], ignore_index=True)
 
     def contPatrimonioNaoClass(self):
@@ -254,7 +246,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.90')&
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
-        self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum()
+        self.contaPatriNClassifica = np.sum(l100['Vlr Saldo Final'].values)
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Contas do Patrimônio Líquido Não Classificadas ", "Value": self.contaPatriNClassifica}])], ignore_index=True)
     
     
@@ -279,7 +271,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.11')&
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
-        self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum() * -1
+        self.contaPatriNClassifica = np.sum(l100['Vlr Saldo Final'].values) * -1
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.contaPatriNClassifica}])], ignore_index=True)
     
     @functools.cache

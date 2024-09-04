@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 import functools
 import time
-
+import gc
 
 
 # Adicione o caminho do diretório onde o módulo 'LacsLalur' está localizado
@@ -74,25 +74,15 @@ class trimestralFiltrandoDadosParaCalculo():
             choices = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
             df['Trimestre'] = np.select(conditions, choices, default='')            
 
+        gc.collect()
+        print("GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR")
+        print(gc.get_stats())
 
         self.resultsCalcJcp = pd.DataFrame(columns=["Operation", "Value"])
         self.resultsTabelaFinal = pd.DataFrame(columns=["Operation", "Value"])
         self.lucro_periodo_value = 0
 
     #-- Função que retorna o nome da empresa, deve ser substituida por uma função que busca o nome da empresa no banco de dados
-    def nomeDasEmpresas(self):
-
-        l100 = self.l100
-        self.nomeEmpresa = ''        
-        if l100['CNPJ'].iloc[0] == '82513490000194':
-            self.nomeEmpresa = 'PROFISER SERVIÇOS PROFISSIONAIS LTDA'
-        elif l100['CNPJ'].iloc[0] == '10332516000197':    
-            self.nomeEmpresa = 'ORBENK TERCEIRIZAÇÃO E SERVIÇOS LTDA'
-        elif l100['CNPJ'].iloc[0] == '04048628000118':
-            self.nomeEmpresa = 'INVIOLAVEL SEGURANÇA ELETRONICA LTDA'
-        else:
-            self.nomeEmpresa = 'Empresa não encontrada'             
-
 
     def set_date(self, data):
         self.data = data   
@@ -105,7 +95,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.capSocial = l100['Vlr Saldo Final'].sum()
+        self.capSocial = np.sum(l100['Vlr Saldo Final'].values)
         key = f'capitalSoc{self.data,self.trimestre,self.mes_fim}'
 
         if key not in st.session_state:
@@ -127,7 +117,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.capitalIntegra = l100['Vlr Saldo Final'].sum()
+        self.capitalIntegra = np.sum(l100['Vlr Saldo Final'].values)
     
         key = f'capitalIntregalizador{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
@@ -147,7 +137,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.reservaCapital = l100['Vlr Saldo Final'].sum()
+        self.reservaCapital = np.sum(l100['Vlr Saldo Final'].values)
     
         key = f'reservasDeCapital{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
@@ -166,7 +156,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.ajusteAvaPatrimonial = l100['Vlr Saldo Final'].sum()
+        self.ajusteAvaPatrimonial = np.sum(l100['Vlr Saldo Final'].values)
 
         key = f'ajustesPatrimonial{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
@@ -186,7 +176,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.lucroAcumulado = l100['Vlr Saldo Final'].sum()        
+        self.lucroAcumulado = np.sum(l100['Vlr Saldo Final'].values)        
 
         key = f'lucrosAcumulados{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
@@ -206,7 +196,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.ajustExercAnt = l100['Vlr Saldo Final'].sum()        
+        self.ajustExercAnt = np.sum(l100['Vlr Saldo Final'].values)        
 
         key = f'ajustesExerAnteirores{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
@@ -254,7 +244,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.reservLegal = l100['Vlr Saldo Final'].sum()
+        self.reservLegal = np.sum(l100['Vlr Saldo Final'].values)
         
         key = f'reservaLegal{self.ano,self.mes_inicio,self.trimestre}'
 
@@ -273,7 +263,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.outrasResLuc = l100['Vlr Saldo Final'].sum()
+        self.outrasResLuc = np.sum(l100['Vlr Saldo Final'].values)
 
         key = f'reservaOutras{self.ano,self.mes_inicio,self.trimestre}'
 
@@ -301,7 +291,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.acosTesouraria = l100['Vlr Saldo Final'].sum()
+        self.acosTesouraria = np.sum(l100['Vlr Saldo Final'].values)
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ações em Tesouraria", "Value": self.acosTesouraria}])], ignore_index=True)
     
     
@@ -313,7 +303,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum()
+        self.contaPatriNClassifica = np.sum(l100['Vlr Saldo Final'].values)
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Contas do Patrimônio Líquido Não Classificadas ", "Value": self.contaPatriNClassifica}])], ignore_index=True)
     
 
@@ -324,7 +314,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.prejuizoPeirod = l100['Vlr Saldo Final'].sum()
+        self.prejuizoPeirod = np.sum(l100['Vlr Saldo Final'].values)
 
         if (l100['D/C Saldo Final'] == 'C').any():
             lucroPrejuizo = 'Lucro do Período'
@@ -349,7 +339,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.contaPatriNClassifica = l100['Vlr Saldo Final'].sum()
+        self.contaPatriNClassifica = np.sum(l100['Vlr Saldo Final'].values)
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.contaPatriNClassifica}])], ignore_index=True)
         
         key = f'prejuizoAcumulado{self.data,self.trimestre,self.mes_fim}'

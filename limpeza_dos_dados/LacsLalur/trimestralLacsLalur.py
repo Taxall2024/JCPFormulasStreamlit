@@ -3,7 +3,7 @@ import numpy as np
 import streamlit as st
 import functools
 from dataclasses import dataclass
-
+import gc
 
 
 class LacsLalurCSLLTrimestral():
@@ -49,6 +49,11 @@ class LacsLalurCSLLTrimestral():
         self.results = pd.DataFrame(columns=["Operation", "Value"]) 
         self.trimestralLacsLalurAposInovacoes = pd.DataFrame(columns=["Operation", "Value"])
 
+        gc.collect()
+        print("GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR")
+        print(gc.get_stats())
+
+
         self.lucroAntCSLL = 0 
         self.adicoes = 0
         self.exclusao = 0
@@ -74,7 +79,7 @@ class LacsLalurCSLLTrimestral():
     
     def calcular_soma(self, df, codigo, col='Código Lançamento e-Lacs'):
         filtro = self.filtro_dados(df, codigo, col)
-        return filtro['Vlr Lançamento e-Lacs'].sum()
+        return np.sum(filtro['Vlr Lançamento e-Lacs'].values)
     
     def filter_data(self, df, code):
         return df[
@@ -114,7 +119,7 @@ class LacsLalurCSLLTrimestral():
             (lacs['Data Inicial'].dt.month <= self.mes_fim)&
             (lacs['Trimestre'] == self.trimestre)]
         
-        self.lucroAntCSLL = lacs['Vlr Lançamento e-Lacs'].sum()
+        self.lucroAntCSLL = np.sum(lacs['Vlr Lançamento e-Lacs'].values)
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
     
@@ -142,7 +147,7 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month >= self.mes_inicio) &
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
-        self.compensacao = lalur['Vlr Lançamento e-Lalur'].sum()
+        self.compensacao = np.sum(lalur['Vlr Lançamento e-Lalur'].values)
 
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Compensação de Prejuízo", "Value": self.compensacao}])], ignore_index=True)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Compensação de Prejuízo", "Value": self.compensacao}])], ignore_index=True)
@@ -167,7 +172,7 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month >= self.mes_inicio) &
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
-        self.retencoes = lalur['Vlr Lançamento e-Lalur'].sum()
+        self.retencoes = np.sum(lalur['Vlr Lançamento e-Lalur'].values)
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Valor CSLL", "Value": self.retencoes}])], ignore_index=True)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Valor CSLL", "Value": self.retencoes}])], ignore_index=True)
     
@@ -212,7 +217,7 @@ class LacsLalurCSLLTrimestral():
             (ecf760['Data Inicial'].dt.month <= self.mes_fim)&
             (ecf760['Trimestre'] == self.trimestre)]
         
-        self.impostoPorEstim = ecf760['Vlr Lançamento'].sum()
+        self.impostoPorEstim = np.sum(ecf760['Vlr Lançamento'].values)
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Imposto por estimativa", "Value": self.impostoPorEstim}])], ignore_index=True)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Imposto por estimativa", "Value": self.impostoPorEstim}])], ignore_index=True)
 
@@ -247,14 +252,14 @@ class LacsLalurCSLLTrimestral():
 
     def LucroLiquidoAntesIRPJ(self):
         lalur_filtered = self.filter_data(self.lalur, 2)
-        self.lucroAntIRPJ = lalur_filtered['Vlr Lançamento e-Lalur'].sum()
+        self.lucroAntIRPJ = np.sum(lalur_filtered['Vlr Lançamento e-Lalur'].values)
         self.add_result("Lucro antes IRPJ", self.lucroAntIRPJ)
         self.add_final_result("Lucro antes IRPJ", self.lucroAntIRPJ)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
     
     def clss(self):
         lalur_filtered = self.filter_data(self.lalur, 9)
-        self.contrilss = lalur_filtered['Vlr Lançamento e-Lalur'].sum()
+        self.contrilss = np.sum(lalur_filtered['Vlr Lançamento e-Lalur'].values)
         self.add_result("Contribuição Social Sobre o Lucro Líquido - CSLL", self.contrilss)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Contribuição Social Sobre o Lucro Líquido - CSLL", "Value": self.contrilss}])], ignore_index=True)
     
@@ -274,7 +279,7 @@ class LacsLalurCSLLTrimestral():
     
     def exclusoesIRPJ(self):
         lalur_filtered = self.filter_data(self.lalur, 168)
-        self.exclusoeS = lalur_filtered['Vlr Lançamento e-Lalur'].sum()
+        self.exclusoeS = np.sum(lalur_filtered['Vlr Lançamento e-Lalur'].values)
         self.add_result("Exclusões", self.exclusoeS)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Exclusões", "Value": self.exclusoeS}])], ignore_index=True)
    
@@ -285,7 +290,7 @@ class LacsLalurCSLLTrimestral():
    
     def CompPrejuFiscal(self):
         lalur_filtered = self.filter_data(self.lalur, 173)
-        self.compPrejFiscal = lalur_filtered['Vlr Lançamento e-Lalur'].sum()
+        self.compPrejFiscal = np.sum(lalur_filtered['Vlr Lançamento e-Lalur'].values)
         self.add_result("Compensação Prejuízo fiscal", self.compPrejFiscal)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Compensação Prejuízo fiscal", "Value": self.compPrejFiscal}])], ignore_index=True)
    
@@ -319,7 +324,7 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
         
-        self.PAT = lalur['Vlr Lançamento'].sum()
+        self.PAT = np.sum(lalur['Vlr Lançamento'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "PAT", "Value": self.PAT}])], ignore_index=True) 
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "PAT", "Value": self.PAT}])], ignore_index=True) 
@@ -335,7 +340,7 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
         
-        self.operCultuArtistico = lalur['Vlr Lançamento'].sum()
+        self.operCultuArtistico = np.sum(lalur['Vlr Lançamento'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Operações de Caráter Cultural e Artístico", "Value": self.operCultuArtistico}])], ignore_index=True )      
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "(-)Operações de Caráter Cultural e Artístico", "Value": self.operCultuArtistico}])], ignore_index=True )      
@@ -371,7 +376,7 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
         
-        self.impostRetFonte = lalur['Vlr Lançamento'].sum()
+        self.impostRetFonte = np.sum(lalur['Vlr Lançamento'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte", "Value": self.impostRetFonte}])], ignore_index=True )      
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte", "Value": self.impostRetFonte}])], ignore_index=True )      
@@ -387,7 +392,7 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
         
-        self.impostRetFonteOrgAut = lalur['Vlr Lançamento'].sum()
+        self.impostRetFonteOrgAut = np.sum(lalur['Vlr Lançamento'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte por Órgãos, Autarquias e Fundações Federais (Lei nº 9.430/1996, art. 64)", "Value": self.impostRetFonteOrgAut}])],
                                   ignore_index=True )      
@@ -405,7 +410,7 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
         
-        self.impostRetFonteDemEnti = lalur['Vlr Lançamento'].sum()
+        self.impostRetFonteDemEnti = np.sum(lalur['Vlr Lançamento'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Retido na Fonte pelas Demais Entidades da Administração Pública Federal (Lei n° 10.833/2003, art. 34)",
                                                                 "Value": self.impostRetFonteDemEnti}])], ignore_index=True )      
@@ -423,7 +428,7 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
         
-        self.impostRV = lalur['Vlr Lançamento'].sum()
+        self.impostRV = np.sum(lalur['Vlr Lançamento'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto Pago Incidente sobre Ganhos no Mercado de Renda Variável",
                                                                 "Value": self.impostRV}])], ignore_index=True )      
@@ -441,7 +446,7 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
         
-        self.impostRendaPago = lalur['Vlr Lançamento'].sum()
+        self.impostRendaPago = np.sum(lalur['Vlr Lançamento'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Operation": "(-)Imposto de Renda Mensal Efetivamente Pago por Estimativa",
                                                                 "Value": self.impostRendaPago}])], ignore_index=True )      
