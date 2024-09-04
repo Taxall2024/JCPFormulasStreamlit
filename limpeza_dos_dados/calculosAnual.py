@@ -7,21 +7,13 @@ import xlsxwriter
 from xlsxwriter import Workbook
 
 from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
-from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo
-from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
-from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
-from arquivosSPED.pipeArquivosECF import SpedProcessor
 from scrapping import ScrappingTJPL
 
-import unittest
+
 import requests
 import functools
 import time
-import base64
-import io
-import psutil
-import pstats
-from io import BytesIO
+
 
 
 
