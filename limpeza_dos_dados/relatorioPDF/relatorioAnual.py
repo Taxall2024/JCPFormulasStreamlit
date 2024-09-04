@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import numpy as np
 from io import BytesIO
+import os
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -16,8 +17,8 @@ Essa metodologia possui respaldo legal no artigo 9º, da Lei nº 9.249/1995, com
 
 """
 def add_background(canvas, doc):
-
-    canvas.drawImage("limpeza_dos_dados\\relatorioPDF\\Cabecalho.png", 0, 0, width=doc.pagesize[0], height=doc.pagesize[1])
+    
+    canvas.drawImage("Cabecalho.png", 0, 0, width=doc.pagesize[0], height=doc.pagesize[1])
 
 
 class RelatorioPDFJSCP():
@@ -91,13 +92,20 @@ class RelatorioPDFJSCP():
         resultados = pd.read_excel(uploaded_file_resultados).fillna(np.nan)
         resultados = resultados.apply(lambda x: x.dropna().reset_index(drop=True))
         resultados = resultados.iloc[24:,:]
-        
-        for col in colunas:
-            resultados[col] = resultados[col].replace('.','_').replace(',','.').replace('_',',').astype(float)
-            
-        valorTotal = resultados.iloc[-1,:]
-        valorImposto = resultados.iloc[-2,:]
-
+        try:
+            for col in colunas:
+                resultados[col] = resultados[col].astype(str)
+                resultados[col] = resultados[col].astype(float)
+                resultados[col] = pd.to_numeric(resultados[col]) 
+            valorTotal = resultados.iloc[-1,:]
+            valorImposto = resultados.iloc[-2,:]
+        except:
+            for col in colunas:
+                resultados[col] = resultados[col].astype(str)
+                resultados[col] = resultados[col].str.replace('.','_').str.replace(',','.').str.replace('_','').astype(float)
+                resultados[col] = pd.to_numeric(resultados[col]) 
+            valorTotal = resultados.iloc[-1,:]
+            valorImposto = resultados.iloc[-2,:]
 
         self.valorTotalPeriodo = "{:,.2f}".format(round(sum([valorTotal['Value_2019'],valorTotal['Value_2020'],
                                                                valorTotal['Value_2021'],valorTotal['Value_2022'],
@@ -164,7 +172,7 @@ class RelatorioPDFJSCP():
         """
         story.append(Paragraph(texto, styles["Normal"]))  
         story.append(Spacer(1, 12))
-        img_path = "limpeza_dos_dados\\relatorioPDF\\RespaldoJuridico1.png"
+        img_path = "RespaldoJuridico1.png"
         img = Image(img_path, width=3.8*inch, height=0.9*inch)
         img.hAlign = 'RIGHT'
         story.append(img) 
@@ -180,7 +188,7 @@ class RelatorioPDFJSCP():
         story.append(Paragraph(texto, styles["Normal"]))
 
         story.append(Spacer(1, 12))
-        img_path = "limpeza_dos_dados\\relatorioPDF\\RespaldoJuridico2.png"
+        img_path = "RespaldoJuridico2.png"
         img = Image(img_path, width=3.8*inch, height=3.5*inch)
         img.hAlign = 'RIGHT'
         story.append(img) 
@@ -197,7 +205,7 @@ class RelatorioPDFJSCP():
         story.append(PageBreak())
 
         story.append(Spacer(1, 12))
-        img_path = "limpeza_dos_dados\\relatorioPDF\\RespaldoJuridico3.png"
+        img_path = "RespaldoJuridico3.png"
         img = Image(img_path, width=3.8*inch, height=4.2*inch)
         img.hAlign = 'RIGHT'
         story.append(img) 
@@ -384,7 +392,7 @@ class RelatorioPDFJSCP():
 
         story.append(Spacer(1, 24))  
 
-        img_path = "limpeza_dos_dados\\relatorioPDF\\Assinaturas.png"
+        img_path = "Assinaturas.png"
         img = Image(img_path, width=5.8*inch, height=1.9*inch)
         img.hAlign = 'CENTER'
         story.append(img) 
@@ -394,24 +402,5 @@ class RelatorioPDFJSCP():
         return pdf_buffer
    
  
-if __name__=='__main__':
-
-    st.set_page_config(layout='wide')
-    col1,col2,col3,col4,col5,col6 = st.columns(6)
-
-    uploaded_file_resultados = st.sidebar.file_uploader("Upload arquivo de resultado", type="xlsx")
-    if uploaded_file_resultados is not None:
-
-        with col1:
-            nomeDaEmepresa = st.text_input('Digite o nome da empresa')
-            aliquotaImposto = st.text_input('Digite o valor da alíquota de imposto, ex(24,34)')
-            dataAssinatura=st.text_input('Escreva a data da assinatura do contrato, ex. 23 de agosto de 2024 ')
-
-        observacoesDoAnlista = st.text_input('Digite aqui suas observações :')    
-        pdf = RelatorioPDFJSCP()
-        pdf.valorTotal(uploaded_file_resultados)
-        pdf.create_pdf(nomeDaEmepresa,aliquotaImposto,observacoesDoAnlista,dataAssinatura)
-
-
 
 
