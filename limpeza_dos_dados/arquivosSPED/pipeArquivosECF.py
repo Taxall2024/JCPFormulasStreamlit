@@ -159,7 +159,6 @@ class SpedProcessor:
             "N670": N670_final
         }
     @functools.cache
-    @staticmethod
     def tratandoTiposDeDados(self,dfs_concatenados):
             
             L100_final = dfs_concatenados["L100"]
