@@ -15,8 +15,7 @@ class SpedProcessor:
         self.listaN630 = []
         self.listaN670 = []
 
-    @functools.cache
-    @staticmethod
+
     def lendoELimpandoDadosSped(self, file_path):
         data = []
         with open(file_path, 'r', encoding='latin-1') as file:
@@ -37,8 +36,7 @@ class SpedProcessor:
         df['Data Final'] = pd.to_datetime(df['Data Final'], format='%d%m%Y').dt.strftime('%d/%m/%Y')
         
         return df
-    # @functools.cache
-    # @staticmethod
+
     def classificaPeriodoDeApuracao(self, arquivo, referencia):
         bloco_iniciado = False
         data_index = 0
@@ -78,7 +76,7 @@ class SpedProcessor:
                         pass
         return arquivo
     
-    @functools.cache
+  
     def gerandoArquivosECF(self, caminho):
         df_sped = self.lendoELimpandoDadosSped(caminho)
 
@@ -112,7 +110,7 @@ class SpedProcessor:
             self.listaM350.append(df_sped_m350)
             self.listaN630.append(df_sped_n630)
             self.listaN670.append(df_sped_n670)
-    @functools.cache
+ 
     def concatenar_dfs(self):
         L100_final = pd.concat(self.listaL100).reset_index(drop=True).rename(columns={
             1: 'Conta Referencial', 2: 'Descrição Conta Referencial', 3: "Tipo Conta", 4: 'Nível Conta',
@@ -160,7 +158,8 @@ class SpedProcessor:
             "N630": N630_final,
             "N670": N670_final
         }
-
+    @functools.cache
+    @staticmethod
     def tratandoTiposDeDados(self,dfs_concatenados):
             
             L100_final = dfs_concatenados["L100"]
