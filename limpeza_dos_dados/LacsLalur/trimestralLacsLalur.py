@@ -534,50 +534,6 @@ class LacsLalurCSLLTrimestral():
 
         return self.trimestralLacsLalurAposInovacoes        
     
-    #Função que processa todo o codigo, transforma os dados em dataframe separadamente por trimestre 
-    def processarDados(self):
-
-        col1, col2, col3, col4 = st.columns(4)
-        trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
-
-        for ano in range(2019, 2024):
-            year_dfsLacs = []
-            year_dfsLalurIRPJ = []
-            for col, trimestre in zip([col1, col2, col3, col4], trimestres):
-                with col:
-
-                    lacs = LacsLalurCSLLTrimestral(trimestre, ano, 1, 12)
-
-                    lacs.runPipeLacsLalurCSLL()
-                    df = lacs.dataframeFinal
-                    df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                    year_dfsLacs.append(df)
-
-
-                    lacs.runPipeLacsLalurIRPJ() 
-                    df2 = lacs.dataframeFinalIRPJ
-                    df2.columns = [f"{col} {trimestre}" for col in df2.columns] 
-                    year_dfsLalurIRPJ.append(df2)
-
-
-                self.dfFinalLacs = pd.concat(year_dfsLacs, axis=1)
-                self.dfFinalLacsIRPJ = pd.concat(year_dfsLalurIRPJ, axis=1)
-
-            st.subheader(f"Resultados Anuais - {ano}")
-            st.dataframe(self.dfFinalLacs)
-            st.dataframe(self.dfFinalLacsIRPJ)
-
-''' O codigo abaixo server para debugar o codigo caso precise rodar a classe isolada nesse modulo'''
-# if __name__=='__main__':
-
-#     lacs = LacsLalurCSLLTrimestral(None, None, 1, 12)
-#     lacs.processarDados()
-
-
-
-
-
-
 
 
 

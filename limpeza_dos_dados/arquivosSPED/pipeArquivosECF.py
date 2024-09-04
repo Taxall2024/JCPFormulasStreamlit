@@ -5,6 +5,7 @@ import numpy as np
 from calendar import monthrange
 
 class SpedProcessor:
+   
     def __init__(self, file_paths):
         self.file_paths = file_paths
         self.listaL100 = []
@@ -15,6 +16,7 @@ class SpedProcessor:
         self.listaN670 = []
 
     @functools.cache
+    @staticmethod
     def lendoELimpandoDadosSped(self, file_path):
         data = []
         with open(file_path, 'r', encoding='latin-1') as file:
@@ -35,7 +37,8 @@ class SpedProcessor:
         df['Data Final'] = pd.to_datetime(df['Data Final'], format='%d%m%Y').dt.strftime('%d/%m/%Y')
         
         return df
-
+    # @functools.cache
+    # @staticmethod
     def classificaPeriodoDeApuracao(self, arquivo, referencia):
         bloco_iniciado = False
         data_index = 0
@@ -157,6 +160,41 @@ class SpedProcessor:
             "N630": N630_final,
             "N670": N670_final
         }
+
+    def tratandoTiposDeDados(self,dfs_concatenados):
+            
+            L100_final = dfs_concatenados["L100"]
+            L100_final['Vlr Saldo Final'] = L100_final['Vlr Saldo Final'].str.replace(',','.').astype(float)
+            L300_final = dfs_concatenados["L300"]
+            L300_final['Vlr Saldo Final'] = L300_final['Vlr Saldo Final'].str.replace(',','.').astype(float)
+
+            M300_final = dfs_concatenados["M300"]
+            M300_final['Vlr Lançamento e-Lalur'] = (M300_final['Vlr Lançamento e-Lalur'].str.replace(',', '.').replace('', np.nan))
+            M300_final['Vlr Lançamento e-Lalur'] = pd.to_numeric(M300_final['Vlr Lançamento e-Lalur'])
+            M300_final['Código Lançamento e-Lalur'] = pd.to_numeric(M300_final['Código Lançamento e-Lalur'])
+            M300_final['Vlr Lançamento e-Lalur'].fillna(0, inplace=True)
+
+            M350_final = dfs_concatenados["M350"]
+            M350_final['Vlr Lançamento e-Lacs'] = (M350_final['Vlr Lançamento e-Lacs'].str.replace(',', '.').replace('', np.nan))
+            M350_final['Vlr Lançamento e-Lacs'] = pd.to_numeric(M350_final['Vlr Lançamento e-Lacs'])
+            M350_final['Código Lançamento e-Lacs'] = pd.to_numeric(M350_final['Código Lançamento e-Lacs'])
+            M350_final['Vlr Lançamento e-Lacs'].fillna(0, inplace=True)
+
+            N630_final = dfs_concatenados["N630"]
+            N630_final['Vlr Lançamento'] = (N630_final['Vlr Lançamento'].str.replace(',', '.').replace('', np.nan))
+            N630_final['Vlr Lançamento'] = pd.to_numeric(N630_final['Vlr Lançamento'])
+            N630_final['Código Lançamento'] = pd.to_numeric(N630_final['Código Lançamento'])
+            N630_final['Vlr Lançamento'].fillna(0, inplace=True)
+
+            N670_final = dfs_concatenados["N670"]
+            N670_final['Vlr Lançamento'] = (N670_final['Vlr Lançamento'].str.replace(',', '.').replace('', np.nan))
+            N670_final['Vlr Lançamento'] = pd.to_numeric(N670_final['Vlr Lançamento'])
+            N670_final['Código Lançamento'] = pd.to_numeric(N670_final['Código Lançamento'])
+            N670_final['Vlr Lançamento'].fillna(0, inplace=True)   
+
+            return L100_final,L300_final,M300_final,M350_final,N630_final,N670_final     
+
+
 
 # #Exemplo de uso da classe
 # if __name__=='__main__':

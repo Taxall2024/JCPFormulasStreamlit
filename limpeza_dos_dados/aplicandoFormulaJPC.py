@@ -155,7 +155,7 @@ if __name__ == "__main__":
                 nomeDaEmepresa = st.text_input('Digite o nome da empresa')
                 aliquotaImposto = st.text_input('Digite o valor da alíquota de imposto, ex(24,34)')
                 dataAssinatura = st.text_input('Escreva a data da assinatura do contrato, ex. 23 de agosto de 2024 ')
-            observacoesDoAnlista = st.text_input('Digite aqui suas observações :')
+                observacoesDoAnlista = st.text_area('Digite aqui as observações :',height=500)
             
 
             pdf = RelatorioPDFJSCP()
@@ -186,50 +186,20 @@ if __name__ == "__main__":
                     f.write(uploaded_file.getbuffer())
                 file_paths.append(file_path)
 
-            sped_processor = SpedProcessor(file_paths)
-            if anualOuTrimestral=='Ano':
-                 seletorPeriodo = 'Ano'
-            else:
-                 seletorPeriodo = 'Trimestre'    
+            sped_processor = SpedProcessor(file_paths)  
             sped_processor.processar_arquivos()
             dfs_concatenados = sped_processor.concatenar_dfs()
+            L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
 
-            L100_final = dfs_concatenados["L100"]
-            L100_final['Vlr Saldo Final'] = L100_final['Vlr Saldo Final'].str.replace(',','.').astype(float)
-            L300_final = dfs_concatenados["L300"]
-            L300_final['Vlr Saldo Final'] = L300_final['Vlr Saldo Final'].str.replace(',','.').astype(float)
-
-            M300_final = dfs_concatenados["M300"]
-            M300_final['Vlr Lançamento e-Lalur'] = (M300_final['Vlr Lançamento e-Lalur'].str.replace(',', '.').replace('', np.nan))
-            M300_final['Vlr Lançamento e-Lalur'] = pd.to_numeric(M300_final['Vlr Lançamento e-Lalur'])
-            M300_final['Código Lançamento e-Lalur'] = pd.to_numeric(M300_final['Código Lançamento e-Lalur'])
-            M300_final['Vlr Lançamento e-Lalur'].fillna(0, inplace=True)
-
-            M350_final = dfs_concatenados["M350"]
-            M350_final['Vlr Lançamento e-Lacs'] = (M350_final['Vlr Lançamento e-Lacs'].str.replace(',', '.').replace('', np.nan))
-            M350_final['Vlr Lançamento e-Lacs'] = pd.to_numeric(M350_final['Vlr Lançamento e-Lacs'])
-            M350_final['Código Lançamento e-Lacs'] = pd.to_numeric(M350_final['Código Lançamento e-Lacs'])
-            M350_final['Vlr Lançamento e-Lacs'].fillna(0, inplace=True)
-
-            N630_final = dfs_concatenados["N630"]
-            N630_final['Vlr Lançamento'] = (N630_final['Vlr Lançamento'].str.replace(',', '.').replace('', np.nan))
-            N630_final['Vlr Lançamento'] = pd.to_numeric(N630_final['Vlr Lançamento'])
-            N630_final['Código Lançamento'] = pd.to_numeric(N630_final['Código Lançamento'])
-            N630_final['Vlr Lançamento'].fillna(0, inplace=True)
-
-            N670_final = dfs_concatenados["N670"]
-            N670_final['Vlr Lançamento'] = (N670_final['Vlr Lançamento'].str.replace(',', '.').replace('', np.nan))
-            N670_final['Vlr Lançamento'] = pd.to_numeric(N670_final['Vlr Lançamento'])
-            N670_final['Código Lançamento'] = pd.to_numeric(N670_final['Código Lançamento'])
-            N670_final['Vlr Lançamento'].fillna(0, inplace=True)
-            
-        uploaded_file_l100 =  L100_final  
-        uploaded_file_l300 = L300_final   
-        uploaded_file_lacs =   M350_final 
-        uploaded_file_lalur =  M300_final 
-        uploaded_file_ecf670 = N670_final 
-        uploaded_file_ec630 =  N630_final 
-
+        try:    
+            uploaded_file_l100 =  L100_final  
+            uploaded_file_l300 = L300_final   
+            uploaded_file_lacs =   M350_final 
+            uploaded_file_lalur =  M300_final 
+            uploaded_file_ecf670 = N670_final 
+            uploaded_file_ec630 =  N630_final 
+        except:
+             pass
         if uploaded_files:
             if anualOuTrimestral == 'Ano':          
                 filtrando_dados = FiltrandoDadosParaCalculo(
@@ -241,249 +211,251 @@ if __name__ == "__main__":
                     l100_file=uploaded_file_l100,
                     l300_file=uploaded_file_l300
                 )
-                #try:
-                calculos2019 = Calculo(data=str('2019'),
-                                        lacs_file=uploaded_file_lacs,
-                                        lalur_file=uploaded_file_lalur,
-                                        ecf670_file=uploaded_file_ecf670,
-                                        ec630_file=uploaded_file_ec630,
-                                        l100_file=uploaded_file_l100,
-                                        l300_file=uploaded_file_l300) 
-                calculos2020 = Calculo(data=str('2020'),
-                                        lacs_file=uploaded_file_lacs,
-                                        lalur_file=uploaded_file_lalur,
-                                        ecf670_file=uploaded_file_ecf670,
-                                        ec630_file=uploaded_file_ec630,
-                                        l100_file=uploaded_file_l100,
-                                        l300_file=uploaded_file_l300) 
-                calculos2021 = Calculo(data=str('2021'),
-                                        lacs_file=uploaded_file_lacs,
-                                        lalur_file=uploaded_file_lalur,
-                                        ecf670_file=uploaded_file_ecf670,
-                                        ec630_file=uploaded_file_ec630,
-                                        l100_file=uploaded_file_l100,
-                                        l300_file=uploaded_file_l300)
-                calculos2022 =  Calculo(data=str('2022'),
-                                        lacs_file=uploaded_file_lacs,
-                                        lalur_file=uploaded_file_lalur,
-                                        ecf670_file=uploaded_file_ecf670,
-                                        ec630_file=uploaded_file_ec630,
-                                        l100_file=uploaded_file_l100,
-                                        l300_file=uploaded_file_l300)                                             
-                calculos2023 =  Calculo(data=str('2023'),
-                                        lacs_file=uploaded_file_lacs,
-                                        lalur_file=uploaded_file_lalur,
-                                        ecf670_file=uploaded_file_ecf670,
-                                        ec630_file=uploaded_file_ec630,
-                                        l100_file=uploaded_file_l100,
-                                        l300_file=uploaded_file_l300) 
-                
-                if barra == "Calculo JCP":
+                try:
+                    calculos2019 = Calculo(data=str('2019'),
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300) 
+                    calculos2020 = Calculo(data=str('2020'),
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300) 
+                    calculos2021 = Calculo(data=str('2021'),
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300)
+                    calculos2022 =  Calculo(data=str('2022'),
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300)                                             
+                    calculos2023 =  Calculo(data=str('2023'),
+                                            lacs_file=uploaded_file_lacs,
+                                            lalur_file=uploaded_file_lalur,
+                                            ecf670_file=uploaded_file_ecf670,
+                                            ec630_file=uploaded_file_ec630,
+                                            l100_file=uploaded_file_l100,
+                                            l300_file=uploaded_file_l300) 
+                    
+                    if barra == "Calculo JCP":
 
-                            
-                            economiaPorAno = []
-                            dataFrameParaExportar1 = []
-                            dataFrameParaExportar2 = []
-                            dataFrameParaExportar3 = []
+                                
+                                economiaPorAno = []
+                                dataFrameParaExportar1 = []
+                                dataFrameParaExportar2 = []
+                                dataFrameParaExportar3 = []
 
-                            df = pd.DataFrame(columns=['Operation','Value'])
-                            
+                                df = pd.DataFrame(columns=['Operation','Value'])
+                                
+
+                                with col1:
+                                    st.write('')
+                                    st.write('')
+                                    st.write('')
+                                    st.write('')
+                                    st.subheader('2019')
+                                    calculosIniciais_2019 = calculos2019.runPipe()
+                                    tabelaFinal_2019 = calculos2019.runPipeFinalTable()
+                                    resultadoTotal_2019 = calculos2019.pipeCalculo('2019')
+                                    economiaPorAno.append(resultadoTotal_2019)
+                                    dataFrameParaExportar1.append(calculosIniciais_2019)
+                                    dataFrameParaExportar2.append(tabelaFinal_2019)
+                                    dataFrameParaExportar3.append(resultadoTotal_2019)
+                                    st.write('')
+                                    with st.expander('Lacas Lalur após inovações'):
+                                        lacsLalurAposInovacoes = calculos2019.runPipeAposInovacoesLacsLalurCSLL()
+                                        lacsLalurAposInovacoesDFFinal2019 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
+                                        lacsLalurAposInovacoesDFFinal2019['Value'] = lacsLalurAposInovacoesDFFinal2019['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+                                        st.dataframe(lacsLalurAposInovacoesDFFinal2019)
+                                    
+                                with col2:
+                                    st.write('')
+                                    st.write('')
+                                    st.write('')
+                                    st.write('')
+                                    st.subheader('2020')
+                                    calculosIniciais_2020 = calculos2020.runPipe()
+                                    tabelaFinal_2020 = calculos2020.runPipeFinalTable()
+                                    resultadoTotal_2020 = calculos2020.pipeCalculo('2020')
+                                    economiaPorAno.append(resultadoTotal_2020)
+                                    dataFrameParaExportar1.append(calculosIniciais_2020)
+                                    dataFrameParaExportar2.append(tabelaFinal_2020)
+                                    dataFrameParaExportar3.append(resultadoTotal_2020)
+                                    st.write('')
+                                    with st.expander('Lacas Lalur após inovações'):
+                                        lacsLalurAposInovacoes = calculos2020.runPipeAposInovacoesLacsLalurCSLL()
+                                        lacsLalurAposInovacoesDFFinal2020 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
+                                        lacsLalurAposInovacoesDFFinal2020['Value'] = lacsLalurAposInovacoesDFFinal2020['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+                                        st.dataframe(lacsLalurAposInovacoesDFFinal2020)
+                                with col3:
+                                    st.write('')
+                                    st.write('')
+                                    st.write('')
+                                    st.write('')
+                                    st.subheader('2021')
+                                    calculosIniciais_2021 = calculos2021.runPipe()
+                                    tabelaFinal_2021 = calculos2021.runPipeFinalTable()
+                                    resultadoTotal_2021 = calculos2021.pipeCalculo('2021')
+                                    economiaPorAno.append(resultadoTotal_2021)
+                                    dataFrameParaExportar1.append(calculosIniciais_2021)
+                                    dataFrameParaExportar2.append(tabelaFinal_2021)
+                                    dataFrameParaExportar3.append(resultadoTotal_2021)
+                                    st.write('')
+                                    
+                                    with st.expander('Lacas Lalur após inovações'):
+                                        lacsLalurAposInovacoes = calculos2021.runPipeAposInovacoesLacsLalurCSLL()
+                                        lacsLalurAposInovacoesDFFinal2021 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
+                                        lacsLalurAposInovacoesDFFinal2021['Value'] = lacsLalurAposInovacoesDFFinal2021['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+                                        st.dataframe(lacsLalurAposInovacoesDFFinal2021)
+                                
+                                with col4:
+                                    st.write('')
+                                    st.write('')
+                                    st.write('')
+                                    st.write('')
+                                    st.subheader('2022')
+                                    calculosIniciais_2022 = calculos2022.runPipe()
+                                    tabelaFinal_2022 = calculos2022.runPipeFinalTable()
+                                    resultadoTotal_2022 = calculos2022.pipeCalculo('2022')
+                                    economiaPorAno.append(resultadoTotal_2022)
+                                    dataFrameParaExportar1.append(calculosIniciais_2022)
+                                    dataFrameParaExportar2.append(tabelaFinal_2022)
+                                    dataFrameParaExportar3.append(resultadoTotal_2022)
+                                    st.write('')
+                                    with st.expander('Lacas Lalur após inovações'):
+                                        lacsLalurAposInovacoes = calculos2022.runPipeAposInovacoesLacsLalurCSLL()
+                                        lacsLalurAposInovacoesDFFinal2022 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
+                                        lacsLalurAposInovacoesDFFinal2022['Value'] = lacsLalurAposInovacoesDFFinal2022['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+                                        st.dataframe(lacsLalurAposInovacoesDFFinal2022)
+                                with col5:
+                                    st.write('')
+                                    st.write('')
+                                    st.write('')
+                                    st.write('')
+                                    st.subheader('2023')
+                                    calculosIniciais_2023 = calculos2023.runPipe()
+                                    tabelaFinal_2023 = calculos2023.runPipeFinalTable()
+                                    resultadoTotal_2023 = calculos2023.pipeCalculo('2023')
+                                    economiaPorAno.append(resultadoTotal_2023)
+                                    dataFrameParaExportar1.append(calculosIniciais_2023)
+                                    dataFrameParaExportar2.append(tabelaFinal_2023)
+                                    dataFrameParaExportar3.append(resultadoTotal_2023)
+                                    st.write('')
+                                    with st.expander('Lacas Lalur após inovações'):
+                                        lacsLalurAposInovacoes = calculos2023.runPipeAposInovacoesLacsLalurCSLL()
+                                        lacsLalurAposInovacoesDFFinal2023 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
+                                        lacsLalurAposInovacoesDFFinal2023['Value'] = lacsLalurAposInovacoesDFFinal2023['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
+                                        st.dataframe(lacsLalurAposInovacoesDFFinal2023)
+                                dfmetricaGeral = pd.concat(economiaPorAno).reset_index(drop='index')
+                                dfmetricaGeral = dfmetricaGeral.transpose().iloc[:,[1,3,5,7,9]]
+                                dfmetricaGeral['Agregado do período'] = dfmetricaGeral.apply(lambda row: row.sum(), axis=1)
+
+                                arquivoParaExportar = pd.concat([calculosIniciais_2019.add_suffix('_2019'), calculosIniciais_2020.add_suffix('_2020'), 
+                                                                calculosIniciais_2021.add_suffix('_2021'), calculosIniciais_2022.add_suffix('_2022'), 
+                                                                calculosIniciais_2023.add_suffix('_2023')], axis=1)
+
+                                arquivoParaExportar2 = pd.concat([tabelaFinal_2019.add_suffix('_2019'), tabelaFinal_2020.add_suffix('_2020'), 
+                                                                tabelaFinal_2021.add_suffix('_2021'), tabelaFinal_2022.add_suffix('_2022'), 
+                                                                tabelaFinal_2023.add_suffix('_2023')], axis=1)
+
+                                arquivoParaExportar3 = pd.concat([resultadoTotal_2019.add_suffix('_2019'), resultadoTotal_2020.add_suffix('_2020'), 
+                                                                resultadoTotal_2021.add_suffix('_2021'), resultadoTotal_2021.add_suffix('_2022'),
+                                                                resultadoTotal_2021.add_suffix('_2023')])
+                                
+                                arquivoFInalParaExpostacao = pd.concat([arquivoParaExportar,arquivoParaExportar2,arquivoParaExportar3],axis=0)
+                                exportaLacsLalurAposInovacoes = pd.concat([lacsLalurAposInovacoesDFFinal2019.add_suffix('2019'),
+                                                                        lacsLalurAposInovacoesDFFinal2020.add_suffix('2020'),
+                                                                            lacsLalurAposInovacoesDFFinal2021.add_suffix('2021'),
+                                                                            lacsLalurAposInovacoesDFFinal2022.add_suffix('2022'),
+                                                                            lacsLalurAposInovacoesDFFinal2023.add_suffix('2023')],axis=1)
+            
+                                st.write('')
+                                st.write('')
+                                st.write('')
+                                st.metric("Total da Economia Gerada", f"R$ {dfmetricaGeral.iloc[1,-1]:,.2f}".replace(',','_').replace('.',',').replace('_','.'))
+
+                    if barra == "Lacs e Lalur":
+
+                            dataFrameParaExportarCSLL = []
+                            dataFrameParaExportarIRPJJ = []
+                            dfLacsLalur = pd.DataFrame(columns=['Operation','Value'])
 
                             with col1:
-                                st.write('')
-                                st.write('')
+
                                 st.write('')
                                 st.write('')
                                 st.subheader('2019')
-                                calculosIniciais_2019 = calculos2019.runPipe()
-                                tabelaFinal_2019 = calculos2019.runPipeFinalTable()
-                                resultadoTotal_2019 = calculos2019.pipeCalculo('2019')
-                                economiaPorAno.append(resultadoTotal_2019)
-                                dataFrameParaExportar1.append(calculosIniciais_2019)
-                                dataFrameParaExportar2.append(tabelaFinal_2019)
-                                dataFrameParaExportar3.append(resultadoTotal_2019)
-                                st.write('')
-                                st.subheader('Lacas Lalur após inovações')
-                                lacsLalurAposInovacoes = calculos2019.runPipeAposInovacoesLacsLalurCSLL()
-                                lacsLalurAposInovacoesDFFinal2019 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
-                                lacsLalurAposInovacoesDFFinal2019['Value'] = lacsLalurAposInovacoesDFFinal2019['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
-                                st.dataframe(lacsLalurAposInovacoesDFFinal2019)
+                                resultadoTotal_2019 = calculos2019.runPipeLacsLalurCSLL()
+                                resultadoTotal_2019IR = calculos2019.runPipeLacsLalurIRPJ()
+                                dataFrameParaExportarCSLL.append(resultadoTotal_2019)
+                                dataFrameParaExportarIRPJJ.append(resultadoTotal_2019IR)                         
                                 
                             with col2:
                                 st.write('')
                                 st.write('')
-                                st.write('')
-                                st.write('')
                                 st.subheader('2020')
-                                calculosIniciais_2020 = calculos2020.runPipe()
-                                tabelaFinal_2020 = calculos2020.runPipeFinalTable()
-                                resultadoTotal_2020 = calculos2020.pipeCalculo('2020')
-                                economiaPorAno.append(resultadoTotal_2020)
-                                dataFrameParaExportar1.append(calculosIniciais_2020)
-                                dataFrameParaExportar2.append(tabelaFinal_2020)
-                                dataFrameParaExportar3.append(resultadoTotal_2020)
-                                st.write('')
-                                st.subheader('Lacas Lalur após inovações')
-                                lacsLalurAposInovacoes = calculos2020.runPipeAposInovacoesLacsLalurCSLL()
-                                lacsLalurAposInovacoesDFFinal2020 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
-                                lacsLalurAposInovacoesDFFinal2020['Value'] = lacsLalurAposInovacoesDFFinal2020['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
-                                st.dataframe(lacsLalurAposInovacoesDFFinal2020)
+                                resultadoTotal_2020 = calculos2020.runPipeLacsLalurCSLL()
+                                resultadoTotal_2020IR = calculos2020.runPipeLacsLalurIRPJ()
+                                dataFrameParaExportarCSLL.append(resultadoTotal_2020)
+                                dataFrameParaExportarIRPJJ.append(resultadoTotal_2020IR)
+
                             with col3:
                                 st.write('')
                                 st.write('')
-                                st.write('')
-                                st.write('')
                                 st.subheader('2021')
-                                calculosIniciais_2021 = calculos2021.runPipe()
-                                tabelaFinal_2021 = calculos2021.runPipeFinalTable()
-                                resultadoTotal_2021 = calculos2021.pipeCalculo('2021')
-                                economiaPorAno.append(resultadoTotal_2021)
-                                dataFrameParaExportar1.append(calculosIniciais_2021)
-                                dataFrameParaExportar2.append(tabelaFinal_2021)
-                                dataFrameParaExportar3.append(resultadoTotal_2021)
-                                st.write('')
-                                st.subheader('Lacas Lalur após inovações')
-                                lacsLalurAposInovacoes = calculos2021.runPipeAposInovacoesLacsLalurCSLL()
-                                lacsLalurAposInovacoesDFFinal2021 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
-                                lacsLalurAposInovacoesDFFinal2021['Value'] = lacsLalurAposInovacoesDFFinal2021['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
-                                st.dataframe(lacsLalurAposInovacoesDFFinal2021)
+                                resultadoTotal_2021 = calculos2021.runPipeLacsLalurCSLL()
+                                resultadoTotal_2021IR = calculos2021.runPipeLacsLalurIRPJ()
+                                dataFrameParaExportarCSLL.append(resultadoTotal_2021)
+                                dataFrameParaExportarIRPJJ.append(resultadoTotal_2021IR)
+
                             with col4:
                                 st.write('')
                                 st.write('')
-                                st.write('')
-                                st.write('')
                                 st.subheader('2022')
-                                calculosIniciais_2022 = calculos2022.runPipe()
-                                tabelaFinal_2022 = calculos2022.runPipeFinalTable()
-                                resultadoTotal_2022 = calculos2022.pipeCalculo('2022')
-                                economiaPorAno.append(resultadoTotal_2022)
-                                dataFrameParaExportar1.append(calculosIniciais_2022)
-                                dataFrameParaExportar2.append(tabelaFinal_2022)
-                                dataFrameParaExportar3.append(resultadoTotal_2022)
-                                st.write('')
-                                st.subheader('Lacas Lalur após inovações')
-                                lacsLalurAposInovacoes = calculos2022.runPipeAposInovacoesLacsLalurCSLL()
-                                lacsLalurAposInovacoesDFFinal2022 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
-                                lacsLalurAposInovacoesDFFinal2022['Value'] = lacsLalurAposInovacoesDFFinal2022['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
-                                st.dataframe(lacsLalurAposInovacoesDFFinal2022)
+                                resultadoTotal_2022 = calculos2022.runPipeLacsLalurCSLL()
+                                resultadoTotal_2022IR = calculos2022.runPipeLacsLalurIRPJ()
+                                dataFrameParaExportarCSLL.append(resultadoTotal_2022)
+                                dataFrameParaExportarIRPJJ.append(resultadoTotal_2022IR)
+
                             with col5:
                                 st.write('')
                                 st.write('')
-                                st.write('')
-                                st.write('')
                                 st.subheader('2023')
-                                calculosIniciais_2023 = calculos2023.runPipe()
-                                tabelaFinal_2023 = calculos2023.runPipeFinalTable()
-                                resultadoTotal_2023 = calculos2023.pipeCalculo('2023')
-                                economiaPorAno.append(resultadoTotal_2023)
-                                dataFrameParaExportar1.append(calculosIniciais_2023)
-                                dataFrameParaExportar2.append(tabelaFinal_2023)
-                                dataFrameParaExportar3.append(resultadoTotal_2023)
-                                st.write('')
-                                st.subheader('Lacas Lalur após inovações')
-                                lacsLalurAposInovacoes = calculos2023.runPipeAposInovacoesLacsLalurCSLL()
-                                lacsLalurAposInovacoesDFFinal2023 = LacsLalurAposInovacoes(lacsLalurAposInovacoes)
-                                lacsLalurAposInovacoesDFFinal2023['Value'] = lacsLalurAposInovacoesDFFinal2023['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
-                                st.dataframe(lacsLalurAposInovacoesDFFinal2023)
-                            dfmetricaGeral = pd.concat(economiaPorAno).reset_index(drop='index')
-                            dfmetricaGeral = dfmetricaGeral.transpose().iloc[:,[1,3,5,7,9]]
-                            dfmetricaGeral['Agregado do período'] = dfmetricaGeral.apply(lambda row: row.sum(), axis=1)
-
-                            arquivoParaExportar = pd.concat([calculosIniciais_2019.add_suffix('_2019'), calculosIniciais_2020.add_suffix('_2020'), 
-                                                            calculosIniciais_2021.add_suffix('_2021'), calculosIniciais_2022.add_suffix('_2022'), 
-                                                            calculosIniciais_2023.add_suffix('_2023')], axis=1)
-
-                            arquivoParaExportar2 = pd.concat([tabelaFinal_2019.add_suffix('_2019'), tabelaFinal_2020.add_suffix('_2020'), 
-                                                            tabelaFinal_2021.add_suffix('_2021'), tabelaFinal_2022.add_suffix('_2022'), 
-                                                            tabelaFinal_2023.add_suffix('_2023')], axis=1)
-
-                            arquivoParaExportar3 = pd.concat([resultadoTotal_2019.add_suffix('_2019'), resultadoTotal_2020.add_suffix('_2020'), 
-                                                            resultadoTotal_2021.add_suffix('_2021'), resultadoTotal_2021.add_suffix('_2022'),
-                                                            resultadoTotal_2021.add_suffix('_2023')])
-                            
-                            arquivoFInalParaExpostacao = pd.concat([arquivoParaExportar,arquivoParaExportar2,arquivoParaExportar3],axis=0)
-                            exportaLacsLalurAposInovacoes = pd.concat([lacsLalurAposInovacoesDFFinal2019.add_suffix('2019'),
-                                                                       lacsLalurAposInovacoesDFFinal2020.add_suffix('2020'),
-                                                                        lacsLalurAposInovacoesDFFinal2021.add_suffix('2021'),
-                                                                        lacsLalurAposInovacoesDFFinal2022.add_suffix('2022'),
-                                                                        lacsLalurAposInovacoesDFFinal2023.add_suffix('2023')],axis=1)
-        
-                            st.write('')
-                            st.write('')
-                            st.write('')
-                            st.metric("Total da Economia Gerada", f"R$ {dfmetricaGeral.iloc[1,-1]:,.2f}".replace(',','_').replace('.',',').replace('_','.'))
-
-                if barra == "Lacs e Lalur":
-
-                        dataFrameParaExportarCSLL = []
-                        dataFrameParaExportarIRPJJ = []
-                        dfLacsLalur = pd.DataFrame(columns=['Operation','Value'])
-
-                        with col1:
-
-                            st.write('')
-                            st.write('')
-                            st.subheader('2019')
-                            resultadoTotal_2019 = calculos2019.runPipeLacsLalurCSLL()
-                            resultadoTotal_2019IR = calculos2019.runPipeLacsLalurIRPJ()
-                            dataFrameParaExportarCSLL.append(resultadoTotal_2019)
-                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2019IR)                         
-                            
-                        with col2:
-                            st.write('')
-                            st.write('')
-                            st.subheader('2020')
-                            resultadoTotal_2020 = calculos2020.runPipeLacsLalurCSLL()
-                            resultadoTotal_2020IR = calculos2020.runPipeLacsLalurIRPJ()
-                            dataFrameParaExportarCSLL.append(resultadoTotal_2020)
-                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2020IR)
-
-                        with col3:
-                            st.write('')
-                            st.write('')
-                            st.subheader('2021')
-                            resultadoTotal_2021 = calculos2021.runPipeLacsLalurCSLL()
-                            resultadoTotal_2021IR = calculos2021.runPipeLacsLalurIRPJ()
-                            dataFrameParaExportarCSLL.append(resultadoTotal_2021)
-                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2021IR)
-
-                        with col4:
-                            st.write('')
-                            st.write('')
-                            st.subheader('2022')
-                            resultadoTotal_2022 = calculos2022.runPipeLacsLalurCSLL()
-                            resultadoTotal_2022IR = calculos2022.runPipeLacsLalurIRPJ()
-                            dataFrameParaExportarCSLL.append(resultadoTotal_2022)
-                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2022IR)
-
-                        with col5:
-                            st.write('')
-                            st.write('')
-                            st.subheader('2023')
-                            resultadoTotal_2023 = calculos2023.runPipeLacsLalurCSLL()
-                            resultadoTotal_2023IR = calculos2023.runPipeLacsLalurIRPJ()
-                            dataFrameParaExportarCSLL.append(resultadoTotal_2023)
-                            dataFrameParaExportarIRPJJ.append(resultadoTotal_2023IR)
-                    
-                if barra == 'Lacs e Lalur Após Inovações': 
-                            calculos2019.runPipeAposInovacoesLacsLalurCSLL()
-                try:
-                        arquivoParaExportarCSLL = pd.concat([resultadoTotal_2019.add_suffix('_2019'), resultadoTotal_2020.add_suffix('_2020'), 
-                                                        resultadoTotal_2021.add_suffix('_2021'), resultadoTotal_2022.add_suffix('_2022'), 
-                                                        resultadoTotal_2023.add_suffix('_2023')], axis=1)
+                                resultadoTotal_2023 = calculos2023.runPipeLacsLalurCSLL()
+                                resultadoTotal_2023IR = calculos2023.runPipeLacsLalurIRPJ()
+                                dataFrameParaExportarCSLL.append(resultadoTotal_2023)
+                                dataFrameParaExportarIRPJJ.append(resultadoTotal_2023IR)
                         
-                        arquivoParaExportarIRPJ = pd.concat([resultadoTotal_2019IR.add_suffix('_2019'), resultadoTotal_2020IR.add_suffix('_2020'), 
-                                                        resultadoTotal_2021IR.add_suffix('_2021'), resultadoTotal_2022IR.add_suffix('_2022'), 
-                                                        resultadoTotal_2023IR.add_suffix('_2023')], axis=1)
-                        
-                        exportarLacsLalur = pd.concat([arquivoParaExportarCSLL,arquivoParaExportarIRPJ])
-                except:
-                        pass
+                    if barra == 'Lacs e Lalur Após Inovações': 
+                                calculos2019.runPipeAposInovacoesLacsLalurCSLL()
+                    try:
+                            arquivoParaExportarCSLL = pd.concat([resultadoTotal_2019.add_suffix('_2019'), resultadoTotal_2020.add_suffix('_2020'), 
+                                                            resultadoTotal_2021.add_suffix('_2021'), resultadoTotal_2022.add_suffix('_2022'), 
+                                                            resultadoTotal_2023.add_suffix('_2023')], axis=1)
+                            
+                            arquivoParaExportarIRPJ = pd.concat([resultadoTotal_2019IR.add_suffix('_2019'), resultadoTotal_2020IR.add_suffix('_2020'), 
+                                                            resultadoTotal_2021IR.add_suffix('_2021'), resultadoTotal_2022IR.add_suffix('_2022'), 
+                                                            resultadoTotal_2023IR.add_suffix('_2023')], axis=1)
+                            
+                            exportarLacsLalur = pd.concat([arquivoParaExportarCSLL,arquivoParaExportarIRPJ])
+                    except:
+                            pass
 
-                #except Exception as e:
-                    # st.warning(f'Error :{str(e)}')
+                except Exception as e:
+                    st.write(f'Error :{str(e)}')
                     # st.warning('Aperte "Gerar Dados"')
-                    # pass
+                    pass
             if anualOuTrimestral == 'Trimestre':
 
                 try:           

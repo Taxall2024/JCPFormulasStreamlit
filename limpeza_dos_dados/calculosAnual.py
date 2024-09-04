@@ -12,6 +12,8 @@ from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
 from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
 from arquivosSPED.pipeArquivosECF import SpedProcessor
 from scrapping import ScrappingTJPL
+
+import unittest
 import requests
 import functools
 import time
