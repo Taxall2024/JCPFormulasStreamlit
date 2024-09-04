@@ -9,7 +9,6 @@ from arquivosSPED.pipeArquivosECF import SpedProcessor
 from calculosAnual import Calculo
 
 
-
 import functools
 import time
 import base64
@@ -139,148 +138,7 @@ def LacsLalurAposInovacoesTrimestral(dataframe,resultJSCP):
     return df
 
 
-class Calculo(FiltrandoDadosParaCalculo):
-    _widget_counter = 0
-
-    @timing
-    def __init__(self, data, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file):
-        super().__init__(data, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file)
-        
-        
-        self.data = data
-        self.resultadoJPC = pd.DataFrame(columns=["Operation", "Value"])
-        self.resultadoLimiteDedu = pd.DataFrame(columns=["Operation", "Value"])
-        self.resultadoEconomiaGerada = pd.DataFrame(columns=["Operation", "Value"])
-        self.csllAposInovacoes = pd.DataFrame(columns=["Operation", "Value"])
-
-        self.dataframe = fetch_tjlp_data()
-        self.valorJPC = 0.0
-
-    @timing
-    def valorJPCRetroativo(self):
-        key = f'retroativoJCP{self.data}'
-
-        if key not in st.session_state:
-            st.session_state[key] = 0.0
-
-        st.session_state[key] = st.session_state[key]
-        self.jcpRetroativo = st.number_input('Digite o valor de JCP ja utilizado pelo cliente', key=key, value=st.session_state[key])
-
-
-    @timing
-    def calculandoJPC(self, data):
-
-        lucroLiquid50 = self.lucroAntIRPJ * 0.5
-        lucroAcuEReserva = (self.reservLucro + self.lucroAcumulado) * 0.5
-
-        if data in self.dataframe.index:
-            self.taxaJuros = self.dataframe.loc[data, 'Ano']
-            
-            if self.totalJSPC<0:
-                self.valorJPC = 0
-            else:    
-                self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2)-self.jcpRetroativo
-            
-            # '''Formula que faz checagem se o valor de JSCP não esta passando certos limites, optei for fazer utilizando np.where porem
-            # o reultado esta muito distorcido, com valores muito acima do esperado, entao vou deixar a formula de calculo simples por enquanto
-            # e retornar eventualmente para implementar a formula'''
-
-            # maior_valor = max(lucroLiquid50, lucroAcuEReserva)
-
-            # #self.valorJPC = 0
-
-            # if lucroLiquid50 * self.totalJSPC > 0:
-
-            #     if self.totalJSPC * self.dataframe.loc[data, 'Ano'] > maior_valor:
-            #         self.valorJPC = maior_valor
-            #     else:
-            #         self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2) - self.jcpRetroativo
-
-            self.irrfJPC = round(self.valorJPC * 0.15, 2)
-            self.valorApropriar = round(self.valorJPC - self.irrfJPC, 2)
-
-            results = [
-                {"Operation": "Base de Cálculo do JSPC", "Value": self.totalJSPC},
-                {"Operation": "TJLP", "Value": self.taxaJuros},
-                {"Operation": "Valor do JSCP", "Value": self.valorJPC},
-                {"Operation": "IRRFs/ JSPC", "Value": self.irrfJPC},
-                {"Operation": "Valor do JSCP", "Value": self.valorApropriar}
-            ]
-            self.resultadoJPC = pd.concat([self.resultadoJPC, pd.DataFrame(results)], ignore_index=True)
-            self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Valor JSCP", "Value": self.valorJPC}])], ignore_index=True)
-            st.dataframe(self.resultadoJPC, use_container_width=True)
-        else:
-            st.error("Data not found in the DataFrame")
-                   
-    @timing
-    def limiteDedutibilidade(self,data):
-
-        key = f'retirar_multa_{data}'
-        if key not in st.session_state:
-            st.session_state[key] = False
-
-        retirarMulta = st.toggle('Retirar valor de multa da conta', key=key)
-        
-
-        self.lucroLiquid50 = self.lucroAntIRPJ * 0.5
-        self.lucroAcuEReserva = (self.reservLucro + self.lucroAcumulado) * 0.5
-        if retirarMulta :
-            self.darf = self.irrfJPC + (self.irrfJPC*0.2*0)
-        else:            
-            self.darf = self.irrfJPC + (self.irrfJPC*0.2)
-
-
-        results = [
-                {"Operation": "50% do Lucro Líquido antes do IRPJ e após a CSLL", "Value": self.lucroLiquid50},
-                {"Operation": "50% do Lucro acumulado + reserva de Lucro", "Value": self.lucroAcuEReserva},
-                {"Operation": "DARF Cód. 5706 IRRF s/ JSCP", "Value": self.darf},
-            ]
-        self.resultadoLimiteDedu = pd.concat([self.resultadoLimiteDedu, pd.DataFrame(results)], ignore_index=True)
-        self.resultadoLimiteDedu['Value'] = self.resultadoLimiteDedu['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
-        st.dataframe(self.resultadoLimiteDedu, use_container_width=True)   
-    
-    @timing
-    def tabelaEconomia(self,data):
-        year = data
-        key = f'alterarAliquota{year}'
-        if key not in st.session_state:
-            st.session_state[key] = False
-
-        alterarAliquiota = st.toggle('Alterar IRPJ/CSLL - 34% para 24%', key=key)
-        if alterarAliquiota:
-            valorAliquota = 24
-            self.reducaoIRPJCSLL = self.valorJPC * 0.24
-        else:
-            self.reducaoIRPJCSLL = self.valorJPC * 0.34
-            valorAliquota = 34 
-
-        self.economia = self.reducaoIRPJCSLL - self.darf
-
-        results = [
-                {"Operation": f"REDUÇÃO NO IRPJ/CSLL - {valorAliquota}%", 'Value': self.reducaoIRPJCSLL},
-                {"Operation": "Economia", "Value": self.economia},
-            ]
-        
-        self.resultadoEconomiaGerada = pd.concat([self.resultadoEconomiaGerada, pd.DataFrame(results)], ignore_index=True)
-        self.resultadoEconomiaGerada['Value'] = self.resultadoEconomiaGerada['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
-        st.dataframe(self.resultadoEconomiaGerada, use_container_width=True)
-        
-        st.metric("Economia Gerada", f"R$ {self.economia:,.2f}".replace(',','_').replace('.',',').replace('_','.'))
-
-    @timing
-    @functools.cache
-    def pipeCalculo(self, data):
-        self.set_date(data)
-        self.lucrosAcumulados()
-        self.valorJPCRetroativo()
-        self.TotalFinsCalcJSPC()
-        self.calculandoJPC(self.data)
-        self.limiteDedutibilidade(data)
-        self.tabelaEconomia(data)
-        return self.resultadoEconomiaGerada
-    
-    
-
+   
 
 if __name__ == "__main__":
     anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre'])  
@@ -304,10 +162,10 @@ if __name__ == "__main__":
             try:
                 pdf.valorTotal(uploaded_file_resultados)
             except:
-               pdf.valorTotalTrimestral(uploaded_file_resultados)
+                pdf.valorTotalTrimestral(uploaded_file_resultados)
 
             pdf_buffer = pdf.create_pdf(nomeDaEmepresa, aliquotaImposto, observacoesDoAnlista, dataAssinatura)          
-            st.download_button(label="Baixar PDF para Relatorio Anula",data=pdf_buffer,file_name="relatorio.pdf",mime="application/pdf")
+            st.download_button(label="Baixar relatório",data=pdf_buffer,file_name="relatório.pdf",mime="application/pdf")
 
     with st.form('form1',border=False):
         if st.form_submit_button('Gerar Dados'):           
@@ -316,14 +174,6 @@ if __name__ == "__main__":
 
 
         col1, col2, col3, col4, col5 = st.columns(5)
-
-
-        uploaded_file_l100 = st.sidebar.file_uploader("Upload L100 Excel File", type="xlsx")
-        uploaded_file_l300 = st.sidebar.file_uploader("Upload L300 Excel File", type="xlsx")
-        uploaded_file_lacs = st.sidebar.file_uploader("Upload M350 Excel File", type="xlsx")
-        uploaded_file_lalur = st.sidebar.file_uploader("Upload M300 Excel File", type="xlsx")
-        uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
-        uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
 
 
         uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
@@ -335,7 +185,7 @@ if __name__ == "__main__":
                 with open(file_path, 'wb') as f:
                     f.write(uploaded_file.getbuffer())
                 file_paths.append(file_path)
-
+            
             sped_processor = SpedProcessor(file_paths)  
             sped_processor.processar_arquivos()
             dfs_concatenados = sped_processor.concatenar_dfs()
@@ -603,17 +453,9 @@ if __name__ == "__main__":
                             pass
 
                 except Exception as e:
-
                     st.write(f'Error :{str(e)}')
                     # st.warning('Aperte "Gerar Dados"')
                     pass
-
-
-                    #st.warning(f'Error :{str(e)}')
-                    st.warning('Clique em "Gerar Dados"')
-                    #pass
-
-
             if anualOuTrimestral == 'Trimestre':
 
                 try:           
@@ -767,7 +609,7 @@ if __name__ == "__main__":
         if anualOuTrimestral == 'Ano':
             if barra == 'Calculo JCP':
                 output8 = io.BytesIO()
-                with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JCP',index=False)
+                with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JSCP',index=False)
                 output8.seek(0)
                 st.write('')
                 st.write('')
@@ -783,29 +625,29 @@ if __name__ == "__main__":
                 st.download_button(type='secondary',label="Exportar Lacs e Lalur Apos Inovacoes",data=output14,file_name=f'LacsLalur Após Inovacoes.xlsx',key='botaoLacsn')
             elif barra == 'Lacs e Lalur':
                 output7 = io.BytesIO()
-                with pd.ExcelWriter(output7, engine='xlsxwriter') as writer:exportarLacsLalur.to_excel(writer,sheet_name=f'Lacs Lalur',index=False)
+                with pd.ExcelWriter(output7, engine='xlsxwriter') as writer:exportarLacsLalur.to_excel(writer,sheet_name=f'JSCP',index=False)
                 output7.seek(0)
                 st.write('')
                 st.write('')
                 st.write('')
-                st.download_button(type='primary',label="Exportar tabela",data=output7,file_name=f'Lacs Lalur.xlsx',key='download_button')                    
+                st.download_button(type='primary',label="Exportar tabela",data=output7,file_name=f'JCP.xlsx',key='download_button')                    
         elif anualOuTrimestral == 'Trimestre':
             if barra == 'Calculo JCP':
                 output9 = io.BytesIO()
-                with pd.ExcelWriter(output9, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTri.to_excel(writer,sheet_name=f'JCP',index=False)
+                with pd.ExcelWriter(output9, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTri.to_excel(writer,sheet_name=f'JSCP',index=False)
                 output9.seek(0)
                 st.write('')
                 st.write('')
                 st.write('')
-                st.download_button(type='primary',label="Exportar tabela",data=output9,file_name=f'JCP Trimestral.xlsx',key='download_button')
+                st.download_button(type='primary',label="Exportar tabela",data=output9,file_name=f'JCP.xlsx',key='download_button')
             elif barra == 'Lacs e Lalur':
                 output10 = io.BytesIO()
-                with pd.ExcelWriter(output10, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTriLacs.to_excel(writer,sheet_name=f'Lacs Lalur',index=False)
+                with pd.ExcelWriter(output10, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTriLacs.to_excel(writer,sheet_name=f'JSCP',index=False)
                 output10.seek(0)
                 st.write('')
                 st.write('')
                 st.write('')
-                st.download_button(type='primary',label="Exportar tabela",data=output10,file_name=f'LacsLalus Trimestral.xlsx',key='download_button')
+                st.download_button(type='primary',label="Exportar tabela",data=output10,file_name=f'JCP.xlsx',key='download_button')
     
     except:
         pass
@@ -828,4 +670,3 @@ with st.sidebar.expander('Dados Processamento'):
 
     df_tempo_processamento = pd.DataFrame(tempoProcessamentoDasFuncoes)
     st.dataframe(df_tempo_processamento)
-
