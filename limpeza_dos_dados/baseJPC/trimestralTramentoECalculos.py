@@ -16,37 +16,17 @@ import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
-
-
-
-@st.cache_data(ttl='1d')
-def fetch_tjlp_data():
-    url = 'https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/pagamentos-e-parcelamentos/taxa-de-juros-de-longo-prazo-tjlp'
-    response = requests.get(url)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, 'html.parser')
-    table_container = soup.find('table')
-    dataframe = pd.read_html(str(table_container), index_col=False)[0]
-    dataframe = dataframe.transpose().reset_index(drop=True).set_index(dataframe.columns[0])
-    dataframe.columns = dataframe.iloc[0]
-    dataframe = dataframe.iloc[1:, :].applymap(lambda x: str(x)[:-1]).applymap(lambda x: x.replace(',', '.')).applymap(lambda x: '0' if x == '' else x).replace('na', np.nan).astype(float)
-    dataframe['1º Tri'] = round(dataframe[['Janeiro', 'Fevereiro', 'Março']].sum(axis=1), 2)
-    dataframe['2º Tri'] = round(dataframe[['Abril', 'Maio', 'Junho']].sum(axis=1), 2)
-    dataframe['3º Tri'] = round(dataframe[['Julho', 'Agosto', 'Setembro']].sum(axis=1), 2)
-    dataframe['4º Tri'] = round(dataframe[['Outubro', 'Novembro', 'Dezembro']].sum(axis=1), 2)
-    dataframe['Ano'] = round(dataframe[['1º Tri', '2º Tri', '3º Tri', '4º Tri']].sum(axis=1), 2)
-
-    return dataframe
+from scrapping import ScrappingTJPL
 
 
 
 class trimestralFiltrandoDadosParaCalculo():
     _widget_counter = 0
 
-    @staticmethod
     @st.cache_data(ttl='1d', show_spinner=False)
-    def load_excel_file(file_path):
-        return pd.read_excel(file_path)
+    @staticmethod
+    def load_excel_file(df):
+        return df  
     
     def __init__(self, trimestre,ano,mes_inicio,mes_fim,l100_file, l300_file,lacs_file, lalur_file, ecf670_file, ec630_file):
         self.data = ano
@@ -62,7 +42,7 @@ class trimestralFiltrandoDadosParaCalculo():
         self.resultadoLimiteDedu = pd.DataFrame(columns=["Operation", "Value"])
         self.resultadoEconomiaGerada = pd.DataFrame(columns=["Operation", "Value"])
 
-        self.dataframe = fetch_tjlp_data()
+        self.dataframe = ScrappingTJPL.fetch_tjlp_data()
   
         self.ano = ano
         self.mes_inicio = mes_inicio
@@ -85,15 +65,18 @@ class trimestralFiltrandoDadosParaCalculo():
             df['Data Inicial'] = pd.to_datetime(df['Data Inicial'])
             df['Data Final'] = pd.to_datetime(df['Data Final'])
             df['Trimestre'] = ''
-            df.loc[(df['Data Final'].dt.month >= 1) & (df['Data Final'].dt.month <= 4), 'Trimestre'] = '1º Trimestre'
-            df.loc[(df['Data Final'].dt.month > 4) & (df['Data Final'].dt.month < 7), 'Trimestre'] = '2º Trimestre'
-            df.loc[(df['Data Final'].dt.month > 7) & (df['Data Final'].dt.month < 10), 'Trimestre'] = '3º Trimestre'
-            df.loc[(df['Data Final'].dt.month >= 10) & (df['Data Final'].dt.month <= 12), 'Trimestre'] = '4º Trimestre'            
+            conditions = [
+                df['Período Apuração Trimestral'] == 'T01 – 1º Trimestre',
+                df['Período Apuração Trimestral'] == 'T02 – 2º Trimestre',
+                df['Período Apuração Trimestral'] == 'T03 – 3º Trimestre',
+                df['Período Apuração Trimestral'] == 'T04 – 4º Trimestre'
+            ]
+            choices = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
+            df['Trimestre'] = np.select(conditions, choices, default='')            
 
 
         self.resultsCalcJcp = pd.DataFrame(columns=["Operation", "Value"])
         self.resultsTabelaFinal = pd.DataFrame(columns=["Operation", "Value"])
-         
         self.lucro_periodo_value = 0
 
     #-- Função que retorna o nome da empresa, deve ser substituida por uma função que busca o nome da empresa no banco de dados
@@ -112,7 +95,7 @@ class trimestralFiltrandoDadosParaCalculo():
 
 
     def set_date(self, data):
-        self.data = data         
+        self.data = data   
 
 
     def capitalSocial(self):
@@ -227,7 +210,7 @@ class trimestralFiltrandoDadosParaCalculo():
 
         key = f'ajustesExerAnteirores{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
-            st.session_state[key] = 0.0
+            st.session_state[key] = self.ajustExercAnt
         st.session_state[key] = st.session_state[key]    
         
         self.ajustExercAnt = st.number_input('Ajustes de Exercícios Anteriores', key=key, value=st.session_state[key])
@@ -239,7 +222,7 @@ class trimestralFiltrandoDadosParaCalculo():
 
         key = f'lucroPeriodo{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
-            st.session_state[key] = 0.0
+            st.session_state[key] = self.lucro_periodo_value
         st.session_state[key] = st.session_state[key]    
         
         self.lucro_periodo_value = st.number_input('Digite o valor dos Lucros do Período', key=key, value=st.session_state[key])  
@@ -342,8 +325,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
         self.prejuizoPeirod = l100['Vlr Saldo Final'].sum()
-        st.warning(self.prejuizoPeirod)
-        st.dataframe(l100)
+
         if (l100['D/C Saldo Final'] == 'C').any():
             lucroPrejuizo = 'Lucro do Período'
         else:
@@ -502,7 +484,8 @@ class trimestralFiltrandoDadosParaCalculo():
         self.dataframeFinal = pd.DataFrame(self.resultsCalcJcp)
         self.dataframJCP = pd.DataFrame(self.resultadoJPC)
         self.dfLacsLalurApos = pd.DataFrame(self.trimestralLacsLalurAposInovacoes)
-
+    
+    @functools.cache
     def runPipeFinalTable(self):
 
         self.lucrosAcumulados()
@@ -520,82 +503,5 @@ class trimestralFiltrandoDadosParaCalculo():
     
 
 
-
-''' O codigo abaixo server para debugar o codigo caso precise rodar a classe isolada nesse modulo'''
-# if __name__=='__main__':
-
-    # uploaded_file_l100 = st.sidebar.file_uploader("Upload L100 Excel File", type="xlsx")
-    # uploaded_file_l300 = st.sidebar.file_uploader("Upload L300 Excel File", type="xlsx")
-    # uploaded_file_lacs = st.sidebar.file_uploader("Upload Lacs Excel File", type="xlsx")
-    # uploaded_file_lalur = st.sidebar.file_uploader("Upload Lalur Excel File", type="xlsx")
-    # uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
-    # uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
-
-
-    # if uploaded_file_l100 and uploaded_file_l300 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ecf670 and uploaded_file_ec630:
-    #     with st.form(key='form1'):
-    #         submitButton = st.form_submit_button('Processar')
-            
-    #         if submitButton:
-
-    #             colunas = st.columns(4)
-    #             trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
-    #             economia_gerada_por_trimestre = []
-    #             for ano in range(2019, 2024):
-    #                 year_dfsLacs = []
-    #                 resultadoJCP = []
-    #                 resultadoDedu = []
-    #                 economiaGerada = []
-    #                 for col, trimestre in zip(colunas, trimestres):
-    #                     with col:
-
-    #                         lacs = trimestralFiltrandoDadosParaCalculo(
-    #                                             trimestre=trimestre,
-    #                                             ano=ano,
-    #                                             mes_inicio=1,
-    #                                             mes_fim=12,
-    #                                             l100_file=uploaded_file_l100,
-    #                                             l300_file=uploaded_file_l300,
-    #                                             lacs_file=uploaded_file_lacs,
-    #                                             lalur_file=uploaded_file_lalur,
-    #                                             ecf670_file=uploaded_file_ecf670,
-    #                                             ec630_file=uploaded_file_ec630)
-
-    #                         st.subheader(f'{ano}    {trimestre}')
-    #                         lacs.runPipe()
-                            
-    #                         df = lacs.dataframeFinal
-    #                         df.columns = [f"{col} {trimestre}" for col in df.columns] 
-    #                         year_dfsLacs.append(df)
-
-    #                         df = lacs.resultadoJPC
-    #                         df.columns = [f"{col} {trimestre}" for col in df.columns] 
-    #                         resultadoJCP.append(df)
-
-    #                         df = lacs.resultadoLimiteDedu
-    #                         df.columns = [f"{col} {trimestre}" for col in df.columns] 
-    #                         resultadoDedu.append(df)
-                            
-    #                         df = lacs.resultadoEconomiaGerada
-    #                         df.columns = [f"{col} {trimestre}" for col in df.columns] 
-    #                         economiaGerada.append(df) 
-
-    #                         economia_gerada_por_trimestre.append(lacs.economia)
-
-                            
-
-
-
-    #                 dfCalculos = pd.concat(year_dfsLacs, axis=1)
-    #                 tabelaJCP = pd.concat(resultadoJCP, axis=1)
-    #                 limiteDedutibili = pd.concat(resultadoDedu, axis=1)
-    #                 economiaGerada = pd.concat(economiaGerada, axis=1)
-                    
-
-    #                 st.subheader(f"Resultados Anuais - {ano}")
-    #                 st.dataframe(dfCalculos)
-    #                 st.dataframe(tabelaJCP)
-    #                 st.dataframe(limiteDedutibili)
-    #                 st.dataframe(economiaGerada)
 
 

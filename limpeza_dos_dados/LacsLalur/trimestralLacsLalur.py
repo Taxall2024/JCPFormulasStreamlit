@@ -8,11 +8,10 @@ from dataclasses import dataclass
 
 class LacsLalurCSLLTrimestral():
 
-    @staticmethod
     @st.cache_data(ttl='1d', show_spinner=False)
-    def load_excel_file(file_path):
-        return pd.read_excel(file_path)
-
+    @staticmethod
+    def load_excel_file(df):
+        return df  
     
     def __init__(self,trimestre,ano,mes_inicio,mes_fim,lacs_file, lalur_file, ecf670_file, ec630_file):
         print('hello world')
@@ -29,10 +28,16 @@ class LacsLalurCSLLTrimestral():
             df['Data Inicial'] = pd.to_datetime(df['Data Inicial'])
             df['Data Final'] = pd.to_datetime(df['Data Final'])
             df['Trimestre'] = ''
-            df.loc[(df['Data Final'].dt.month >= 1) & (df['Data Final'].dt.month <= 4), 'Trimestre'] = '1º Trimestre'
-            df.loc[(df['Data Final'].dt.month > 4) & (df['Data Final'].dt.month < 7), 'Trimestre'] = '2º Trimestre'
-            df.loc[(df['Data Final'].dt.month > 7) & (df['Data Final'].dt.month < 10), 'Trimestre'] = '3º Trimestre'
-            df.loc[(df['Data Final'].dt.month >= 10) & (df['Data Final'].dt.month <= 12), 'Trimestre'] = '4º Trimestre'
+
+                     
+            conditions = [
+                df['Período Apuração Trimestral'] == 'T01 – 1º Trimestre',
+                df['Período Apuração Trimestral'] == 'T02 – 2º Trimestre',
+                df['Período Apuração Trimestral'] == 'T03 – 3º Trimestre',
+                df['Período Apuração Trimestral'] == 'T04 – 4º Trimestre']
+            
+            choices = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
+            df['Trimestre'] = np.select(conditions, choices, default='')  
         
         self.ano = ano
         self.mes_inicio = mes_inicio
@@ -110,7 +115,6 @@ class LacsLalurCSLLTrimestral():
             (lacs['Trimestre'] == self.trimestre)]
         
         self.lucroAntCSLL = lacs['Vlr Lançamento e-Lacs'].sum()
-
         self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Lucro antes CSLL", "Value": self.lucroAntCSLL}])], ignore_index=True)
     
@@ -171,7 +175,7 @@ class LacsLalurCSLLTrimestral():
 
         lalur = self.ecf670
         filtroUm = lalur[
-            (lalur['Código Lançamento']== 15)&
+            (lalur['Código Lançamento']== 15)|(lalur['Código Lançamento']== 16)|(lalur['Código Lançamento']== 18)&
             (lalur['Data Inicial'].dt.year == self.ano) &
             (lalur['Data Inicial'].dt.month >= self.mes_inicio) &
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
@@ -530,50 +534,6 @@ class LacsLalurCSLLTrimestral():
 
         return self.trimestralLacsLalurAposInovacoes        
     
-    #Função que processa todo o codigo, transforma os dados em dataframe separadamente por trimestre 
-    def processarDados(self):
-
-        col1, col2, col3, col4 = st.columns(4)
-        trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
-
-        for ano in range(2019, 2024):
-            year_dfsLacs = []
-            year_dfsLalurIRPJ = []
-            for col, trimestre in zip([col1, col2, col3, col4], trimestres):
-                with col:
-
-                    lacs = LacsLalurCSLLTrimestral(trimestre, ano, 1, 12)
-
-                    lacs.runPipeLacsLalurCSLL()
-                    df = lacs.dataframeFinal
-                    df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                    year_dfsLacs.append(df)
-
-
-                    lacs.runPipeLacsLalurIRPJ() 
-                    df2 = lacs.dataframeFinalIRPJ
-                    df2.columns = [f"{col} {trimestre}" for col in df2.columns] 
-                    year_dfsLalurIRPJ.append(df2)
-
-
-                self.dfFinalLacs = pd.concat(year_dfsLacs, axis=1)
-                self.dfFinalLacsIRPJ = pd.concat(year_dfsLalurIRPJ, axis=1)
-
-            st.subheader(f"Resultados Anuais - {ano}")
-            st.dataframe(self.dfFinalLacs)
-            st.dataframe(self.dfFinalLacsIRPJ)
-
-''' O codigo abaixo server para debugar o codigo caso precise rodar a classe isolada nesse modulo'''
-# if __name__=='__main__':
-
-#     lacs = LacsLalurCSLLTrimestral(None, None, 1, 12)
-#     lacs.processarDados()
-
-
-
-
-
-
 
 
 
