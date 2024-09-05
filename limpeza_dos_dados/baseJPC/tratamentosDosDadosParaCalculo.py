@@ -14,10 +14,10 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     _widget_counter = 0
 
 
-    @st.cache_data(ttl='1d', show_spinner=False)
+    @st.cache_data(ttl='1d',persist=False)
     @staticmethod
-    def load_excel_file(df):
-        return df  
+    def load_excel_file(file_path):
+        return pd.read_excel(file_path) 
     
     #@st.cache_data(ttl='1d')
     def __init__(self, data, lacs_file, lalur_file, ecf670_file, ec630_file, l100_file, l300_file):

@@ -8,10 +8,10 @@ import gc
 
 class LacsLalurCSLLTrimestral():
 
-    @st.cache_data(ttl='1d', show_spinner=False)
+    @st.cache_data(ttl='5m',persist=False)
     @staticmethod
-    def load_excel_file(df):
-        return df  
+    def load_excel_file(file_path):
+        return pd.read_excel(file_path)
     
     def __init__(self,trimestre,ano,mes_inicio,mes_fim,lacs_file, lalur_file, ecf670_file, ec630_file):
         print('hello world')

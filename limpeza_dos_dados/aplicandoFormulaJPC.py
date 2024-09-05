@@ -148,6 +148,7 @@ if __name__ == "__main__":
     barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur",'Relátorio']) 
     
     if barra == "Relátorio":
+        st.cache_data.clear()
         col1,col2,col3,col4,col5,col6 = st.columns(6)
         with col1:
             uploaded_file_resultados = st.file_uploader("Coloque o arquivo de resultado", type="xlsx")
@@ -179,31 +180,14 @@ if __name__ == "__main__":
         col1, col2, col3, col4, col5 = st.columns(5)
 
 
-        uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
+        uploaded_file_l100 = st.sidebar.file_uploader("Upload L100 Excel File", type="xlsx")
+        uploaded_file_l300 = st.sidebar.file_uploader("Upload L300 Excel File", type="xlsx")
+        uploaded_file_lacs = st.sidebar.file_uploader("Upload M350 Excel File", type="xlsx")
+        uploaded_file_lalur = st.sidebar.file_uploader("Upload M300 Excel File", type="xlsx")
+        uploaded_file_ecf670 = st.sidebar.file_uploader("Upload ECF 670 Excel File", type="xlsx")
+        uploaded_file_ec630 = st.sidebar.file_uploader("Upload ECF 630 Excel File", type="xlsx")
 
-        if uploaded_files:
-            file_paths = []
-            for uploaded_file in uploaded_files:
-                file_path = uploaded_file.name
-                with open(file_path, 'wb') as f:
-                    f.write(uploaded_file.getbuffer())
-                file_paths.append(file_path)
-            
-            sped_processor = SpedProcessor(file_paths)  
-            sped_processor.processar_arquivos()
-            dfs_concatenados = sped_processor.concatenar_dfs()
-            L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
-
-        try:    
-            uploaded_file_l100 =  L100_final  
-            uploaded_file_l300 = L300_final   
-            uploaded_file_lacs =   M350_final 
-            uploaded_file_lalur =  M300_final 
-            uploaded_file_ecf670 = N670_final 
-            uploaded_file_ec630 =  N630_final 
-        except:
-             pass
-        if uploaded_files:
+        if uploaded_file_l100 and uploaded_file_l300 and uploaded_file_lacs and uploaded_file_lalur and uploaded_file_ec630 and uploaded_file_ecf670:
             if anualOuTrimestral == 'Ano':          
                 filtrando_dados = FiltrandoDadosParaCalculo(
                     data=None,
@@ -389,7 +373,8 @@ if __name__ == "__main__":
                                 st.metric("Total da Economia Gerada", f"R$ {dfmetricaGeral.iloc[1,-1]:,.2f}".replace(',','_').replace('.',',').replace('_','.'))
 
                     if barra == "Lacs e Lalur":
-
+                            
+                            st.cache_data.clear()
                             dataFrameParaExportarCSLL = []
                             dataFrameParaExportarIRPJJ = []
                             dfLacsLalur = pd.DataFrame(columns=['Operation','Value'])
@@ -460,6 +445,7 @@ if __name__ == "__main__":
                     # st.warning('Aperte "Gerar Dados"')
                     pass
             if anualOuTrimestral == 'Trimestre':
+                st.cache_data.clear()
 
                 try:           
                     if barra == "Calculo JCP":
@@ -554,6 +540,7 @@ if __name__ == "__main__":
 
       
                     if barra == "Lacs e Lalur":
+                        st.cache_data.clear()
                         col1, col2, col3, col4 = st.columns(4)
                         trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
                         tabelaFinalLacsLalurUnificad = []
@@ -625,15 +612,17 @@ if __name__ == "__main__":
                 st.write('')
                 st.write('')
                 st.write('')
-                st.download_button(type='secondary',label="Exportar Lacs e Lalur Apos Inovacoes",data=output14,file_name=f'LacsLalur Após Inovacoes.xlsx',key='botaoLacsn')
+                st.download_button(type='secondary',label="Exportar Lacs e Lalur Apos Inovacoes",
+                                   data=output14,file_name=f'LacsLalur Após Inovacoes.xlsx',key='botaoLacsn')
+            
             elif barra == 'Lacs e Lalur':
                 output7 = io.BytesIO()
-                with pd.ExcelWriter(output7, engine='xlsxwriter') as writer:exportarLacsLalur.to_excel(writer,sheet_name=f'JSCP',index=False)
+                with pd.ExcelWriter(output7, engine='xlsxwriter') as writer:exportarLacsLalur.to_excel(writer,sheet_name=f'LacsLalur',index=False)
                 output7.seek(0)
                 st.write('')
                 st.write('')
                 st.write('')
-                st.download_button(type='primary',label="Exportar tabela",data=output7,file_name=f'JCP.xlsx',key='download_button')                    
+                st.download_button(type='primary',label="Exportar tabela",data=output7,file_name=f'LacsLalur.xlsx',key='download_button')                    
         elif anualOuTrimestral == 'Trimestre':
             if barra == 'Calculo JCP':
                 output9 = io.BytesIO()
@@ -645,12 +634,12 @@ if __name__ == "__main__":
                 st.download_button(type='primary',label="Exportar tabela",data=output9,file_name=f'JCP.xlsx',key='download_button')
             elif barra == 'Lacs e Lalur':
                 output10 = io.BytesIO()
-                with pd.ExcelWriter(output10, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTriLacs.to_excel(writer,sheet_name=f'JSCP',index=False)
+                with pd.ExcelWriter(output10, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTriLacs.to_excel(writer,sheet_name=f'LacsLalur',index=False)
                 output10.seek(0)
                 st.write('')
                 st.write('')
                 st.write('')
-                st.download_button(type='primary',label="Exportar tabela",data=output10,file_name=f'JCP.xlsx',key='download_button')
+                st.download_button(type='primary',label="Exportar tabela",data=output10,file_name=f'LacsLalur.xlsx',key='download_button')
     
     except:
         pass
@@ -674,3 +663,4 @@ with st.sidebar.expander('Dados Processamento'):
     st.write(f"Uso de Memória: {memory_usage}%")
     df_tempo_processamento = pd.DataFrame(tempoProcessamentoDasFuncoes)
     st.dataframe(df_tempo_processamento)
+
