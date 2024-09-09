@@ -3,7 +3,15 @@ import streamlit as st
 import functools
 import numpy as np
 from calendar import monthrange
+from sqlalchemy import create_engine
 import gc
+import sys
+import os
+
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from db.controllerDB import dbController
+controler = dbController('ECF')
 class SpedProcessor:
    
     def __init__(self, file_paths):
@@ -197,44 +205,39 @@ class SpedProcessor:
             N670_final['Código Lançamento'] = pd.to_numeric(N670_final['Código Lançamento'])
             N670_final['Vlr Lançamento'].fillna(0, inplace=True)   
 
-            return L100_final,L300_final,M300_final,M350_final,N630_final,N670_final     
+            return L100_final,L300_final,M300_final,M350_final,N630_final,N670_final  
+    
+
+
+if __name__=='__main__':
 
 
 
-# #Exemplo de uso da classe
-# if __name__=='__main__':
+    uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
+    if uploaded_files:
+            file_paths = []
+            for uploaded_file in uploaded_files:
+                file_path = uploaded_file.name
+                with open(file_path, 'wb') as f:
+                    f.write(uploaded_file.getbuffer())
+                file_paths.append(file_path)
 
-#     st.title('Processamento de Arquivos SPED')
-#     anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre'])  
-#     uploaded_files = st.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
+            sped_processor = SpedProcessor(file_paths)  
+            sped_processor.processar_arquivos()
+            dfs_concatenados = sped_processor.concatenar_dfs()
+            L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
 
-#     if uploaded_files:
-#         file_paths = []
-#         for uploaded_file in uploaded_files:
-#             file_path = uploaded_file.name
-#             with open(file_path, 'wb') as f:
-#                 f.write(uploaded_file.getbuffer())
-#             file_paths.append(file_path)
-
-#         sped_processor = SpedProcessor(file_paths)
-#         sped_processor.processar_arquivos()
-#         dfs_concatenados = sped_processor.concatenar_dfs()
-
-#         # Acesso aos DataFrames processados
-#         L100_final = dfs_concatenados["L100"]
-#         L300_final = dfs_concatenados["L300"]
-#         M300_final = dfs_concatenados["M300"]
-#         M350_final = dfs_concatenados["M350"]
-#         N630_final = dfs_concatenados["N630"]
-#         N670_final = dfs_concatenados["N670"]
-
-#         st.dataframe(L100_final)
-#         st.dataframe(L300_final)
-#         st.dataframe(M300_final)
-#         st.dataframe(M350_final)
-#         st.dataframe(N630_final)
-#         st.dataframe(N670_final)
-#         #Adicione exibição dos outros DataFrames se necessário
+    st.subheader('L100')
+    st.data_editor(L100_final)
+    
+    st.warning('sbsnfsd')
+    controler.inserirTabelas('l100',L100_final)
+    controler.inserirTabelas('l300',L300_final)
+    controler.inserirTabelas('m300',M300_final)
+    controler.inserirTabelas('m350',M350_final)
+    controler.inserirTabelas('n630',N630_final)
+    controler.inserirTabelas('n670',N670_final)
+    
 
 
 
