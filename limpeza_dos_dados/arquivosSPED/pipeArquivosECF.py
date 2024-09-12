@@ -45,8 +45,22 @@ class SpedProcessor:
         df['Data Final'] = pd.to_datetime(df['Data Final'], format='%d%m%Y').dt.strftime('%d/%m/%Y')
         
         return df
-    # @functools.cache
-    # @staticmethod
+    
+    def pegandoInfosDaEmpresa(self, file_path):
+        data = []
+        with open(file_path, 'r', encoding='latin-1') as file:
+            for linha in file:
+                linha = linha.strip()
+                if linha.startswith('|'):
+                    valores = linha.split('|')[1:]
+                    data.append(valores)
+
+        df = pd.DataFrame(data).rename(columns={3:'CNPJ',4:'NomeDaEmpresa'})
+        resultado = df.loc[0, ['CNPJ', 'NomeDaEmpresa']].to_frame().T
+
+        
+        return resultado
+
     def classificaPeriodoDeApuracao(self, arquivo, referencia):
         bloco_iniciado = False
         data_index = 0
@@ -222,21 +236,25 @@ if __name__=='__main__':
                     f.write(uploaded_file.getbuffer())
                 file_paths.append(file_path)
 
-            sped_processor = SpedProcessor(file_paths)  
-            sped_processor.processar_arquivos()
-            dfs_concatenados = sped_processor.concatenar_dfs()
-            L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
+            sped_processor = SpedProcessor(file_paths)
+            arquivoProcessado = sped_processor.pegandoInfosDaEmpresa(file_path)
+            
+            st.data_editor(arquivoProcessado) 
 
-    st.subheader('L100')
-    st.data_editor(L100_final)
+
+    #         sped_processor.processar_arquivos()
+    #         dfs_concatenados = sped_processor.concatenar_dfs()
+    #         L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
+
+    # st.subheader('L100')
+    # st.data_editor(L100_final)
     
-    st.warning('sbsnfsd')
-    controler.inserirTabelas('l100',L100_final)
-    controler.inserirTabelas('l300',L300_final)
-    controler.inserirTabelas('m300',M300_final)
-    controler.inserirTabelas('m350',M350_final)
-    controler.inserirTabelas('n630',N630_final)
-    controler.inserirTabelas('n670',N670_final)
+    # controler.inserirTabelas('l100',L100_final)
+    # controler.inserirTabelas('l300',L300_final)
+    # controler.inserirTabelas('m300',M300_final)
+    # controler.inserirTabelas('m350',M350_final)
+    # controler.inserirTabelas('n630',N630_final)
+    # controler.inserirTabelas('n670',N670_final)
     
 
 

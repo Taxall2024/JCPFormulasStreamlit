@@ -10,17 +10,17 @@ class LacsLalurCSLLTrimestral():
 
     @st.cache_data(ttl='5m',persist=False)
     @staticmethod
-    def load_excel_file(file_path):
-        return pd.read_excel(file_path)
+    def load_file(df):
+            return df
     
     def __init__(self,trimestre,ano,mes_inicio,mes_fim,lacs_file, lalur_file, ecf670_file, ec630_file):
         print('hello world')
 
        
-        self.lacs = LacsLalurCSLLTrimestral.load_excel_file(lacs_file)
-        self.lalur = LacsLalurCSLLTrimestral.load_excel_file(lalur_file)
-        self.ecf670 = LacsLalurCSLLTrimestral.load_excel_file(ecf670_file)
-        self.ec630 = LacsLalurCSLLTrimestral.load_excel_file(ec630_file)
+        self.lacs = LacsLalurCSLLTrimestral.load_file(lacs_file)
+        self.lalur = LacsLalurCSLLTrimestral.load_file(lalur_file)
+        self.ecf670 = LacsLalurCSLLTrimestral.load_file(ecf670_file)
+        self.ec630 = LacsLalurCSLLTrimestral.load_file(ec630_file)
 
         self.dfs = [self.lacs, self.lalur, self.ecf670, self.ec630]
 
@@ -239,7 +239,6 @@ class LacsLalurCSLLTrimestral():
         self.retencoesOrgPublicos()
         self.impostoPorEstimativa()
         self.subTotalCSLLRecolher()
-        self.resultsLacs['Value'] = self.resultsLacs['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
 
         self.dataframeFinal = pd.DataFrame(self.resultsLacs)
         
@@ -487,7 +486,6 @@ class LacsLalurCSLLTrimestral():
         self.impostoRendPagoEfe()
         self.subTotal()
 
-        self.results['Value'] = self.results['Value'].apply(lambda x: "{:,.2f}".format(x)).str.replace('.','_').str.replace(',','.').str.replace('_',',')
         self.dataframeFinalIRPJ = pd.DataFrame(self.results)
         
         return self.dataframeFinalIRPJ
@@ -496,8 +494,7 @@ class LacsLalurCSLLTrimestral():
     def runPipeFinalTabelLacsLalur(self):
         self.baseCSLL()
         self.LucroLiquidoAntesIRPJ()
-        
-        self.resultsTabelaFinal['Value'] = self.resultsTabelaFinal['Value'].apply(lambda x: f"{x:,.2f}")
+
     @functools.cache
     def trimestralLacsLalurAposInovacoesFn(self):
         self.lucroAntesCSLL()

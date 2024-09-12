@@ -69,7 +69,8 @@ if __name__=='__main__':
         "Tipo Conta" VARCHAR(50),
         "Nível Conta" INT,
         "Vlr Saldo Final" NUMERIC,
-        "D/C Saldo Final" VARCHAR(2)
+        "D/C Saldo Final" VARCHAR(2),
+        PRIMARY KEY (CNPJ, Ano)
     )
     '''
 
@@ -88,7 +89,8 @@ if __name__=='__main__':
             "Tipo Conta" VARCHAR(50),
             "Nível Conta" INT,
             "Vlr Saldo Final" NUMERIC,
-            "D/C Saldo Final" VARCHAR(2)
+            "D/C Saldo Final" VARCHAR(2),
+            PRIMARY KEY (CNPJ, Ano)
         )
         '''
 
@@ -106,7 +108,8 @@ if __name__=='__main__':
             "Tipo Lançamento" VARCHAR(50),
             "Indicador Relação Parte A" VARCHAR(50),
             "Vlr Lançamento e-Lalur" NUMERIC,
-            "Histórico e-Lalur" VARCHAR(50)
+            "Histórico e-Lalur" VARCHAR(50),
+            PRIMARY KEY (CNPJ, Ano)
         )
         '''
 
@@ -122,7 +125,8 @@ if __name__=='__main__':
             "Tipo Lançamento" VARCHAR(50),
             "Indicador Relação Parte A" VARCHAR(50),
             "Vlr Lançamento e-Lacs" NUMERIC,
-            "Histórico e-Lacs" VARCHAR(50)
+            "Histórico e-Lacs" VARCHAR(50),
+            PRIMARY KEY (CNPJ, Ano)
         )
         '''
 
@@ -135,7 +139,8 @@ if __name__=='__main__':
             "Período Apuração Trimestral" VARCHAR(50),
             "Código Lançamento" FLOAT,
             "Descrição Lançamento" VARCHAR(255),
-            "Vlr Lançamento" NUMERIC
+            "Vlr Lançamento" NUMERIC,
+            PRIMARY KEY (CNPJ, Ano)
         )
         '''
 
@@ -148,10 +153,63 @@ if __name__=='__main__':
             "Período Apuração Trimestral" VARCHAR(50),
             "Código Lançamento" FLOAT,
             "Descrição Lançamento" VARCHAR(255),
-            "Vlr Lançamento" NUMERIC
+            "Vlr Lançamento" NUMERIC,
+            PRIMARY KEY (CNPJ, Ano)
         )
         '''
-
+    
+    create_table_query_operacoes = '''
+    CREATE TABLE IF NOT EXISTS resultadosJCP (
+        "CNPJ" NUMERIC NOT NULL,
+        "Operation" VARCHAR(100) NOT NULL,
+        "Value" NUMERIC NOT NULL,
+        "Ano" INT NOT NULL
+    );
+'''
+    create_table_query_operacoesLacsLalur = '''
+    CREATE TABLE IF NOT EXISTS lacslalur (
+        "CNPJ" NUMERIC NOT NULL,
+        "Operation" VARCHAR(350) NOT NULL,
+        "Value" NUMERIC NOT NULL,
+        "Ano" INT NOT NULL
+    );
+'''
+    create_table_query_operacoesTrimestral = '''
+    CREATE TABLE IF NOT EXISTS resultadosJCPTrimestral (
+        "Operation 1º Trimestre" VARCHAR(100) NOT NULL,
+        "Value 1º Trimestre" NUMERIC NOT NULL,
+        "Operation 2º Trimestre" VARCHAR(100) NOT NULL,
+        "Value 2º Trimestre" NUMERIC NOT NULL,
+        "Operation 3º Trimestre" VARCHAR(100) NOT NULL,
+        "Value 3º Trimestre" NUMERIC NOT NULL,
+        "Operation 4º Trimestre" VARCHAR(100) NOT NULL,
+        "Value 4º Trimestre" NUMERIC NOT NULL,
+        "Ano" INT NOT NULL,
+        "CNPJ" NUMERIC NOT NULL
+    );
+'''
+    create_table_query_operacoesTrimestralLacsLalur = '''
+    CREATE TABLE IF NOT EXISTS LacsLalurTrimestral (
+        "Operation 1º Trimestre" VARCHAR(350) NOT NULL,
+        "Value 1º Trimestre" NUMERIC NOT NULL,
+        "Operation 2º Trimestre" VARCHAR(350) NOT NULL,
+        "Value 2º Trimestre" NUMERIC NOT NULL,
+        "Operation 3º Trimestre" VARCHAR(350) NOT NULL,
+        "Value 3º Trimestre" NUMERIC NOT NULL,
+        "Operation 4º Trimestre" VARCHAR(350) NOT NULL,
+        "Value 4º Trimestre" NUMERIC NOT NULL,
+        "Ano" INT NOT NULL,
+        "CNPJ" NUMERIC NOT NULL
+    );
+'''
+    create_table_cadastro_das_empresas = '''
+    CREATE TABLE IF NOT EXISTS cadastroDasEmpresas (
+        "NomeDaEmpresa" VARCHAR(350) NOT NULL,
+        "CNPJ" NUMERIC NOT NULL
+    );
+'''
+    
+    service.creatingTables('ECF',create_table_cadastro_das_empresas)
 
 
 
