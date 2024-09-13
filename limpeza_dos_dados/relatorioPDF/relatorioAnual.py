@@ -166,7 +166,7 @@ class RelatorioPDFJSCP():
         story.append(img) 
         story.append(Paragraph(f"<font size='40'><b>{nomeEmpresa}</b></font>", title_style))
         story.append(Spacer(1, 40))
-        story.append(Paragraph("<b>RELATÓRIODE REVISÃO FISCAL</b>", title_style))
+        story.append(Paragraph("<b>RELATÓRIO DE REVISÃO FISCAL</b>", title_style))
         story.append(Spacer(1, 280))
         story.append(Paragraph(f"<font size='10'><b>Brasília, {textoData}</b></font>", title_style))
 
