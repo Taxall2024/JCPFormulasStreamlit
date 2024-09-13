@@ -170,23 +170,41 @@ class trimestralFiltrandoDadosParaCalculo():
                     
     def lucrosAcumulados(self):
 
+        lucroperiodoParaFun = self.l300
+        lucroperiodoParaFun = lucroperiodoParaFun[(lucroperiodoParaFun['Conta Referencial']=='3')&
+            (lucroperiodoParaFun['Data Inicial'].dt.year == self.ano) &
+            (lucroperiodoParaFun['Data Inicial'].dt.month >= self.mes_inicio) &
+            (lucroperiodoParaFun['Data Inicial'].dt.month <= self.mes_fim)&
+            (lucroperiodoParaFun['Trimestre'] == self.trimestre)]
+        self.lucroperiodoParaFun = sum(lucroperiodoParaFun['Vlr Saldo Final'])
+
+        
         l100 = self.l100
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.01')&
             (l100['Data Inicial'].dt.year == self.ano) &
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.lucroAcumulado = np.sum(l100['Vlr Saldo Final'].values)        
+        self.lucroAcumulado = sum(l100['Vlr Saldo Final'])  
+
+        
+        if (lucroperiodoParaFun['D/C Saldo Final'] == 'C').any():
+            
+            self.resultado = self.lucroAcumulado - self.lucroperiodoParaFun
+        else:
+            self.resultado = self.lucroAcumulado          
+
+    
 
         key = f'lucrosAcumulados{self.ano,self.mes_inicio,self.trimestre}'
         if key not in st.session_state:
             st.session_state[key] = self.lucroAcumulado 
         st.session_state[key] = st.session_state[key]    
         
-        self.lucroAcumulado = st.number_input('Digite o valor dos Lucros Acumulados', key=key, value=st.session_state[key])
+        #self.lucroAcumulado = st.number_input('Digite o valor dos Lucros Acumulados', key=key, value=st.session_state[key])
          
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
-        self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.resultado}])], ignore_index=True)
+        self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.resultado}])], ignore_index=True)
       
     
     def ajustesExerAnteriores(self):
@@ -207,19 +225,6 @@ class trimestralFiltrandoDadosParaCalculo():
          
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ajustes Exercícios Anteriores", "Value": self.ajustExercAnt}])], ignore_index=True)
 
-    
-    def lucroPeriodo(self):
-
-        key = f'lucroPeriodo{self.ano,self.mes_inicio,self.trimestre}'
-        if key not in st.session_state:
-            st.session_state[key] = self.lucro_periodo_value
-        st.session_state[key] = st.session_state[key]    
-        
-        self.lucro_periodo_value = st.number_input('Digite o valor dos Lucros do Período', key=key, value=st.session_state[key])  
-
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucro do Período", "Value": self.lucro_periodo_value}])], ignore_index=True)
-        self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucro do Período", "Value": self.lucro_periodo_value}])], ignore_index=True)
-    
 
     def TotalFinsCalcJSPC(self):
 
@@ -256,30 +261,25 @@ class trimestralFiltrandoDadosParaCalculo():
          
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reserva legal", "Value": self.reservLegal}])], ignore_index=True)
    
-    def OutrasReservasLucros(self):
+    
+    def ReservasLucros(self):
+
         l100 = self.l100
-        l100 = l100[(l100['Conta Referencial']=='2.03.02.03.99')&
+        l100 = l100[(l100['Conta Referencial']=='2.03.02.03')&
             (l100['Data Inicial'].dt.year == self.ano) &
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.outrasResLuc = np.sum(l100['Vlr Saldo Final'].values)
+        self.reservLucro = np.sum(l100['Vlr Saldo Final'].values)
 
-        key = f'reservaOutras{self.ano,self.mes_inicio,self.trimestre}'
+        key = f'reservaSDElucrosOutras{self.ano,self.mes_inicio,self.trimestre}'
 
         if key not in st.session_state:
-            st.session_state[key] = self.outrasResLuc
+            st.session_state[key] = self.reservLucro
         
         st.session_state[key] = st.session_state[key]
 
-        self.outrasResLuc = st.number_input('Digite o valor Outras reservas de lucros',key=key,value=st.session_state[key])
-         
-
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Outras Reservas de Lucros", "Value": self.outrasResLuc}])], ignore_index=True)
-
-    
-    def ReservasLucros(self):
-        self.reservLucro = self.reservLegal + self.outrasResLuc
+        self.reservLucro = st.number_input('Digite o valor  Reservas de Lucros',key=key,value=st.session_state[key])
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reservas de Lucros", "Value": self.reservLucro}])], ignore_index=True)
     
     
@@ -332,6 +332,13 @@ class trimestralFiltrandoDadosParaCalculo():
 
         
     def prejuizosAcumulados(self):
+        prejuPeriodo = self.l300
+        prejuPeriodo = prejuPeriodo[(prejuPeriodo['Conta Referencial']=='3')&
+            (prejuPeriodo['Data Inicial'].dt.year == self.ano) &
+            (prejuPeriodo['Data Inicial'].dt.month >= self.mes_inicio) &
+            (prejuPeriodo['Data Inicial'].dt.month <= self.mes_fim)&
+            (prejuPeriodo['Trimestre'] == self.trimestre)]
+        self.prejuizoPeirodo = np.sum(prejuPeriodo['Vlr Saldo Final'].values)
 
         l100 = self.l100
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.11')&
@@ -340,6 +347,12 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
         self.contaPatriNClassifica = np.sum(l100['Vlr Saldo Final'].values)
+
+        if (prejuPeriodo['D/C Saldo Final'] == 'C').any():
+            self.contaPatriNClassifica = self.contaPatriNClassifica
+        else:
+            self.contaPatriNClassifica =  self.contaPatriNClassifica - self.prejuizoPeirod 
+
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.contaPatriNClassifica}])], ignore_index=True)
         
         key = f'prejuizoAcumulado{self.data,self.trimestre,self.mes_fim}'
@@ -443,7 +456,6 @@ class trimestralFiltrandoDadosParaCalculo():
             self.ajustesAvalPatrimonial()
 
             self.ReservaLegal()
-            self.OutrasReservasLucros()
             self.ReservasLucros()
 
             self.acoesTesouraria()
@@ -454,7 +466,6 @@ class trimestralFiltrandoDadosParaCalculo():
             self.acoesTesouraria()
             self.lucrosAcumulados()
             self.ajustesExerAnteriores()
-            self.lucroPeriodo()
             self.TotalFinsCalcJSPC()
 
             #-- Metódos que fazer calculos dos valores finais do JCP
@@ -478,7 +489,6 @@ class trimestralFiltrandoDadosParaCalculo():
     def runPipeFinalTable(self):
 
         self.lucrosAcumulados()
-        self.lucroPeriodo()
         self.LacsLalurTrimestral.exclusoes()
         self.LacsLalurTrimestral.calcAdicoes()
         self.LacsLalurTrimestral.lucroAntesCSLL()

@@ -366,7 +366,6 @@ if __name__ == "__main__":
                                                                             lacsLalurAposInovacoesDFFinal2021.add_suffix('2021'),
                                                                             lacsLalurAposInovacoesDFFinal2022.add_suffix('2022'),
                                                                             lacsLalurAposInovacoesDFFinal2023.add_suffix('2023')],axis=1)
-            
                                 st.write('')
                                 st.write('')
                                 st.write('')
@@ -447,8 +446,8 @@ if __name__ == "__main__":
             if anualOuTrimestral == 'Trimestre':
                 st.cache_data.clear()
 
-                try:           
-                    if barra == "Calculo JCP":
+                #try:           
+                if barra == "Calculo JCP":
                         colunas = st.columns(4)
                         trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
                         economia_gerada_por_trimestre = []
@@ -506,8 +505,8 @@ if __name__ == "__main__":
 
 
 
-                                        df.columns = [f"{col} {trimestre}" for col in df.columns] 
-                                        lacsLalurApos.append(df)
+                                    df.columns = [f"{col} {trimestre}" for col in df.columns] 
+                                    lacsLalurApos.append(df)
 
 
 
@@ -534,12 +533,18 @@ if __name__ == "__main__":
                                 with st.expander('Ver Lacs e lalur após inovações'):
                                         st.subheader('Lacs Lalur Após Inovações')
                                         st.dataframe(LacasLalurAposTrimestres)
-                    
-                        arquivoFinalParaExportacaoTri = pd.concat(tabelaUnicaLista,axis=1, ignore_index=True)
-                        
+                                
+                                arquivoFinalParaExportacaoTri = pd.concat(tabelaUnicaLista,axis=1, ignore_index=True)
+                                arquivoFinalParaExportacaoTri = arquivoFinalParaExportacaoTri.rename(columns={0:"Operação 1º Tri 2019",1:"Valor 1º Tri 2019",2:"Operação 2º Tri 2019",3:"Valor 2º Tri 2019",4:"Operação 3º Tri 2019",5:"Valor 3º Tri 2019",6:"Operação 4º Tri 2019",7:"Valor 4º Tri 2019",
+                                                                                                              8:"Operação 1º Tri 2020",9:"Valor 1º Tri 2020",10:"Operação 2º Tri 2020",11:"Valor 2º Tri 2020",12:"Operação 3º Tri 2020",13:"Valor 3º Tri 2020",14:"Operação 4º Tri 2020",15:"Valor 4º Tri 2020",
+                                                                                                              16:"Operação 1º Tri 2021",17:"Valor 1º Tri 2021",18:"Operação 2º Tri 2021",19:"Valor 2º Tri 2021",20:"Operação 3º Tri 2021",21:"Valor 3º Tri 2021",22:"Operação 4º Tri 2021",23:"Valor 4º Tri 2021",
+                                                                                                              24:"Operação 1º Tri 2022",25:"Valor 1º Tri 2022",26:"Operação 2º Tri 2022",27:"Valor 2º Tri 2022",28:"Operação 3º Tri 2022",29:"Valor 3º Tri 2022",30:"Operação 4º Tri 2022",31:"Valor 4º Tri 2022",
+                                                                                                              32:"Operação 1º Tri 2023",33:"Valor 1º Tri 2023",34:"Operação 2º Tri 2023",35:"Valor 2º Tri 2023",36:"Operação 3º Tri 2023",37:"Valor 3º Tri 2023",38:"Operação 4º Tri 2023",39:"Valor 4º Tri 2023"
+                                                                                                              })
+                            
 
       
-                    if barra == "Lacs e Lalur":
+                if barra == "Lacs e Lalur":
                         st.cache_data.clear()
                         col1, col2, col3, col4 = st.columns(4)
                         trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
@@ -589,8 +594,8 @@ if __name__ == "__main__":
                             st.dataframe(dfFinalLacsIRPJ)
                         arquivoFinalParaExportacaoTriLacs = pd.concat(tabelaFinalLacsLalurUnificad,axis=1)    
 
-                except Exception as e:
-                    st.warning(f'Error :{str(e)}')
+                # except Exception as e:
+                #     st.warning(f'Error :{str(e)}')
                     
                 #     pass
             

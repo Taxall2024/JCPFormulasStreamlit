@@ -12,7 +12,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, 
 from reportlab.pdfgen import canvas
 
 texto = """
-O Juros sobre Capital Próprio – JCP é uma forma de remuneração dos sócios pelo capital investido na empresa. Uma das vantagens desse tipo de remuneração está no fato de que a base de cálculo do JCP é o patrimônio líquido aplicado à variação da Taxa de Juros de Longo Prazo – TJLP, ou seja, não depende diretamente do sucesso econômico da empresa como verificado em outros tipos de remuneração.
+O Juros sobre Capital Próprio – JSCP é uma forma de remuneração dos sócios pelo capital investido na empresa. Uma das vantagens desse tipo de remuneração está no fato de que a base de cálculo do JSCP é o patrimônio líquido aplicado à variação da Taxa de Juros de Longo Prazo – TJLP, ou seja, não depende diretamente do sucesso econômico da empresa como verificado em outros tipos de remuneração.
 Essa metodologia possui respaldo legal no artigo 9º, da Lei nº 9.249/1995, como disposto abaixo: 
 
 """
@@ -27,26 +27,28 @@ class RelatorioPDFJSCP():
 
         resultados = pd.read_excel(uploaded_file_resultados).fillna(np.nan)
         resultados = resultados.apply(lambda x: x.dropna().reset_index(drop=True))
-        resultados = resultados.iloc[24:,[0,1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39]]
-        
-        colunas = [1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39]
+        resultados = resultados.iloc[22:,[0,1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39]]
+        colunas = ["Valor 1º Tri 2019","Valor 2º Tri 2019","Valor 3º Tri 2019","Valor 4º Tri 2019","Valor 1º Tri 2020","Valor 2º Tri 2020",
+                    "Valor 3º Tri 2020","Valor 4º Tri 2020","Valor 1º Tri 2021","Valor 2º Tri 2021","Valor 3º Tri 2021","Valor 4º Tri 2021",
+                    "Valor 1º Tri 2022","Valor 2º Tri 2022","Valor 3º Tri 2022","Valor 4º Tri 2022","Valor 1º Tri 2023",
+                    "Valor 2º Tri 2023","Valor 3º Tri 2023","Valor 4º Tri 2023"]
         for col in colunas:
-            resultados[col] = resultados[col].str.replace('.','_').str.replace(',','.').str.replace('_','').astype(float)
-            
-        resultados.at[25,'Value_2019'] = resultados.at[25,1]+resultados.at[25,3]+resultados.at[25,5]+resultados.at[25,7]
-        resultados.at[24,'Value_2019'] = resultados.at[24,1]+resultados.at[24,3]+resultados.at[24,5]+resultados.at[24,7]
+            resultados[col] = resultados[col].str.replace('.','').str.replace(',','.').astype(float)#.str.replace(',','.').str.replace('_','').astype(float)
+  
+        resultados.at[23,'Value_2019'] = resultados.at[23,"Valor 1º Tri 2019"]+resultados.at[23,"Valor 2º Tri 2019"]+resultados.at[23,"Valor 3º Tri 2019"]+resultados.at[23,"Valor 4º Tri 2019"]
+        resultados.at[22,'Value_2019'] = resultados.at[22,"Valor 1º Tri 2019"]+resultados.at[22,"Valor 2º Tri 2019"]+resultados.at[22,"Valor 3º Tri 2019"]+resultados.at[22,"Valor 4º Tri 2019"]
         
-        resultados.at[25,'Value_2020'] = resultados.at[25,9]+resultados.at[25,11]+resultados.at[25,13]+resultados.at[25,15]
-        resultados.at[24,'Value_2020'] = resultados.at[24,9]+resultados.at[24,11]+resultados.at[24,13]+resultados.at[24,15]  
+        resultados.at[23,'Value_2020'] = resultados.at[23,"Valor 1º Tri 2020"]+resultados.at[23,"Valor 2º Tri 2020"]+resultados.at[23,"Valor 3º Tri 2020"]+resultados.at[23,"Valor 4º Tri 2020"]
+        resultados.at[22,'Value_2020'] = resultados.at[22,"Valor 1º Tri 2020"]+resultados.at[22,"Valor 2º Tri 2020"]+resultados.at[22,"Valor 3º Tri 2020"]+resultados.at[22,"Valor 4º Tri 2020"]  
 
-        resultados.at[25,'Value_2021'] = resultados.at[25,17]+resultados.at[25,19]+resultados.at[25,21]+resultados.at[25,23]
-        resultados.at[24,'Value_2021'] = resultados.at[24,17]+resultados.at[24,19]+resultados.at[24,21]+resultados.at[24,23]   
+        resultados.at[23,'Value_2021'] = resultados.at[23,"Valor 1º Tri 2021"]+resultados.at[23,"Valor 2º Tri 2021"]+resultados.at[23,"Valor 3º Tri 2021"]+resultados.at[23,"Valor 4º Tri 2021"]
+        resultados.at[22,'Value_2021'] = resultados.at[22,"Valor 1º Tri 2021"]+resultados.at[22,"Valor 2º Tri 2021"]+resultados.at[22,"Valor 3º Tri 2021"]+resultados.at[22,"Valor 4º Tri 2021"]   
 
-        resultados.at[25,'Value_2022'] = resultados.at[25,25]+resultados.at[25,27]+resultados.at[25,29]+resultados.at[25,31]
-        resultados.at[24,'Value_2022'] = resultados.at[24,25]+resultados.at[24,27]+resultados.at[24,29]+resultados.at[24,31] 
+        resultados.at[23,'Value_2022'] = resultados.at[23,"Valor 1º Tri 2022"]+resultados.at[23,"Valor 2º Tri 2022"]+resultados.at[23,"Valor 3º Tri 2022"]+resultados.at[23,"Valor 4º Tri 2022"]
+        resultados.at[22,'Value_2022'] = resultados.at[22,"Valor 1º Tri 2022"]+resultados.at[22,"Valor 2º Tri 2022"]+resultados.at[22,"Valor 3º Tri 2022"]+resultados.at[22,"Valor 4º Tri 2022"] 
 
-        resultados.at[25,'Value_2023'] = resultados.at[25,33]+resultados.at[25,35]+resultados.at[25,37]+resultados.at[25,39]
-        resultados.at[24,'Value_2023'] = resultados.at[24,33]+resultados.at[24,35]+resultados.at[24,37]+resultados.at[24,39] 
+        resultados.at[23,'Value_2023'] = resultados.at[23,"Valor 1º Tri 2023"]+resultados.at[23,"Valor 2º Tri 2023"]+resultados.at[23,"Valor 3º Tri 2023"]+resultados.at[23,"Valor 4º Tri 2023"]
+        resultados.at[22,'Value_2023'] = resultados.at[22,"Valor 1º Tri 2023"]+resultados.at[22,"Valor 2º Tri 2023"]+resultados.at[22,"Valor 3º Tri 2023"]+resultados.at[22,"Valor 4º Tri 2023"] 
 
         resultados = resultados.iloc[:,[0,-5,-4,-3,-2,-1]].rename(columns={0:''}).reset_index(drop='index')
 
@@ -142,11 +144,11 @@ class RelatorioPDFJSCP():
 
 
     def create_pdf(self,nomeEmpresa,aliquota,observacoesDoAnalista,textoData):
-        filename = 'Relatorio JCP.pdf'
+        filename = 'Relatorio JSCP.pdf'
         pdf_buffer = BytesIO()
         doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
         story = []
-        story.append(Spacer(1, 25))
+
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
             name="Title",
@@ -156,16 +158,31 @@ class RelatorioPDFJSCP():
             fontName="Helvetica-Bold",  # Bold font
         )
 
-        # Add title
-        story.append(Paragraph("<b>Juros sobre Capital Próprio – JCP</b>", title_style))
+   
+
+        img_path = "paginaEmBranco.png"
+        img = Image(img_path, width=9*inch, height=3*inch)
+        img._offs_y = 80
+        story.append(img) 
+        story.append(Paragraph(f"<font size='40'><b>{nomeEmpresa}</b></font>", title_style))
+        story.append(Spacer(1, 40))
+        story.append(Paragraph("<b>RELATÓRIODE REVISÃO FISCAL</b>", title_style))
+        story.append(Spacer(1, 280))
+        story.append(Paragraph(f"<font size='10'><b>Brasília, {textoData}</b></font>", title_style))
+
+
+
+        story.append(PageBreak())
+
+        story.append(Paragraph("<b>Juros sobre Capital Próprio – JSCP</b>", title_style))
 
         # Add a spacer between the title and the rest of the text
         story.append(Spacer(1, 25))
 
         styles = getSampleStyleSheet()
         texto = """
-        O Juros sobre Capital Próprio – JCP é uma forma de remuneração dos sócios pelo capital investido na empresa. 
-        Uma das vantagens desse tipo de remuneração está no fato de que a base de cálculo do JCP é o patrimônio 
+        O Juros sobre Capital Próprio – JSCP é uma forma de remuneração dos sócios pelo capital investido na empresa. 
+        Uma das vantagens desse tipo de remuneração está no fato de que a base de cálculo do JSCP é o patrimônio 
         líquido aplicado à variação da Taxa de Juros de Longo Prazo – TJLP, ou seja, não depende diretamente do 
         sucesso econômico da empresa como verificado em outros tipos de remuneração.
         Essa metodologia possui respaldo legal no artigo 9º, da Lei nº 9.249/1995, como disposto abaixo:
@@ -183,7 +200,7 @@ class RelatorioPDFJSCP():
         texto = """
         Consoante a este entendimento, a jurisprudência do Conselho Administrativo de Recursos Fiscais – CARF e
         dos Tribunais Superiores vêm sedimentando o entendimento de que é juridicamente viável o 
-        uso do JCP como forma de remuneração dos sócios, como observa-se a seguir:  
+        uso do JSCP como forma de remuneração dos sócios, como observa-se a seguir:  
         """
         story.append(Paragraph(texto, styles["Normal"]))
 
@@ -197,7 +214,7 @@ class RelatorioPDFJSCP():
 
         styles = getSampleStyleSheet()
         texto = """
-        Para mais, cumpre esclarecer que o uso de JCP referente a períodos 
+        Para mais, cumpre esclarecer que o uso de JSCP referente a períodos 
         anteriores é plenamente possível conforme decisão proferida pelo CARF:  
         """
         story.append(Paragraph(texto, styles["Normal"]))
@@ -214,15 +231,15 @@ class RelatorioPDFJSCP():
 
         styles = getSampleStyleSheet()
         texto = """
-        Na esfera judicial, o uso de JCP retroativo possui jurisprudência favorável. Em 20/06/2023, o Superior Tribunal de Justiça – STJ finalizou o julgamento do REsp nº 1.971.537/SP, em que se discute a possibilidade de dedução dos juros sobre o capital próprio (JCP) retroativos da base de cálculo do IRPJ e da CSLL. Na oportunidade,
-        houve a pacificação da tese de que é possível deduzir do lucro real os valores de JCP, ainda que tenham sido apurados em exercícios anteriores.
+        Na esfera judicial, o uso de JSCP retroativo possui jurisprudência favorável. Em 20/06/2023, o Superior Tribunal de Justiça – STJ finalizou o julgamento do REsp nº 1.971.537/SP, em que se discute a possibilidade de dedução dos juros sobre o capital próprio (JSCP) retroativos da base de cálculo do IRPJ e da CSLL. Na oportunidade,
+        houve a pacificação da tese de que é possível deduzir do lucro real os valores de JSCP, ainda que tenham sido apurados em exercícios anteriores.
         """
         story.append(Paragraph(texto, styles["Normal"]))
         story.append(Spacer(1, 12)) 
         styles = getSampleStyleSheet()
         texto = """
-            A principal vantagem trazida pelo uso de JCP é a redução da carga tributária da empresa, pois é considerado como despesa das organizações
-            por ser descontado antes do lucro líquido, sendo assim dedutível do IRPJ e da CSLL, gerando uma economia tributária de 34% sobre o valor apurado de JCP.
+            A principal vantagem trazida pelo uso de JSCP é a redução da carga tributária da empresa, pois é considerado como despesa das organizações
+            por ser descontado antes do lucro líquido, sendo assim dedutível do IRPJ e da CSLL, gerando uma economia tributária de 34% sobre o valor apurado de JSCP.
         """
         story.append(Paragraph(texto, styles["Normal"]))
 
@@ -236,7 +253,7 @@ class RelatorioPDFJSCP():
         story.append(Spacer(1, 12)) 
         styles = getSampleStyleSheet()
         texto = """
-        Ademais, o JCP, considerado como despesa de remuneração ao sócio, irá trazer adicionalmente impactos positivos na apuração do IRPJ e da CSLL.
+        Ademais, o JSCP, considerado como despesa de remuneração ao sócio, irá trazer adicionalmente impactos positivos na apuração do IRPJ e da CSLL.
         Com a aplicação dessa inovação, o crédito identificado irá aumentar o saldo negativo, que poderá ser utilizado na compensação de débitos futuros.
         """
         story.append(Paragraph(texto, styles["Normal"]))
@@ -246,13 +263,13 @@ class RelatorioPDFJSCP():
         story.append(Spacer(1, 12)) 
         styles = getSampleStyleSheet()
         texto = f"""
-            Ao analisar a ECF, de abril de 2019 a dezembro de 2023 constatou-se que a  <font size="14" color="black"><b>{nomeEmpresa}</b></font>  não utilizou a metodologia do JCP como fonte de remuneração 
+            Ao analisar a ECF, de 2019 a 2023 constatou-se que a  <font size="14" color="black"><b>{nomeEmpresa}</b></font>  não utilizou a metodologia do JSCP como fonte de remuneração 
             dos sócios. 
             Diante disso, com a aplicação dessa inovação, a empresa observará um ganho econômico, de abril de 2019 a dezembro de 2023, 
-            de aproximadamente R$ <font size="12" color="black"><b>{self.valorAntesImpostos}</b></font>, referente a dedução de IRPJ/CSLL de {aliquota}% sobre o JCP apurado.
+            de aproximadamente R$ <font size="10" color="black"><b>{self.valorAntesImpostos}</b></font>, referente a dedução de IRPJ/CSLL de {aliquota}% sobre o JSCP apurado.
             Lembrando que, com a utilização desta metodologia, deverá ser recolhido, a título de Imposto de Renda Retido na Fonte – IRRF e 
-            multa moratória de 20%  o significa cerca de R$ <font size="12" color="black"><b>{self.valorImpostos}</b></font>. Ou seja, mesmo com a dedução dos impostos devidos, essa metodologia trará ganho 
-            econômico de aproximadamente R$ <font size="12" color="green"><b>{self.valorTotalPeriodo}</b></font>, evidenciado abaixo:
+            multa moratória de 20%  o significa cerca de R$ <font size="10" color="black"><b>{self.valorImpostos}</b></font>. Ou seja, mesmo com a dedução dos impostos devidos, essa metodologia trará ganho 
+            econômico de aproximadamente R$ <font size="10" color="green"><b>{self.valorTotalPeriodo}</b></font>, evidenciado abaixo:
 
         """
         story.append(Paragraph(texto, styles["Normal"]))
@@ -279,7 +296,7 @@ class RelatorioPDFJSCP():
 
         styles = getSampleStyleSheet()
         texto = f"""
-        Além dos ganhos pretéritos, ressalte-se que essa metodologia pode ser utilizada nas próximas apurações, gerando economia em escala. Para o uso correto do JCP,
+        Além dos ganhos pretéritos, ressalte-se que essa metodologia pode ser utilizada nas próximas apurações, gerando economia em escala. Para o uso correto do JSCP,
           deve-se seguir as orientações contidas neste relatório e durante a execução do contrato realizado pela equipe técnica da Tax All.
 
         """
@@ -335,7 +352,7 @@ class RelatorioPDFJSCP():
         styles = getSampleStyleSheet()
         texto = f"""
             Desta forma, as inovações tributárias e créditos identificados pela
-            Tax All podem ser sintetizados em dois cenários, conforme explicitado abaixo:. 
+            Tax All podem ser sintetizados em dois cenários, conforme explicitado abaixo:
 
         """
         story.append(Paragraph(texto, styles["Normal"]))
@@ -351,7 +368,7 @@ class RelatorioPDFJSCP():
         )))
         story.append(Spacer(1, 32))  
 
-        story.append(Paragraph(f"<b>1)	Juros sobre Capital Próprio – JCP de aproximadamente :  </b>",ParagraphStyle(
+        story.append(Paragraph(f"<b>1)	Juros sobre Capital Próprio – JSCP de aproximadamente :  </b>",ParagraphStyle(
             name="Title", 
             fontSize=12,  # Increase font size
             spaceAfter=15,  # Add space after the title
@@ -392,8 +409,8 @@ class RelatorioPDFJSCP():
 
         story.append(Spacer(1, 24))  
 
-        img_path = "Assinaturas.png"
-        img = Image(img_path, width=5.8*inch, height=1.9*inch)
+        img_path = "AssinaturasAtualalizado.png"
+        img = Image(img_path, width=5.6*inch, height=1.9*inch)
         img.hAlign = 'CENTER'
         story.append(img) 
         # Add the background image by wrapping the build call
