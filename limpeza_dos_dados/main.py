@@ -5,7 +5,7 @@ from aplicandoFormulaJPC import CalculosEProcessamentoDosDados
 
 import base64
 
-
+#st.set_page_config(layout='wide')
 background_image ="Untitleddesign.jpg"
 st.markdown(
      f"""
@@ -15,7 +15,42 @@ st.markdown(
      """,
      unsafe_allow_html=True )
 
+def reCalculandoAno(economia2019):
+        economia2019.at[8, 'Value'] = economia2019.at[6, 'Value'] + economia2019.at[7, 'Value']
+        economia2019.at[17, 'Value'] = sum([economia2019.at[0, 'Value'], economia2019.at[2, 'Value'], 
+                                            economia2019.at[8, 'Value'], economia2019.at[13, 'Value'],
+                                            economia2019.at[14, 'Value'], economia2019.at[12, 'Value'],
+                                            economia2019.at[15, 'Value']])
+        economia2019.at[22, 'Value'] = economia2019.at[17, 'Value']
+        economia2019.at[24, 'Value'] = economia2019.at[22, 'Value'] * (economia2019.at[23, 'Value'] / 100)
+        economia2019.at[25, 'Value'] = economia2019.at[24, 'Value'] * 0.15
+        economia2019.at[26, 'Value'] = economia2019.at[24, 'Value'] - economia2019.at[25, 'Value']
+        economia2019.at[27, 'Value'] = economia2019.at[20, 'Value'] * 0.5
+        economia2019.at[28, 'Value'] = (economia2019.at[8, 'Value'] + economia2019.at[14, 'Value']) * 0.5
+        economia2019.at[29, 'Value'] = economia2019.at[25, 'Value'] + (economia2019.at[25, 'Value'] * 0.2)
+        economia2019.at[30, 'Value'] = economia2019.at[24, 'Value'] * 0.34
+        economia2019.at[31, 'Value'] = economia2019.at[30, 'Value'] - economia2019.at[29, 'Value']
+        
+        return economia2019
+def reCalculandoTrimestral(economia2019):
+    economia2019.at[17, 'Value'] = sum([economia2019.at[0, 'Value'], economia2019.at[2, 'Value'], 
+                                        economia2019.at[6, 'Value'], economia2019.at[7, 'Value'],
+                                        economia2019.at[12, 'Value'], economia2019.at[13, 'Value']])
+    economia2019.at[16, 'Value'] = economia2019.at[15, 'Value']
+    economia2019.at[18, 'Value'] = economia2019.at[16, 'Value'] * (economia2019.at[17, 'Value'] / 100)
+    economia2019.at[19, 'Value'] = economia2019.at[20, 'Value'] * 0.15       
+    economia2019.at[20, 'Value'] = economia2019.at[18, 'Value'] - economia2019.at[19, 'Value']
+
+    economia2019.at[22, 'Value'] = (economia2019.at[6, 'Value'] + economia2019.at[12, 'Value']) * 0.5
+    economia2019.at[23, 'Value'] = economia2019.at[19, 'Value'] + (economia2019.at[19, 'Value'] * 0.2)
+    economia2019.at[24, 'Value'] = economia2019.at[20, 'Value'] * 0.34
+    economia2019.at[25, 'Value'] = economia2019.at[24, 'Value'] - economia2019.at[23, 'Value']
+
+    return economia2019
+
+
 if __name__=='__main__':
+
 
     seletorDePagina = st.sidebar.radio('Selecione',['Ver tabelas','Processar dados'])
 
@@ -37,39 +72,41 @@ if __name__=='__main__':
 
         col1,col2,col3,col4,col5 = st.columns(5)
         
-        
-        
+              
 
         ano = 'Análise Anual'
         trimestre = 'Análise trimestral'
 
         with col1:
             st.subheader('2019')
-            if st.toggle('',key='2019'):
+            if st.toggle('',2019):
                 st.write(ano)
-                economia2019 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcp",2019).iloc[:,[1,2]]
-                economia2019.at[8,'Value'] = economia2019.at[6,'Value'] + economia2019.at[7,'Value']
-                economia2019.at[17,'Value'] = sum([economia2019.at[0,'Value'], economia2019.at[2,'Value'], 
-                                                  economia2019.at[8,'Value'], economia2019.at[13,'Value'],
-                                                 economia2019.at[14,'Value'], economia2019.at[12,'Value'],
-                                                  economia2019.at[15,'Value'] ])
-                
-                economia2019.at[22,'Value'] = economia2019.at[17,'Value']
-                economia2019.at[24,'Value'] = economia2019.at[22,'Value'] * (economia2019.at[23,'Value']/100)
-                economia2019.at[25,'Value'] = economia2019.at[24,'Value'] * 0.15
-                economia2019.at[26,'Value'] = economia2019.at[24,'Value'] - economia2019.at[25,'Value']
-                economia2019.at[27,'Value'] = economia2019.at[20,'Value'] *0.5
-                economia2019.at[28,'Value'] = (economia2019.at[8,'Value'] + economia2019.at[14,'Value']) * 0.5
-                economia2019.at[29,'Value'] = economia2019.at[25,'Value'] + (economia2019.at[25,'Value']*0.2)
-                economia2019.at[30,'Value'] = economia2019.at[24,'Value'] * 0.34
-                economia2019.at[31,'Value'] = economia2019.at[30,'Value'] - economia2019.at[29,'Value'] 
+                if 'economia2019' not in st.session_state:
+                    economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", 2019).iloc[:, [1, 2]]
+                    st.session_state.economia2019 = economia2019
 
+                with st.form("my_form"):
+                    economia2019_data_editor = st.data_editor(st.session_state.economia2019, key='2019deano', height=1250, use_container_width=True)
+                    submitted = st.form_submit_button("Submit")
 
-
+                if submitted:
+                    
+                    st.session_state.economia2019 = reCalculandoAno(economia2019_data_editor)
             else:
                 st.write(trimestre)
-                economia2019 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcptrimestral",2019).iloc[:,:8]
-            st.data_editor(economia2019,key='2019de',height=1150,use_container_width=True)
+                if 'economia2019Trimestral' not in st.session_state:
+                    economia2019Trimestral = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcptrimestral",2019).iloc[:,:8]
+                    st.session_state.economia2019Trimestral = economia2019Trimestral
+                
+                with st.form("my_form"):
+                    economia2019Trimestral_data_editor = st.data_editor(st.session_state.economia2019Trimestral, key='economia2019Trimestral', height=950, use_container_width=True)
+                    submitted = st.form_submit_button("Submit")
+                if submitted:
+                    
+                    st.session_state.economia2019Trimestral = reCalculandoTrimestral(economia2019Trimestral_data_editor)
+                
+        
+                 
 
 
         with col2:
@@ -130,6 +167,8 @@ if __name__=='__main__':
                                 file_paths.append(file_path)
             calculos = CalculosEProcessamentoDosDados()
             calculos.filtrarCalcularECadastras(file_paths,file_path)
+
+
 
 
 
@@ -235,3 +274,32 @@ if __name__=='__main__':
     
 #     except:
 #         pass'''
+
+#Atualização da tabela anual, teste
+
+        # with col1:
+        #     st.subheader('2019')
+        #     ano = 'Análise Anual'
+
+        #     if 'economia2019' not in st.session_state:
+        #         economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", 2019).iloc[:, [1, 2]]
+        #         st.session_state.economia2019 = economia2019
+
+        #     economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", 2019).iloc[:, [1, 2]]
+        #     economia2019recalculada = reCalculandoAno(economia2019)
+
+        #     with st.form("my_form"):
+        #         economia2019_data_editor = st.data_editor(economia2019recalculada, key='2019de', height=1250, use_container_width=True)
+        #         submitted = st.form_submit_button("Submit")
+
+        #     if submitted:
+        #         st.session_state.economia2019 = economia2019_data_editor
+        #         st.session_state.economia2019recalculada = reCalculandoAno(st.session_state.economia2019)
+
+        #     st.data_editor(st.session_state.economia2019, key='2019de_final', height=1250, use_container_width=True)
+
+            # else:
+            #     st.write(trimestre)
+            #     economia2019 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcptrimestral",2019).iloc[:,:8]
+            # st.data_editor(st.session_state.economia2019,key='2019de',height=1150,use_container_width=True)
+           
