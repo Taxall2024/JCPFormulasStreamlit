@@ -126,6 +126,11 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
         
+        if (l100['D/C Saldo Final'] == 'C').any():
+            self.lucroAcumulado = np.where(np.sum(l100['Vlr Saldo Final'].values)-lucroperio<0,0,np.sum(l100['Vlr Saldo Final'].values)-lucroperio)
+        else:
+            self.lucroAcumulado = np.sum(l100['Vlr Saldo Final'].values)
+        
         self.lucroAcumulado = np.where(np.sum(l100['Vlr Saldo Final'].values)-lucroperio<0,0,np.sum(l100['Vlr Saldo Final'].values)-lucroperio)
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
@@ -155,15 +160,22 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
         self.lucro_periodo_value = np.sum(l100['Vlr Saldo Final'].values)
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucro do Período", "Value": self.lucro_periodo_value}])], ignore_index=True)
-        self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucro do Período", "Value": self.lucro_periodo_value}])], ignore_index=True)
+        
+        if (l100['D/C Saldo Final'] == 'C').any():
+            lucroPrejuizo = 'Lucro do Período'
+        else:
+            lucroPrejuizo = 'Prejuízo do Período' 
+
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": f"{lucroPrejuizo}", "Value": self.lucro_periodo_value}])], ignore_index=True)
+        self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": f"{lucroPrejuizo}", "Value": self.lucro_periodo_value}])], ignore_index=True)
 
 
     def TotalFinsCalcJSPC(self):
 
-        self.totalJSPC =  sum((self.capSocial,self.reservaCapital,self.lucroAcumulado,self.reservLucro,
-                               self.contaPatriNClassifica,self.prejuizoPeirod,self.ajustExercAnt,
-                               self.resultExercicio,self.lucroPrejAcumu))
+        self.totalJSPC =  sum((self.capSocial,self.reservaCapital,self.lucroAcumulado,self.reservLucro
+                               ,self.prejuizoPeirod,self.ajustExercAnt,
+                               self.resultExercicio,self.lucroPrejAcumu)) - self.prejuAcumulado
+        
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
     
 
@@ -267,12 +279,25 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
   
     def prejuizosAcumulados(self):
 
+        lucroOuPrejuPeriodo = self.l300
+        lucroOuPrejuPeriodo = lucroOuPrejuPeriodo[(lucroOuPrejuPeriodo['Descrição Conta Referencial']=='RESULTADO LÍQUIDO DO PERÍODO')&
+            (lucroOuPrejuPeriodo['Data Inicial'].str.contains(self.data))&(
+            lucroOuPrejuPeriodo['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
+        self.lucroOuPrejuPeriodo = np.sum(lucroOuPrejuPeriodo['Vlr Saldo Final'].values)
+         
+
         l100 = self.l100
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.11')&
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
-        self.contaPatriNClassifica = np.sum(l100['Vlr Saldo Final'].values) * -1
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.contaPatriNClassifica}])], ignore_index=True)
+        self.contaPatriNClassifica = np.sum(l100['Vlr Saldo Final'].values)
+
+        if (l100['D/C Saldo Final'] == 'C').any():
+            self.prejuAcumulado = abs(self.contaPatriNClassifica)
+        else:
+            self.prejuAcumulado = abs(self.contaPatriNClassifica - self.lucroOuPrejuPeriodo)
+        
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.prejuAcumulado}])], ignore_index=True)
     
     @functools.cache
     def runPipe(self):
@@ -322,14 +347,3 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         st.dataframe(self.resultsTabelaFinal)
         return self.resultsTabelaFinal
 
-# if __name__=='__main__':
-
-#     jcp = FiltrandoDadosParaCalculo() 
-
-#     jcp.runPipeFinalTable()
-#     #jcp.runPipeFinalTabelLacsLalur()
-#     st.subheader('Calculo JCP')
-#     jcp.runPipe()
-#     st.subheader('Lacs e Lalur ')
-#     jcp.runPipeLacsLalurIRPJ()
-#     jcp.runPipeLacsLalurCSLL()
