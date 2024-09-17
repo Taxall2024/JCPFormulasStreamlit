@@ -15,8 +15,9 @@ import time
 import base64
 import psutil
 
+
+st.set_page_config(layout='wide')
 controler = dbController('ECF')
-st.set_page_config(layout="wide")
 start_time = time.time()
 tempoProcessamentoDasFuncoes = []
 

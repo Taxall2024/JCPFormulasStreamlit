@@ -2,8 +2,13 @@ import streamlit as st
 
 from db.controllerDB import dbController
 from aplicandoFormulaJPC import CalculosEProcessamentoDosDados
+from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
 
+import pandas as pd
 import base64
+import io
+import textwrap
+import re
 
 #st.set_page_config(layout='wide')
 background_image ="Untitleddesign.jpg"
@@ -15,7 +20,7 @@ st.markdown(
      """,
      unsafe_allow_html=True )
 
-def reCalculandoAno(economia2019):
+def reCalculandoAno(economia2019,retirarMulta):
   
         economia2019.at[8, 'Value'] = economia2019.at[6, 'Value'] + economia2019.at[7, 'Value']
         economia2019.at[17, 'Value'] = sum([economia2019.at[0, 'Value'], economia2019.at[2, 'Value'], 
@@ -28,34 +33,99 @@ def reCalculandoAno(economia2019):
         economia2019.at[26, 'Value'] = economia2019.at[24, 'Value'] - economia2019.at[25, 'Value']
         economia2019.at[27, 'Value'] = economia2019.at[20, 'Value'] * 0.5
         economia2019.at[28, 'Value'] = (economia2019.at[8, 'Value'] + economia2019.at[14, 'Value']) * 0.5
-        economia2019.at[29, 'Value'] = economia2019.at[25, 'Value'] + (economia2019.at[25, 'Value'] * 0.2)
+        if retirarMulta == True:
+            economia2019.at[29, 'Value'] = economia2019.at[25, 'Value'] + (economia2019.at[25, 'Value'] * 0.2 * 0)
+        else:
+            economia2019.at[29, 'Value'] = economia2019.at[25, 'Value'] + (economia2019.at[25, 'Value'] * 0.2)    
         economia2019.at[30, 'Value'] = economia2019.at[24, 'Value'] * 0.34
         economia2019.at[31, 'Value'] = economia2019.at[30, 'Value'] - economia2019.at[29, 'Value']
         
         return economia2019
-def reCalculandoTrimestral(economia2019):
-
+def reCalculandoTrimestral(economia2019,retirarMulta):
 
     trimestres = [1,2,3,4]
     for i in trimestres:
-        economia2019.at[15, f'Value {i}º Trimestre'] = sum([economia2019.at[0, f'Value {i}º Trimestre'], economia2019.at[2, f'Value {i}º Trimestre'], 
-                                            economia2019.at[6, f'Value {i}º Trimestre'], economia2019.at[7, f'Value {i}º Trimestre'],
-                                            economia2019.at[12, f'Value {i}º Trimestre'], economia2019.at[13, f'Value {i}º Trimestre']])
-        economia2019.at[16, f'Value {i}º Trimestre'] = economia2019.at[15, f'Value {i}º Trimestre']
-        economia2019.at[18, f'Value {i}º Trimestre'] = economia2019.at[16, f'Value {i}º Trimestre'] * (economia2019.at[17, f'Value {i}º Trimestre'] / 100000)
-        economia2019.at[19, f'Value {i}º Trimestre'] = economia2019.at[20, f'Value {i}º Trimestre'] * 0.15       
-        economia2019.at[20, f'Value {i}º Trimestre'] = economia2019.at[18, f'Value {i}º Trimestre'] - economia2019.at[19, f'Value {i}º Trimestre']
-        economia2019.at[22, f'Value {i}º Trimestre'] = (economia2019.at[6, f'Value {i}º Trimestre'] + economia2019.at[12, f'Value {i}º Trimestre']) * 0.5
-        economia2019.at[23, f'Value {i}º Trimestre'] = economia2019.at[19, f'Value {i}º Trimestre'] + (economia2019.at[19, f'Value {i}º Trimestre'] * 0.2)
-        economia2019.at[24, f'Value {i}º Trimestre'] = economia2019.at[20, f'Value {i}º Trimestre'] * 0.34
-        economia2019.at[25, f'Value {i}º Trimestre'] = economia2019.at[24, f'Value {i}º Trimestre'] - economia2019.at[23, f'Value {i}º Trimestre']
+        economia2019_copy = economia2019.copy()  
+        economia2019_copy.at[15, f'Value {i}º Trimestre'] = sum([economia2019_copy.at[0, f'Value {i}º Trimestre'], economia2019_copy.at[2, f'Value {i}º Trimestre'], 
+                                                            economia2019_copy.at[6, f'Value {i}º Trimestre'], economia2019_copy.at[7, f'Value {i}º Trimestre'],
+                                                            economia2019_copy.at[12, f'Value {i}º Trimestre'], economia2019_copy.at[13, f'Value {i}º Trimestre']])
+        economia2019_copy.at[16, f'Value {i}º Trimestre'] = economia2019_copy.at[15, f'Value {i}º Trimestre']
+        economia2019_copy.at[18, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * (economia2019_copy.at[17, f'Value {i}º Trimestre'] / 100000)
+        economia2019_copy.at[19, f'Value {i}º Trimestre'] = economia2019_copy.at[20, f'Value {i}º Trimestre'] * 0.15       
+        economia2019_copy.at[20, f'Value {i}º Trimestre'] = economia2019_copy.at[18, f'Value {i}º Trimestre'] - economia2019_copy.at[19, f'Value {i}º Trimestre']
+        economia2019_copy.at[22, f'Value {i}º Trimestre'] = (economia2019_copy.at[6, f'Value {i}º Trimestre'] + economia2019_copy.at[12, f'Value {i}º Trimestre']) * 0.5
+        if retirarMulta == True:            
+            economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[19, f'Value {i}º Trimestre'] + (economia2019_copy.at[19, f'Value {i}º Trimestre'] * 0.2 * 0)
+        else:
+            economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[19, f'Value {i}º Trimestre'] + (economia2019_copy.at[19, f'Value {i}º Trimestre'] * 0.2)    
+        economia2019_copy.at[24, f'Value {i}º Trimestre'] = economia2019_copy.at[20, f'Value {i}º Trimestre'] * 0.34
+        economia2019_copy.at[25, f'Value {i}º Trimestre'] = economia2019_copy.at[24, f'Value {i}º Trimestre'] - economia2019_copy.at[23, f'Value {i}º Trimestre']
 
-    return economia2019
+        
+        economia2019 = economia2019_copy
+
+        return economia2019
+
+def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cnpj_selecionado):
+    st.subheader(anoDeAnalise)
+    multa = st.toggle('Retirar multa', key=f'{anoDeAnalise}')
+    periodoDeAnalise = st.toggle('', key=f"teste{anoDeAnalise}")
+
+    session_cnpj_key = f'cnpj_selecionado_{anoDeAnalise}'
+
+    if periodoDeAnalise:
+        st.write(ano)
+        session_state_name = f"economia{anoDeAnalise}"
+
+        if session_state_name not in st.session_state or st.session_state.get(session_cnpj_key, None) != cnpj_selecionado:
+            economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", anoDeAnalise).iloc[:, [1, 2]]
+            st.session_state[session_state_name] = economia2019
+        st.session_state[session_cnpj_key] = cnpj_selecionado
+
+        with st.form(f"my_form{anoDeAnalise}{ano}"):
+            economia2019_data_editor = st.data_editor(st.session_state[session_state_name], key=f'{anoDeAnalise}deano', height=1175, use_container_width=True)
+            submitted = st.form_submit_button(f"Atualizar {anoDeAnalise}")
+
+        if submitted:
+            st.session_state[session_state_name] = reCalculandoAno(economia2019_data_editor, multa)
+        resultadoAnual = economia2019_data_editor.copy()
+        resultadoAnual.columns = [f"{col}_{anoDeAnalise}" for col in resultadoAnual.columns]
+        resultadoAnual = resultadoAnual.drop([4,5,6,7,15,20]).reset_index(drop='index')
+
+    else:
+        st.write(trimestre) 
+        session_state_name = f"economia{anoDeAnalise}Trimestral"
+
+        if session_state_name not in st.session_state or st.session_state.get(session_cnpj_key, None) != cnpj_selecionado:
+            economia2019Trimestral = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcptrimestral", anoDeAnalise).iloc[:, :8]
+            st.session_state[session_state_name] = economia2019Trimestral
+        st.session_state[session_cnpj_key] = cnpj_selecionado
+        
+        with st.form(f"{anoDeAnalise}{trimestre}"):
+
+            economia2019Trimestral_data_editor = st.data_editor(st.session_state[session_state_name], key=f'data_editor_{anoDeAnalise}', height=950, use_container_width=True)
+            submittedbutton1 = st.form_submit_button(f"Atualizar {anoDeAnalise}")
+
+        if submittedbutton1:
+            if 'form_submitted' not in st.session_state or not st.session_state.form_submitted:
+                st.session_state[session_state_name] = reCalculandoTrimestral(economia2019Trimestral_data_editor, multa)
+                st.session_state.form_submitted = True
+            else:
+                st.session_state.form_submitted = False
+
+        resultaTrimestral = economia2019Trimestral_data_editor
+        resultaTrimestral.columns = [f"{col}_{anoDeAnalise}" for col in resultaTrimestral.columns]
+
+    if periodoDeAnalise == True:
+        dataframesParaDownload.append(resultadoAnual)
+    else:
+         dataframesParaDownload.append(resultaTrimestral)
+          
 
 
 if __name__=='__main__':
 
-
+    
     seletorDePagina = st.sidebar.radio('Selecione',['Ver tabelas','Processar dados'])
 
     if seletorDePagina=='Ver tabelas':
@@ -66,9 +136,12 @@ if __name__=='__main__':
         listaDosNomesDasEmpresas = list(tabelaDeNomes['NomeDaEmpresa'])
         nome_para_cnpj = dict(zip(tabelaDeNomes['NomeDaEmpresa'], tabelaDeNomes['CNPJ']))
 
+        dataframesParaDownload = []
         nomeEmpresaSelecionada = st.sidebar.selectbox('Selecione a empresa',listaDosNomesDasEmpresas)
         cnpj_selecionado = nome_para_cnpj[nomeEmpresaSelecionada]
-
+        if 'cnpj_selecionado' not in st.session_state:
+            st.session_state.cnpj_selecionado = cnpj_selecionado
+            
         st.header(f'{nomeEmpresaSelecionada}')
         st.subheader('')
         st.subheader('')
@@ -82,95 +155,35 @@ if __name__=='__main__':
         trimestre = 'Análise trimestral'
 
         with col1:
-            st.subheader('2019')
-            if st.toggle('', 2019):
-                st.write(ano)
-                if 'cnpj_selecionado' not in st.session_state:
-                    st.session_state.cnpj_selecionado = None
-                if 'economia2019' not in st.session_state or st.session_state.cnpj_selecionado != cnpj_selecionado:
-                    economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", 2019).iloc[:, [1, 2]]
-                    st.session_state.economia2019 = economia2019
-                    st.session_state.cnpj_selecionado = cnpj_selecionado
-
-                with st.form("my_form"):
-                    economia2019_data_editor = st.data_editor(st.session_state.economia2019, key='2019deano', height=1250, use_container_width=True)
-                    submitted = st.form_submit_button("Submit")
-
-                if submitted:
-                    st.session_state.economia2019 = reCalculandoAno(economia2019_data_editor)
-            else:
-                st.write(trimestre)
-                economia2019Trimestral = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcptrimestral", 2019).iloc[:, :8]
-
-                if 'economia2019Trimestral' not in st.session_state:
-                    st.session_state.economia2019Trimestral = economia2019Trimestral
-
-                with st.form("trimestral2019"):
-
-                    economia2019Trimestral_data_editor = st.data_editor(st.session_state.economia2019Trimestral, key='data_editor_2019', height=950, use_container_width=True)
-                    submittedbutton1 = st.form_submit_button("Submit..")
-
-                if submittedbutton1:
-                    st.session_state.economia2019Trimestral = reCalculandoTrimestral(economia2019Trimestral_data_editor)
-
-
-                # economia2019Trimestral = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcptrimestral", 2019).iloc[:, :8]
-                # if 'economia2019Trimestral' not in st.session_state:
-                #     st.session_state.economia2019Trimestral = economia2019Trimestral
-
-                # with st.form("my_form2"):
-                #     economia2019_data_editortri = st.data_editor(st.session_state.economia2019Trimestral, key='2019tri', height=1250, use_container_width=True)
-                #     submitted = st.form_submit_button("Sub")
-
-                # if submitted:
-                    
-                #     st.session_state.economia2019Trimestral = reCalculandoTrimestral(economia2019_data_editortri)                   
-
-
-
-
-
-        with col2:
-            st.subheader('2020')
-            if st.toggle('',key='2020'):
-                st.write(ano)
-                economia2020 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcp",2020).iloc[:,[1,2]]
-            else:
-                st.write(trimestre)
-                economia2020 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcptrimestral",2020).iloc[:,:8]
-            st.data_editor(economia2020,key='2020de',height=1150,use_container_width=True)
         
+            criandoVisualizacao(trimestre,ano,2019,dataframesParaDownload,cnpj_selecionado)
+
+        with col2:         
+
+            criandoVisualizacao(trimestre,ano,2020,dataframesParaDownload,cnpj_selecionado)
+
         with col3:
-            st.subheader('2021')
-            if st.toggle('',key='2021'):
-                st.write(ano)
-                economia2021 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcp",2021).iloc[:,[1,2]]
-            else:
-                st.write(trimestre)
-                economia2021 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcptrimestral",2021).iloc[:,:8]
-            st.data_editor(economia2021,key='2021de',height=1150,use_container_width=True)
+
+            criandoVisualizacao(trimestre,ano,2021,dataframesParaDownload,cnpj_selecionado)
 
         with col4:
-            st.subheader('2022')
-            if st.toggle('',key='2022'):
-                st.write(ano)
-                economia2022 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcp",2022).iloc[:,[1,2]]
-            else:
-                st.write(trimestre)
-                economia2022 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcptrimestral",2022).iloc[:,:8]
-            st.data_editor(economia2022,key='2022de',height=1150,use_container_width=True)
-        
+
+            criandoVisualizacao(trimestre,ano,2022,dataframesParaDownload,cnpj_selecionado)
+
         with col5:
-            st.subheader('2023')
-            if st.toggle('',key='2023'):
-                st.write(ano)
-                economia2023 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcp",2023).iloc[:,[1,2]]
-            else:
-                st.write(trimestre)
-                economia2023 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcptrimestral",2023).iloc[:,:8]
-            st.data_editor(economia2023,key='2023de',height=1150,use_container_width=True)
 
+            criandoVisualizacao(trimestre,ano,2023,dataframesParaDownload,cnpj_selecionado)
 
+        arquivoParaDownload = pd.concat(dataframesParaDownload,axis=1)
+
+        output8 = io.BytesIO()
+        with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoParaDownload.to_excel(writer,sheet_name=f'JSCP_{re.sub(r'[^a-zA-Z0-9_]+', '', textwrap.shorten(nomeEmpresaSelecionada, width=25))}', index=False)
+        output8.seek(0)
+        st.write('')
+        st.write('')
+        st.write('')
+        st.download_button(type='primary',label="Exportar tabela JSCP",data=output8,file_name=f"JSCP_{re.sub(r'[^a-zA-Z0-9_]+', '', textwrap.shorten(nomeEmpresaSelecionada, width=25))}'.xlsx",key='download_button')
+        
 
 
 
