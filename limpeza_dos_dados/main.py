@@ -16,6 +16,7 @@ st.markdown(
      unsafe_allow_html=True )
 
 def reCalculandoAno(economia2019):
+  
         economia2019.at[8, 'Value'] = economia2019.at[6, 'Value'] + economia2019.at[7, 'Value']
         economia2019.at[17, 'Value'] = sum([economia2019.at[0, 'Value'], economia2019.at[2, 'Value'], 
                                             economia2019.at[8, 'Value'], economia2019.at[13, 'Value'],
@@ -33,18 +34,21 @@ def reCalculandoAno(economia2019):
         
         return economia2019
 def reCalculandoTrimestral(economia2019):
-    economia2019.at[17, 'Value'] = sum([economia2019.at[0, 'Value'], economia2019.at[2, 'Value'], 
-                                        economia2019.at[6, 'Value'], economia2019.at[7, 'Value'],
-                                        economia2019.at[12, 'Value'], economia2019.at[13, 'Value']])
-    economia2019.at[16, 'Value'] = economia2019.at[15, 'Value']
-    economia2019.at[18, 'Value'] = economia2019.at[16, 'Value'] * (economia2019.at[17, 'Value'] / 100)
-    economia2019.at[19, 'Value'] = economia2019.at[20, 'Value'] * 0.15       
-    economia2019.at[20, 'Value'] = economia2019.at[18, 'Value'] - economia2019.at[19, 'Value']
 
-    economia2019.at[22, 'Value'] = (economia2019.at[6, 'Value'] + economia2019.at[12, 'Value']) * 0.5
-    economia2019.at[23, 'Value'] = economia2019.at[19, 'Value'] + (economia2019.at[19, 'Value'] * 0.2)
-    economia2019.at[24, 'Value'] = economia2019.at[20, 'Value'] * 0.34
-    economia2019.at[25, 'Value'] = economia2019.at[24, 'Value'] - economia2019.at[23, 'Value']
+
+    trimestres = [1,2,3,4]
+    for i in trimestres:
+        economia2019.at[15, f'Value {i}º Trimestre'] = sum([economia2019.at[0, f'Value {i}º Trimestre'], economia2019.at[2, f'Value {i}º Trimestre'], 
+                                            economia2019.at[6, f'Value {i}º Trimestre'], economia2019.at[7, f'Value {i}º Trimestre'],
+                                            economia2019.at[12, f'Value {i}º Trimestre'], economia2019.at[13, f'Value {i}º Trimestre']])
+        economia2019.at[16, f'Value {i}º Trimestre'] = economia2019.at[15, f'Value {i}º Trimestre']
+        economia2019.at[18, f'Value {i}º Trimestre'] = economia2019.at[16, f'Value {i}º Trimestre'] * (economia2019.at[17, f'Value {i}º Trimestre'] / 100000)
+        economia2019.at[19, f'Value {i}º Trimestre'] = economia2019.at[20, f'Value {i}º Trimestre'] * 0.15       
+        economia2019.at[20, f'Value {i}º Trimestre'] = economia2019.at[18, f'Value {i}º Trimestre'] - economia2019.at[19, f'Value {i}º Trimestre']
+        economia2019.at[22, f'Value {i}º Trimestre'] = (economia2019.at[6, f'Value {i}º Trimestre'] + economia2019.at[12, f'Value {i}º Trimestre']) * 0.5
+        economia2019.at[23, f'Value {i}º Trimestre'] = economia2019.at[19, f'Value {i}º Trimestre'] + (economia2019.at[19, f'Value {i}º Trimestre'] * 0.2)
+        economia2019.at[24, f'Value {i}º Trimestre'] = economia2019.at[20, f'Value {i}º Trimestre'] * 0.34
+        economia2019.at[25, f'Value {i}º Trimestre'] = economia2019.at[24, f'Value {i}º Trimestre'] - economia2019.at[23, f'Value {i}º Trimestre']
 
     return economia2019
 
@@ -79,34 +83,51 @@ if __name__=='__main__':
 
         with col1:
             st.subheader('2019')
-            if st.toggle('',2019):
+            if st.toggle('', 2019):
                 st.write(ano)
-                if 'economia2019' not in st.session_state:
+                if 'cnpj_selecionado' not in st.session_state:
+                    st.session_state.cnpj_selecionado = None
+                if 'economia2019' not in st.session_state or st.session_state.cnpj_selecionado != cnpj_selecionado:
                     economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", 2019).iloc[:, [1, 2]]
                     st.session_state.economia2019 = economia2019
+                    st.session_state.cnpj_selecionado = cnpj_selecionado
 
                 with st.form("my_form"):
                     economia2019_data_editor = st.data_editor(st.session_state.economia2019, key='2019deano', height=1250, use_container_width=True)
                     submitted = st.form_submit_button("Submit")
 
                 if submitted:
-                    
                     st.session_state.economia2019 = reCalculandoAno(economia2019_data_editor)
             else:
                 st.write(trimestre)
+                economia2019Trimestral = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcptrimestral", 2019).iloc[:, :8]
+
                 if 'economia2019Trimestral' not in st.session_state:
-                    economia2019Trimestral = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcptrimestral",2019).iloc[:,:8]
                     st.session_state.economia2019Trimestral = economia2019Trimestral
-                
-                with st.form("my_form"):
-                    economia2019Trimestral_data_editor = st.data_editor(st.session_state.economia2019Trimestral, key='economia2019Trimestral', height=950, use_container_width=True)
-                    submitted = st.form_submit_button("Submit")
-                if submitted:
-                    
+
+                with st.form("trimestral2019"):
+
+                    economia2019Trimestral_data_editor = st.data_editor(st.session_state.economia2019Trimestral, key='data_editor_2019', height=950, use_container_width=True)
+                    submittedbutton1 = st.form_submit_button("Submit..")
+
+                if submittedbutton1:
                     st.session_state.economia2019Trimestral = reCalculandoTrimestral(economia2019Trimestral_data_editor)
-                
-        
-                 
+
+
+                # economia2019Trimestral = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcptrimestral", 2019).iloc[:, :8]
+                # if 'economia2019Trimestral' not in st.session_state:
+                #     st.session_state.economia2019Trimestral = economia2019Trimestral
+
+                # with st.form("my_form2"):
+                #     economia2019_data_editortri = st.data_editor(st.session_state.economia2019Trimestral, key='2019tri', height=1250, use_container_width=True)
+                #     submitted = st.form_submit_button("Sub")
+
+                # if submitted:
+                    
+                #     st.session_state.economia2019Trimestral = reCalculandoTrimestral(economia2019_data_editortri)                   
+
+
+
 
 
         with col2:
