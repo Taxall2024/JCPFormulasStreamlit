@@ -37,6 +37,7 @@ class trimestralFiltrandoDadosParaCalculo():
         self.lucroAcumulado = 0.0
         self.reservLucro = 0.0
         self.taxaJuros = 0.0
+        self.resultado = 0.0
 
         self.resultadoJPC = pd.DataFrame(columns=["Operation", "Value"])
         self.resultadoLimiteDedu = pd.DataFrame(columns=["Operation", "Value"])
