@@ -84,7 +84,7 @@ class RelatorioPDFJSCP():
         colunasParaFormatar = ['2019','2020','2021','2022','2023','Total']
         for col in colunasParaFormatar:
             self.tabelaFinalDf[col] = self.tabelaFinalDf[col].apply(lambda x: "{:,.2f}".format( x, grouping=True).replace('.','_').replace(',','.').replace('_',','))
-        
+        self.tabelaFinalDf = self.tabelaFinalDf.rename(columns={'Operação 1º Tri 2019':''})
 
 
     
