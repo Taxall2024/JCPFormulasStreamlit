@@ -9,6 +9,7 @@ import base64
 import io
 import textwrap
 import re
+import numpy as np
 
 #st.set_page_config(layout='wide')
 background_image ="Untitleddesign.jpg"
@@ -50,9 +51,9 @@ def reCalculandoTrimestral(economia2019,retirarMulta):
                                                             economia2019_copy.at[6, f'Value {i}º Trimestre'], economia2019_copy.at[7, f'Value {i}º Trimestre'],
                                                             economia2019_copy.at[12, f'Value {i}º Trimestre'], economia2019_copy.at[13, f'Value {i}º Trimestre']])
         economia2019_copy.at[16, f'Value {i}º Trimestre'] = economia2019_copy.at[15, f'Value {i}º Trimestre']
-        economia2019_copy.at[18, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * (economia2019_copy.at[17, f'Value {i}º Trimestre'] / 100000)
-        economia2019_copy.at[19, f'Value {i}º Trimestre'] = economia2019_copy.at[20, f'Value {i}º Trimestre'] * 0.15       
-        economia2019_copy.at[20, f'Value {i}º Trimestre'] = economia2019_copy.at[18, f'Value {i}º Trimestre'] - economia2019_copy.at[19, f'Value {i}º Trimestre']
+        economia2019_copy.at[18, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * (economia2019_copy.at[17, f'Value {i}º Trimestre'] / 100)
+        economia2019_copy.at[19, f'Value {i}º Trimestre'] = economia2019_copy.at[18, f'Value {i}º Trimestre'] * 0.15       
+        economia2019_copy.at[20, f'Value {i}º Trimestre'] = abs(economia2019_copy.at[18, f'Value {i}º Trimestre'] - economia2019_copy.at[19, f'Value {i}º Trimestre'])
         economia2019_copy.at[22, f'Value {i}º Trimestre'] = (economia2019_copy.at[6, f'Value {i}º Trimestre'] + economia2019_copy.at[12, f'Value {i}º Trimestre']) * 0.5
         if retirarMulta == True:            
             economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[19, f'Value {i}º Trimestre'] + (economia2019_copy.at[19, f'Value {i}º Trimestre'] * 0.2 * 0)
@@ -66,7 +67,7 @@ def reCalculandoTrimestral(economia2019,retirarMulta):
 
         return economia2019
 
-def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cnpj_selecionado):
+def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cnpj_selecionado,tabelaParaRelatorio):
     st.subheader(anoDeAnalise)
     multa = st.toggle('Retirar multa', key=f'{anoDeAnalise}')
     periodoDeAnalise = st.toggle('', key=f"teste{anoDeAnalise}")
@@ -88,6 +89,11 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
 
         if submitted:
             st.session_state[session_state_name] = reCalculandoAno(economia2019_data_editor, multa)
+        
+        tabelaRelatorio = economia2019_data_editor.copy()
+        tabelaRelatorio = tabelaRelatorio.iloc[30:,:].reset_index(drop='index')
+        tabelaRelatorio.columns = [f"{col}_{anoDeAnalise}" for col in tabelaRelatorio.columns]
+
         resultadoAnual = economia2019_data_editor.copy()
         resultadoAnual.columns = [f"{col}_{anoDeAnalise}" for col in resultadoAnual.columns]
         resultadoAnual = resultadoAnual.drop([4,5,6,7,15,20]).reset_index(drop='index')
@@ -112,15 +118,26 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
                 st.session_state.form_submitted = True
             else:
                 st.session_state.form_submitted = False
+        
+        tabelaRelatorioTri = economia2019Trimestral_data_editor.copy()
+        tabelaRelatorioTri = tabelaRelatorioTri.iloc[24:,[0,1,3,5,7]].reset_index(drop='index')
+        tabelaRelatorioTri[f'Value_{anoDeAnalise}'] = sum([tabelaRelatorioTri.at[1,'Value 1º Trimestre'],tabelaRelatorioTri.at[1,'Value 2º Trimestre'],
+                                                        tabelaRelatorioTri.at[1,'Value 3º Trimestre'],tabelaRelatorioTri.at[1,'Value 4º Trimestre']])
+        
+        tabelaRelatorioTri.at[0,f'Value_{anoDeAnalise}'] = sum([tabelaRelatorioTri.at[0,'Value 1º Trimestre'],tabelaRelatorioTri.at[0,'Value 2º Trimestre'],
+                                                        tabelaRelatorioTri.at[0,'Value 3º Trimestre'],tabelaRelatorioTri.at[0,'Value 4º Trimestre']])
+        
+        tabelaRelatorioTri = tabelaRelatorioTri.iloc[:,5].reset_index(drop='index')
 
         resultaTrimestral = economia2019Trimestral_data_editor
         resultaTrimestral.columns = [f"{col}_{anoDeAnalise}" for col in resultaTrimestral.columns]
-
+        
     if periodoDeAnalise == True:
         dataframesParaDownload.append(resultadoAnual)
+        tabelaParaRelatorio.append(tabelaRelatorio)
     else:
          dataframesParaDownload.append(resultaTrimestral)
-          
+         tabelaParaRelatorio.append(tabelaRelatorioTri) 
 
 
 if __name__=='__main__':
@@ -137,6 +154,7 @@ if __name__=='__main__':
         nome_para_cnpj = dict(zip(tabelaDeNomes['NomeDaEmpresa'], tabelaDeNomes['CNPJ']))
 
         dataframesParaDownload = []
+        tabelaParaRelatorio = []
         nomeEmpresaSelecionada = st.sidebar.selectbox('Selecione a empresa',listaDosNomesDasEmpresas)
         cnpj_selecionado = nome_para_cnpj[nomeEmpresaSelecionada]
         if 'cnpj_selecionado' not in st.session_state:
@@ -156,23 +174,23 @@ if __name__=='__main__':
 
         with col1:
         
-            criandoVisualizacao(trimestre,ano,2019,dataframesParaDownload,cnpj_selecionado)
+            criandoVisualizacao(trimestre,ano,2019,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
         with col2:         
 
-            criandoVisualizacao(trimestre,ano,2020,dataframesParaDownload,cnpj_selecionado)
+            criandoVisualizacao(trimestre,ano,2020,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
         with col3:
 
-            criandoVisualizacao(trimestre,ano,2021,dataframesParaDownload,cnpj_selecionado)
+            criandoVisualizacao(trimestre,ano,2021,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
         with col4:
 
-            criandoVisualizacao(trimestre,ano,2022,dataframesParaDownload,cnpj_selecionado)
+            criandoVisualizacao(trimestre,ano,2022,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
         with col5:
 
-            criandoVisualizacao(trimestre,ano,2023,dataframesParaDownload,cnpj_selecionado)
+            criandoVisualizacao(trimestre,ano,2023,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
         arquivoParaDownload = pd.concat(dataframesParaDownload,axis=1)
 
@@ -184,6 +202,13 @@ if __name__=='__main__':
         st.write('')
         st.download_button(type='primary',label="Exportar tabela JSCP",data=output8,file_name=f"JSCP_{re.sub(r'[^a-zA-Z0-9_]+', '', textwrap.shorten(nomeEmpresaSelecionada, width=25))}'.xlsx",key='download_button')
         
+        dataframeParaRelatorio = pd.concat(tabelaParaRelatorio,axis=1,ignore_index=True).rename(columns={0:'',1:'2019',2:'2020',3:'2021',4:'2022',5:'2023'})
+        colunas = ['2019','2020','2021','2022','2023']
+        for i in colunas:
+             dataframeParaRelatorio[i] = dataframeParaRelatorio[i].apply(lambda x: f"{x:,.2f}").str.replace('.','_').str.replace(',','.').str.replace('_',',')
+             
+        dataframeParaRelatorio.at[0,''] = 'Redução no IRPJ/CSLL'
+        st.dataframe(dataframeParaRelatorio)
 
 
 
@@ -258,82 +283,3 @@ if __name__=='__main__':
 #             st.download_button(label="Baixar relatório",data=pdf_buffer,file_name="relatório.pdf",mime="application/pdf")'''
 
 
-
-
-# ''' try:
-#         if anualOuTrimestral == 'Ano':
-#             if barra == 'Calculo JCP':
-#                 output8 = io.BytesIO()
-#                 with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoFInalParaExpostacao.to_excel(writer,sheet_name=f'JSCP',index=False)
-#                 output8.seek(0)
-#                 st.write('')
-#                 st.write('')
-#                 st.write('')
-#                 st.download_button(type='primary',label="Exportar tabela JSCP",data=output8,file_name=f'JCP.xlsx',key='download_button')
-                
-#                 output14 = io.BytesIO()
-#                 with pd.ExcelWriter(output14, engine='xlsxwriter') as writer:exportaLacsLalurAposInovacoes.to_excel(writer,sheet_name=f'LacsLalur',index=False)
-#                 output14.seek(0)
-#                 st.write('')
-#                 st.write('')
-#                 st.write('')
-#                 st.download_button(type='secondary',label="Exportar Lacs e Lalur Apos Inovacoes",
-#                                    data=output14,file_name=f'LacsLalur Após Inovacoes.xlsx',key='botaoLacsn')
-            
-#         elif barra == 'Lacs e Lalur':
-#                 output7 = io.BytesIO()
-#                 with pd.ExcelWriter(output7, engine='xlsxwriter') as writer:exportarLacsLalur.to_excel(writer,sheet_name=f'LacsLalur',index=False)
-#                 output7.seek(0)
-#                 st.write('')
-#                 st.write('')
-#                 st.write('')
-#                 st.download_button(type='primary',label="Exportar tabela",data=output7,file_name=f'LacsLalur.xlsx',key='download_button')                    
-#         elif anualOuTrimestral == 'Trimestre':
-#             if barra == 'Calculo JCP':
-#                 output9 = io.BytesIO()
-#                 with pd.ExcelWriter(output9, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTri.to_excel(writer,sheet_name=f'JSCP',index=False)
-#                 output9.seek(0)
-#                 st.write('')
-#                 st.write('')
-#                 st.write('')
-#                 st.download_button(type='primary',label="Exportar tabela",data=output9,file_name=f'JCP.xlsx',key='download_button')
-#             elif barra == 'Lacs e Lalur':
-#                 output10 = io.BytesIO()
-#                 with pd.ExcelWriter(output10, engine='xlsxwriter') as writer:arquivoFinalParaExportacaoTriLacs.to_excel(writer,sheet_name=f'LacsLalur',index=False)
-#                 output10.seek(0)
-#                 st.write('')
-#                 st.write('')
-#                 st.write('')
-#                 st.download_button(type='primary',label="Exportar tabela",data=output10,file_name=f'LacsLalur.xlsx',key='download_button')
-    
-#     except:
-#         pass'''
-
-#Atualização da tabela anual, teste
-
-        # with col1:
-        #     st.subheader('2019')
-        #     ano = 'Análise Anual'
-
-        #     if 'economia2019' not in st.session_state:
-        #         economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", 2019).iloc[:, [1, 2]]
-        #         st.session_state.economia2019 = economia2019
-
-        #     economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", 2019).iloc[:, [1, 2]]
-        #     economia2019recalculada = reCalculandoAno(economia2019)
-
-        #     with st.form("my_form"):
-        #         economia2019_data_editor = st.data_editor(economia2019recalculada, key='2019de', height=1250, use_container_width=True)
-        #         submitted = st.form_submit_button("Submit")
-
-        #     if submitted:
-        #         st.session_state.economia2019 = economia2019_data_editor
-        #         st.session_state.economia2019recalculada = reCalculandoAno(st.session_state.economia2019)
-
-        #     st.data_editor(st.session_state.economia2019, key='2019de_final', height=1250, use_container_width=True)
-
-            # else:
-            #     st.write(trimestre)
-            #     economia2019 = controler.queryResultadoFinal(cnpj_selecionado,"resultadosjcptrimestral",2019).iloc[:,:8]
-            # st.data_editor(st.session_state.economia2019,key='2019de',height=1150,use_container_width=True)
-           
