@@ -37,12 +37,12 @@ class SpedProcessor:
         df = pd.DataFrame(data).iloc[:, :13]
         df['Data Inicial'] = df.iloc[0, 9]
         df['Data Final'] = df.iloc[0, 10]
-        df['Ano'] = df['Data Inicial'].astype(str).str[-4:]
+        df['Ano'] = df['Data Inicial'].astype(str).str[4:]
         df['CNPJ'] = df.iloc[0, 3]
         df['Período Apuração'] = None
         df['Período Apuração Trimestral'] = None
-        df['Data Inicial'] = pd.to_datetime(df['Data Inicial'], format='%d%m%Y').dt.strftime('%d/%m/%Y')
-        df['Data Final'] = pd.to_datetime(df['Data Final'], format='%d%m%Y').dt.strftime('%d/%m/%Y')
+        df['Data Inicial'] = pd.to_datetime(df['Data Inicial'], format='%d%m%Y').dt.strftime("%Y-%m-%d")
+        df['Data Final'] = pd.to_datetime(df['Data Final'], format='%d%m%Y').dt.strftime("%Y-%m-%d")
 
         return df
     

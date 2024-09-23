@@ -17,32 +17,7 @@ from db.controllerDB import dbController
 
 
 
-
-
-st.set_page_config(layout='wide')
 controler = dbController('taxall')
-#controler = dbController('ECF')
-start_time = time.time()
-tempoProcessamentoDasFuncoes = []
-
-
-def timing(f):
-    @functools.wraps(f)
-    def wrap(*args, **kw):
-        start_time = time.time()
-        result = f(*args, **kw)
-        end_time = time.time()
-        execution_time = end_time - start_time
-        
-        # Adiciona os resultados à lista
-        tempoProcessamentoDasFuncoes.append({
-            "Function": f.__name__,
-            "Execution Time (s)": execution_time
-        })
-        
-        print(f'Function {f.__name__} took {execution_time:.2f} seconds')
-        return result
-    return wrap
 
 def LacsLalurAposInovacoes(dataframe):
             lacsLalurAposInovacoesDF = pd.DataFrame(dataframe)
@@ -146,6 +121,14 @@ class CalculosEProcessamentoDosDados():
         dfs_concatenados = sped_processor.concatenar_dfs()
 
         L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
+        #L100_final = L100_final.iloc[:-13,:]
+       # st.dataframe(L100_final)
+        L100_final = L100_final.dropna()
+        # st.warning(L100_final.dtypes)
+        # L100_final['Ano'] = L100_final['Ano'].astype(int)
+        #st.dataframe(L100_final)
+        
+
 
 
         cnpj = L100_final.loc[0,'CNPJ']
@@ -298,7 +281,7 @@ class CalculosEProcessamentoDosDados():
         jcp2021['Value'] = jcp2021['Value'].astype(float)
         jcp2022['Value'] = jcp2022['Value'].astype(float)
         jcp2023['Value'] = jcp2023['Value'].astype(float)
-  
+
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2019)
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2020)
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2021)
@@ -362,7 +345,7 @@ class CalculosEProcessamentoDosDados():
         controler.inserirTabelasFinaisJCP('lacslalur',lacsLalur2022)
         controler.inserirTabelasFinaisJCP('lacslalur',lacsLalur2023)
 
-        st.cache_data.clear()
+
 
                         
 
@@ -446,7 +429,7 @@ class CalculosEProcessamentoDosDados():
         
 
 
-        st.cache_data.clear()
+        
         col1, col2, col3, col4 = st.columns(4)
         trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
         tabelaFinalLacsLalurUnificad = []
@@ -501,20 +484,6 @@ class CalculosEProcessamentoDosDados():
         arquivoFinalParaExportacaoTriLacs = pd.concat(tabelaFinalLacsLalurUnificad,axis=1)    
           
                 
-end_time = time.time()
-execution_time = end_time - start_time
-
 
 
       
-with st.sidebar.expander('Dados Processamento'):
-    st.write(f"Tempo de execução: {execution_time} segundos")
-    cpu_usage = psutil.cpu_percent(interval=1)
-    memory_usagePercent = psutil.virtual_memory().percent
-    memory_usage = psutil.virtual_memory().used
-    st.write(f"Uso de CPU: {cpu_usage}%")
-    st.write(f"Uso de Memória: {memory_usagePercent}%")
-    st.write(f"Uso de Memória: {memory_usage}%")
-    df_tempo_processamento = pd.DataFrame(tempoProcessamentoDasFuncoes)
-    st.dataframe(df_tempo_processamento)
-

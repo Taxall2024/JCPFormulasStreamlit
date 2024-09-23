@@ -5,16 +5,20 @@ class serviceTaxAllDB():
 
     def __init__(self):
         
-        
-        self.conn = psycopg2.connect(
-            dbname="postgres",
-            user="postgres",
-            password="Taxall2024",
-            host="localhost",
-            port="5432"
-        )
+        try:
+            self.conn = psycopg2.connect(
+                dbname="taxall",
+                user="postgres",
+                password="Taxall2024",
+                host="taxalldb.c54ciw48evvs.us-east-1.rds.amazonaws.com",
+                port="5432"
+            )
+            print("Conexão efetuada com sucesso")
+        except Exception as e:
+            print(e)    
 
-    def creating_DB(self,nomeDaDB):
+    def creating_DB(self,nomeDaDB:str):
+
         self.conn.autocommit = True 
         cur = self.conn.cursor()
 
@@ -30,20 +34,25 @@ class serviceTaxAllDB():
         except psycopg2.errors.DuplicateDatabase:
             print(f"O banco de dados '{db_name}' já existe.")
 
-    def creatingTables(self,db,formatoDaTabela):
+    def creatingTables(self,db,formatoDaTabela:str):
 
-        conn = psycopg2.connect(
-            dbname=f"{db}",
-            user="postgres",
-            password="Taxall2024",
-            host="localhost",
-            port="5432"
-        )
+        try:
+            conn = psycopg2.connect(
+                dbname=f"{db}",
+                user="postgres",
+                password="Taxall2024",
+                host="taxalldb.c54ciw48evvs.us-east-1.rds.amazonaws.com",
+                port="5432"
+            )
 
 
-        cur = conn.cursor()
-        cur.execute(formatoDaTabela)
-        conn.commit()
+            cur = conn.cursor()
+            cur.execute(formatoDaTabela)
+            conn.commit()
+            print(f'tabela {formatoDaTabela} , criado no Banco de dados {db}')
+        except Exception as e:
+            print(e)
+
 
 
 
@@ -51,7 +60,7 @@ class serviceTaxAllDB():
 if __name__=='__main__':
 
     service = serviceTaxAllDB()
-    #service.creating_DB('Clientes')
+    #service.creating_DB('taxall')
     #service.creatingTables('ECF',create_table_query_teste)
 
     create_table_query_L100 = '''
@@ -59,7 +68,7 @@ if __name__=='__main__':
         CNPJ NUMERIC NOT NULL,
         "Data Inicial" DATE NOT NULL,
         "Data Final" DATE NOT NULL,
-        Ano INT,
+        "Ano" INT,
         "Período Apuração" VARCHAR(50),
         "Período Apuração Trimestral" VARCHAR(50),
         "Conta Referencial" VARCHAR(50),
@@ -79,7 +88,7 @@ if __name__=='__main__':
             CNPJ NUMERIC NOT NULL,
             "Data Inicial" DATE NOT NULL,
             "Data Final" DATE NOT NULL,
-            Ano INT,
+            "Ano" INT,
             "Período Apuração" VARCHAR(50),
             "Período Apuração Trimestral" VARCHAR(50),
             "Conta Referencial" VARCHAR(50),
@@ -99,6 +108,7 @@ if __name__=='__main__':
             CNPJ NUMERIC NOT NULL,
             "Data Inicial" DATE NOT NULL,
             "Data Final" DATE NOT NULL,
+            "Ano" INT,
             "Período Apuração" VARCHAR(50),
             "Período Apuração Trimestral" VARCHAR(50),
             "Conta Referencial" VARCHAR(50),
@@ -109,7 +119,7 @@ if __name__=='__main__':
             "Indicador Relação Parte A" VARCHAR(50),
             "Vlr Lançamento e-Lalur" NUMERIC,
             "Histórico e-Lalur" VARCHAR(50),
-            PRIMARY KEY (CNPJ, Ano)
+            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
 
@@ -118,6 +128,7 @@ if __name__=='__main__':
             CNPJ NUMERIC NOT NULL,
             "Data Inicial" DATE NOT NULL,
             "Data Final" DATE NOT NULL,
+            "Ano" INT,
             "Período Apuração" VARCHAR(50),
             "Período Apuração Trimestral" VARCHAR(50),
             "Código Lançamento e-Lacs" FLOAT,
@@ -126,7 +137,7 @@ if __name__=='__main__':
             "Indicador Relação Parte A" VARCHAR(50),
             "Vlr Lançamento e-Lacs" NUMERIC,
             "Histórico e-Lacs" VARCHAR(50),
-            PRIMARY KEY (CNPJ, Ano)
+            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
 
@@ -135,12 +146,13 @@ if __name__=='__main__':
             CNPJ NUMERIC NOT NULL,
             "Data Inicial" DATE NOT NULL,
             "Data Final" DATE NOT NULL,
+            "Ano" INT,
             "Período Apuração" VARCHAR(50),
             "Período Apuração Trimestral" VARCHAR(50),
             "Código Lançamento" FLOAT,
             "Descrição Lançamento" VARCHAR(255),
             "Vlr Lançamento" NUMERIC,
-            PRIMARY KEY (CNPJ, Ano)
+            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
 
@@ -149,12 +161,13 @@ if __name__=='__main__':
             CNPJ NUMERIC NOT NULL,
             "Data Inicial" DATE NOT NULL,
             "Data Final" DATE NOT NULL,
+            "Ano" INT,
             "Período Apuração" VARCHAR(50),
             "Período Apuração Trimestral" VARCHAR(50),
             "Código Lançamento" FLOAT,
             "Descrição Lançamento" VARCHAR(255),
             "Vlr Lançamento" NUMERIC,
-            PRIMARY KEY (CNPJ, Ano)
+            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
     
@@ -163,7 +176,8 @@ if __name__=='__main__':
         "CNPJ" NUMERIC NOT NULL,
         "Operation" VARCHAR(100) NOT NULL,
         "Value" NUMERIC NOT NULL,
-        "Ano" INT NOT NULL
+        "Ano" INT NOT NULL,
+        "index" NUMERIC NOT NULL
     );
 '''
     create_table_query_operacoesLacsLalur = '''
@@ -185,7 +199,8 @@ if __name__=='__main__':
         "Operation 4º Trimestre" VARCHAR(100) NOT NULL,
         "Value 4º Trimestre" NUMERIC NOT NULL,
         "Ano" INT NOT NULL,
-        "CNPJ" NUMERIC NOT NULL
+        "CNPJ" NUMERIC NOT NULL,
+        "index" NUMERIC NOT NULL
     );
 '''
     create_table_query_operacoesTrimestralLacsLalur = '''
@@ -208,9 +223,26 @@ if __name__=='__main__':
         "CNPJ" NUMERIC NOT NULL
     );
 '''
+    create_table_tipo_da_analise = '''
+    CREATE TABLE IF NOT EXISTS tipoDaAnalise (
+        "NomeDaEmpresa" VARCHAR(350) NOT NULL,
+        "CNPJ" NUMERIC NOT NULL,
+        "PeriodoDeAnalise" NUMERIC NOT NULL,
+        "TipoDaAnalise" VARCHAR(50) NOT NULL
+    );
+'''
     
-    service.creatingTables('ECF',create_table_cadastro_das_empresas)
-
+    #service.creatingTables('taxall',create_table_query_L300)
+    #service.creatingTables('taxall',create_table_query_M300)
+    #service.creatingTables('taxall',create_table_query_M350)
+    #service.creatingTables('taxall',create_table_query_N630)
+    #service.creatingTables('taxall',create_table_query_N670)
+    #service.creatingTables('taxall',create_table_query_operacoes)
+    #service.creatingTables('taxall',create_table_query_operacoesLacsLalur)
+    #service.creatingTables('taxall',create_table_query_operacoesTrimestral)
+    #service.creatingTables('taxall',create_table_query_operacoesTrimestralLacsLalur)
+    #service.creatingTables('taxall',create_table_cadastro_das_empresas)
+    #service.creatingTables('taxall',create_table_tipo_da_analise)
 
 
 

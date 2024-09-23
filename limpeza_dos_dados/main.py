@@ -8,6 +8,8 @@ import textwrap
 import re
 import sys
 import os
+import time
+import psutil
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.controllerDB import dbController
@@ -15,12 +17,15 @@ from aplicandoFormulaJPC import CalculosEProcessamentoDosDados
 from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
 from arquivosSPED.pipeArquivosECF import SpedProcessor
 
-#controler = dbController('ECF')
+controler = dbController('ECF')
+#controler = dbController('taxall')
+
+
+st.set_page_config(layout='wide')
+
 controler = dbController('taxall')
-
-
-
-#st.set_page_config(layout='wide')
+start_time = time.time()
+tempoProcessamentoDasFuncoes = []
 background_image ="Untitleddesign.jpg"
 st.markdown(
      f"""
@@ -29,7 +34,7 @@ st.markdown(
     )}" style="width:3000px;height:9000px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
      """,
      unsafe_allow_html=True )
-
+@st.cache_data(ttl='10m')
 def reCalculandoAno(economia2019,retirarMulta,valorIRPJ):
   
         economia2019.at[8, 'Value'] = economia2019.at[6, 'Value'] + economia2019.at[7, 'Value']
@@ -56,6 +61,7 @@ def reCalculandoAno(economia2019,retirarMulta,valorIRPJ):
         economia2019.at[31, 'Value'] = economia2019.at[30, 'Value'] - economia2019.at[29, 'Value']
         
         return economia2019
+@st.cache_data(ttl='10m')
 def reCalculandoTrimestral(economia2019,retirarMulta, valorIRPJ):
 
     trimestres = [1,2,3,4]
@@ -98,9 +104,7 @@ def reCalculandoTrimestral(economia2019,retirarMulta, valorIRPJ):
 
 def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cnpj_selecionado,tabelaParaRelatorio):
     st.subheader(anoDeAnalise)
-    with st.expander(''):
-        multa = st.toggle('Retirar multa', key=f'{anoDeAnalise}')
-        valorIRPJ = st.toggle('Alterar valor IRPJ de 34% para 24%',key=f'{anoDeAnalise}widgetMulta')
+
     periodoDeAnalise = st.toggle('', key=f"teste{anoDeAnalise}")
 
     session_cnpj_key = f'cnpj_selecionado_{anoDeAnalise}'
@@ -116,6 +120,8 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
         st.session_state[session_cnpj_key] = cnpj_selecionado
 
         with st.form(f"my_form{anoDeAnalise}{ano}"):
+            multa = st.toggle('Retirar multa', key=f'{anoDeAnalise}')
+            valorIRPJ = st.toggle('Alterar valor IRPJ de 34% para 24%',key=f'{anoDeAnalise}widgetMulta')
             economia2019_data_editor = st.data_editor(st.session_state[session_state_name], key=f'{anoDeAnalise}deano', height=1175, use_container_width=True)
             submitted = st.form_submit_button(f"Atualizar {anoDeAnalise}")
 
@@ -248,12 +254,12 @@ if __name__=='__main__':
         arquivoParaDownload = pd.concat(dataframesParaDownload,axis=1)
 
         output8 = io.BytesIO()
-        with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoParaDownload.to_excel(writer,sheet_name=f'JSCP_{re.sub(r'[^a-zA-Z0-9_]+', '', textwrap.shorten(nomeEmpresaSelecionada, width=25))}', index=False)
+        with pd.ExcelWriter(output8, engine='xlsxwriter') as writer:arquivoParaDownload.to_excel(writer,sheet_name=f'JSCP', index=False)
         output8.seek(0)
         st.write('')
         st.write('')
         st.write('')
-        st.download_button(type='primary',label="Exportar tabela JSCP",data=output8,file_name=f"JSCP_{re.sub(r'[^a-zA-Z0-9_]+', '', textwrap.shorten(nomeEmpresaSelecionada, width=25))}'.xlsx",key='download_button')
+        st.download_button(type='primary',label="Exportar tabela JSCP",data=output8,file_name=f"JSCP'.xlsx",key='download_button')
         st.write('')
         st.write('')
         st.write('')
@@ -298,10 +304,10 @@ if __name__=='__main__':
 
     with st.spinner('Carregando dados'):
         if seletorDePagina =='Processar dados':
-            try:
-                uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
+            #try:
+            uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
 
-                if uploaded_files:
+            if uploaded_files:
                                 file_paths = []
                                 for uploaded_file in uploaded_files:
                                     file_path = uploaded_file.name
@@ -317,18 +323,30 @@ if __name__=='__main__':
                                 periodosETipoDeAnalise = pd.concat(periodoDeAnalise)
                                 controler.inserirTabelas('tipodaanalise',periodosETipoDeAnalise)
 
-                calculos = CalculosEProcessamentoDosDados()
-                try:
-                    calculos.filtrarCalcularECadastras(file_paths,file_path)
-                except:
-                    pass
-            except Exception as e:
-                st.write(e)
+            calculos = CalculosEProcessamentoDosDados()
+                #try:
+            calculos.filtrarCalcularECadastras(file_paths,file_path)
+            #     except:
+            #         pass
+            # except Exception as e:
+            #     st.write(e)
 
 
 
 
+finish_time = time.time()
+execution_time = finish_time - start_time
 
+with st.sidebar.expander('Dados Processamento'):
+    st.write(f"Tempo de execução: {execution_time} segundos")
+    cpu_usage = psutil.cpu_percent(interval=1)
+    memory_usagePercent = psutil.virtual_memory().percent
+    memory_usage = psutil.virtual_memory().used
+    st.write(f"Uso de CPU: {cpu_usage}%")
+    st.write(f"Uso de Memória: {memory_usagePercent}%")
+    st.write(f"Uso de Memória: {memory_usage}%")
+    df_tempo_processamento = pd.DataFrame(tempoProcessamentoDasFuncoes)
+    st.dataframe(df_tempo_processamento)
 
 
 

@@ -1,17 +1,25 @@
 import pandas as pd
 from sqlalchemy import create_engine, text
+import sqlalchemy as sa
 import streamlit as st
+from sqlalchemy.exc import DBAPIError
+import time
 
 header = {
     "autorization":  st.secrets["general"]["auth_token"],
     "content-type":"application/json"
 }
 
+MAX_RETRIES = 5
+
+RETRY_DELAY = 5
 class dbController():
     
     def __init__(self,banco):
         
-        #self.engine = create_engine(f'postgresql+psycopg2://{st.secrets["general"]["auth_token"]}/{banco}')
+        # self.engine = create_engine(f'postgresql+psycopg2://{st.secrets["general"]["auth_token"]}/ECF', 
+        #                connect_args={'options': '-c datestyle=iso,mdy'})
+        
         username = st.secrets["apiAWS"]["username"]
         password = st.secrets["apiAWS"]["password"]
         host = st.secrets["apiAWS"]["host"]
@@ -20,25 +28,70 @@ class dbController():
         self.conn = self.engine.connect()
 
 
+
     def inserirTabelas(self, tabela, df):
 
-        verificacaoCNPJ = df.iloc[0]['CNPJ'] 
+        # verificacaoCNPJ = df.iloc[0]['CNPJ'] 
+        # query = text(f"SELECT * FROM {tabela} WHERE \"CNPJ\" = :CNPJ")
+        # result = self.conn.execute(query, {'CNPJ': verificacaoCNPJ})
+
+        # rows = result.fetchall()
+
+        # if rows:
+        #     st.warning(f"CNPJ {verificacaoCNPJ} já existe na tabela {tabela}. Não inserindo dados.")
+        # else:
+        #     df.to_sql(tabela, self.engine, if_exists='append', index=False)
+        #     st.success(f"CNPJ {verificacaoCNPJ} inserido com sucesso na tabela {tabela}!")
+        
+        # verificacaoCNPJ = df.iloc[0]['CNPJ'] 
+        # query = text(f"SELECT * FROM {tabela} WHERE \"CNPJ\" = :CNPJ")
+        verificacaoCNPJ = df.iloc[0]['CNPJ']
         query = text(f"SELECT * FROM {tabela} WHERE \"CNPJ\" = :CNPJ")
-        result = self.conn.execute(query, {'CNPJ': verificacaoCNPJ})
+        
+        self.retry_count = 0
 
-        rows = result.fetchall()
+        while self.retry_count < MAX_RETRIES:
+            try:
+                # Execute the query
+                result = self.conn.execute(query, {'CNPJ': verificacaoCNPJ})
 
-        if rows:
-            st.warning(f"CNPJ {verificacaoCNPJ} já existe na tabela {tabela}. Não inserindo dados.")
-        else:
-            df.to_sql(tabela, self.engine, if_exists='append', index=False)
-            st.success(f"CNPJ {verificacaoCNPJ} inserido com sucesso na tabela {tabela}!")
+                # Fetch the results
+                rows = result.fetchall()
+
+                if rows:
+                    st.warning(f"CNPJ {verificacaoCNPJ} já existe na tabela {tabela}. Não inserindo dados.")
+                else:
+                    df.to_sql(tabela, self.engine, if_exists='append', index=False)
+                    st.success(f"CNPJ {verificacaoCNPJ} inserido com sucesso na tabela {tabela}!")
+
+                # Break out of the retry loop
+                break
+
+            except sa.exc.OperationalError as e:
+        
+                print(f"Operational error: {e}")
+                self.retry_count += 1
+       
+                time.sleep(RETRY_DELAY)
+           
+                self.conn = self.engine.connect()
+
+        if self.retry_count == MAX_RETRIES:
+
+            raise Exception("Failed to execute query after {} retries".format(MAX_RETRIES))
+
 
     def get_data_by_cnpj(self, cnpj,tabela):
         query = f"SELECT * FROM {tabela} WHERE \"CNPJ\" = '{cnpj}'"
         df = pd.read_sql_query(query, self.engine)
         return df
     
+    def deletarDadosDaTabela(self,tabela):
+        query = text("DELETE FROM {}".format(tabela))
+        self.conn.execute(query)
+        print(f'Os valores para tabela {tabela} foram DELETADOS!')
+        self.conn.commit()
+
     def get_all_data(self,tabela):
         query = f"SELECT * FROM {tabela}"
         df = pd.read_sql_query(query, self.engine)
@@ -54,7 +107,7 @@ class dbController():
         verificacaoCNPJ = df.iloc[0]['CNPJ']
 
         query = text(f"SELECT * FROM {tabela} WHERE \"Ano\" = :Ano AND \"CNPJ\" = :CNPJ")
-        result = self.conn.execute(query, {'Ano': verificacaoAno, 'CNPJ': verificacaoCNPJ})
+        result = self.conn.execute(query, {'Ano': verificacaoAno, 'CNPJ': float(verificacaoCNPJ)})
 
         rows = result.fetchall()
 
@@ -72,14 +125,11 @@ class dbController():
                 query = text(f"UPDATE {tabela} SET \"Value\" = :Value WHERE \"CNPJ\" = :CNPJ AND \"Ano\" = :Ano AND \"Operation\" = :Operation")
                 params = {'Value': value, 'CNPJ': cnpj, 'Ano': ano, 'Operation': operation}
                 self.conn.execute(query, params)
-            st.success(f'Os valores para foram Atualizados')
+            st.success(f'Os valores foram Atualizados')
             self.conn.commit()
         except Exception as e:
             st.warning(f'Não foi possivel atualizar os valores para {operation} por {e}')
     
-    def update_table_trimestral(self, tabela, df, cnpj, ano):
-
-        operations = [op for trimestre in [1,2,3,4] for op in df[f'Operation {trimestre}º Trimestre'].unique()]
 
     def update_table_trimestral(self, tabela, df, cnpj, ano):
         operations = [op for trimestre in [1,2,3,4] for op in df[f'Operation {trimestre}º Trimestre'].unique()]
@@ -99,13 +149,14 @@ class dbController():
                 self.conn.commit()
         except Exception as e:
                 st.warning(f'Não foi possivel atualizar os valores para {operation} por {e}')
+
 if __name__ =="__main__":
     
     controler = dbController('taxall')
+    controler.deletarDadosDaTabela('cadastrodasempresas')
 
-
-    l100Teste = controler.get_data_by_cnpj("14576552000157","m350")
-    st.data_editor(l100Teste)
+    # l100Teste = controler.get_data_by_cnpj("14576552000157","m350")
+    # st.data_editor(l100Teste)
 
 
 #     df = pd.DataFrame({

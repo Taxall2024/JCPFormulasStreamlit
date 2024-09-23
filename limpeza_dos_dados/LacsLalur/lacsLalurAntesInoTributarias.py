@@ -23,6 +23,11 @@ class LacsLalurCSLL():
         self.ecf670 = LacsLalurCSLL.load_file(ecf670_file)
         self.ec630 = LacsLalurCSLL.load_file(ec630_file)
 
+        dados = [self.lacs,self.lalur,self.ec630,self.ecf670]
+        for i in dados:
+            i['Data Inicial'] = i['Data Inicial'].astype(str)
+            i['Data Final'] = i['Data Final'].astype(str)
+
         self.lacsFiltrado = self.lacs[self.lacs['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
         self.lalurFiltrado = self.lalur[self.lalur['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
         self.ec670Filtrado = self.ecf670[self.ecf670['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']

@@ -39,6 +39,11 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.resultsTabelaFinal = pd.DataFrame(columns=["CNPJ","Operation", "Value","Ano"]) 
         self.lucro_periodo_value = 0
 
+        dados = [self.l100, self.l300,self.lacs,self.lalur]
+        for i in dados:
+            i['Data Inicial'] = i['Data Inicial'].astype(str)
+            i['Data Final'] = i['Data Final'].astype(str)
+        
         gc.collect()
 
     
