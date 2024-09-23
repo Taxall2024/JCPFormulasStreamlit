@@ -2,13 +2,21 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 import streamlit as st
 
-
+header = {
+    "autorization":  st.secrets["general"]["auth_token"],
+    "content-type":"application/json"
+}
 
 class dbController():
-
+    
     def __init__(self,banco):
         
-        self.engine = create_engine(f'postgresql+psycopg2://postgres:Taxall2024@localhost:5432/{banco}')
+        #self.engine = create_engine(f'postgresql+psycopg2://{st.secrets["general"]["auth_token"]}/{banco}')
+        username = st.secrets["apiAWS"]["username"]
+        password = st.secrets["apiAWS"]["password"]
+        host = st.secrets["apiAWS"]["host"]
+        port = st.secrets["apiAWS"]["port"]
+        self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/taxall')
         self.conn = self.engine.connect()
 
 
@@ -30,6 +38,7 @@ class dbController():
         query = f"SELECT * FROM {tabela} WHERE \"CNPJ\" = '{cnpj}'"
         df = pd.read_sql_query(query, self.engine)
         return df
+    
     def get_all_data(self,tabela):
         query = f"SELECT * FROM {tabela}"
         df = pd.read_sql_query(query, self.engine)
@@ -55,10 +64,44 @@ class dbController():
             df.to_sql(tabela, self.engine, if_exists='append', index=False)
             st.success(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} inserido com sucesso no banco ECF!")
 
+    def update_table(self, tabela, df, cnpj, ano):
+        operations = df['Operation'].unique()
+        try:
+            for operation in operations:
+                value = float(df.loc[df['Operation'] == operation, 'Value'].iloc[0]) 
+                query = text(f"UPDATE {tabela} SET \"Value\" = :Value WHERE \"CNPJ\" = :CNPJ AND \"Ano\" = :Ano AND \"Operation\" = :Operation")
+                params = {'Value': value, 'CNPJ': cnpj, 'Ano': ano, 'Operation': operation}
+                self.conn.execute(query, params)
+            st.success(f'Os valores para foram Atualizados')
+            self.conn.commit()
+        except Exception as e:
+            st.warning(f'Não foi possivel atualizar os valores para {operation} por {e}')
+    
+    def update_table_trimestral(self, tabela, df, cnpj, ano):
 
+        operations = [op for trimestre in [1,2,3,4] for op in df[f'Operation {trimestre}º Trimestre'].unique()]
+
+    def update_table_trimestral(self, tabela, df, cnpj, ano):
+        operations = [op for trimestre in [1,2,3,4] for op in df[f'Operation {trimestre}º Trimestre'].unique()]
+
+        try:
+            for trimestre in [1,2,3,4]:
+                for operation in operations:
+                    filtered_df = df.loc[df[f'Operation {trimestre}º Trimestre'] == operation]
+                    if not filtered_df.empty:
+                        value = float(filtered_df[f'Value {trimestre}º Trimestre'].iloc[0]) 
+                        query = text(f"UPDATE {tabela} SET \"Value {trimestre}º Trimestre\" = :Value WHERE \"CNPJ\" = :CNPJ AND \"Ano\" = :Ano AND \"Operation {trimestre}º Trimestre\" = :Operation")
+                        params = {'Value': value, 'CNPJ': cnpj, 'Ano': ano, 'Operation': operation}
+                        self.conn.execute(query, params)
+                    else:
+                        st.warning(f'Não há valores para {operation} no {trimestre}º trimestre')
+                st.success(f'Os valores para {trimestre}º trimestre foram Atualizados')
+                self.conn.commit()
+        except Exception as e:
+                st.warning(f'Não foi possivel atualizar os valores para {operation} por {e}')
 if __name__ =="__main__":
     
-    controler = dbController('ECF')
+    controler = dbController('taxall')
 
 
     l100Teste = controler.get_data_by_cnpj("14576552000157","m350")

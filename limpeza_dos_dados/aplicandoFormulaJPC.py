@@ -2,7 +2,13 @@ import pandas as pd
 import streamlit as st
 import numpy as np
 
+import functools
+import time
+import sys
+import psutil
+import os
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
 from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalculo
 from arquivosSPED.pipeArquivosECF import SpedProcessor
@@ -10,14 +16,12 @@ from calculosAnual import Calculo
 from db.controllerDB import dbController
 
 
-import functools
-import time
-import base64
-import psutil
+
 
 
 st.set_page_config(layout='wide')
-controler = dbController('ECF')
+controler = dbController('taxall')
+#controler = dbController('ECF')
 start_time = time.time()
 tempoProcessamentoDasFuncoes = []
 
@@ -133,10 +137,14 @@ class CalculosEProcessamentoDosDados():
     
     def filtrarCalcularECadastras(self,file_paths,file_path):        
         sped_processor = SpedProcessor(file_paths)
-        nomeDaEmpresa = sped_processor.pegandoInfosDaEmpresa(file_path)  
+
+        nomeDaEmpresa = sped_processor.pegandoInfosDaEmpresa(file_path)
+        
         controler.inserirTabelas('cadastrodasempresas',nomeDaEmpresa)
+
         sped_processor.processar_arquivos()
         dfs_concatenados = sped_processor.concatenar_dfs()
+
         L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
 
 
@@ -277,11 +285,12 @@ class CalculosEProcessamentoDosDados():
         
         arquivoFInalParaExpostacao = pd.concat([arquivoParaExportar,arquivoParaExportar2,arquivoParaExportar3],axis=0)
                                 
-        jcp2019 = pd.concat([calculosIniciais_2019,tabelaFinal_2019,resultadoTotal_2019],axis=0).reset_index(drop='index')
-        jcp2020 = pd.concat([calculosIniciais_2020,tabelaFinal_2020,resultadoTotal_2020],axis=0).reset_index(drop='index')
-        jcp2021 = pd.concat([calculosIniciais_2021,tabelaFinal_2021,resultadoTotal_2021],axis=0).reset_index(drop='index')
-        jcp2022 = pd.concat([calculosIniciais_2022,tabelaFinal_2022,resultadoTotal_2022],axis=0).reset_index(drop='index')
-        jcp2023 = pd.concat([calculosIniciais_2023,tabelaFinal_2023,resultadoTotal_2023],axis=0).reset_index(drop='index')
+        jcp2019 = pd.concat([calculosIniciais_2019,tabelaFinal_2019,resultadoTotal_2019],axis=0).reset_index(drop='index').reset_index()
+        jcp2020 = pd.concat([calculosIniciais_2020,tabelaFinal_2020,resultadoTotal_2020],axis=0).reset_index(drop='index').reset_index()
+        jcp2021 = pd.concat([calculosIniciais_2021,tabelaFinal_2021,resultadoTotal_2021],axis=0).reset_index(drop='index').reset_index()
+        jcp2022 = pd.concat([calculosIniciais_2022,tabelaFinal_2022,resultadoTotal_2022],axis=0).reset_index(drop='index').reset_index()
+        jcp2023 = pd.concat([calculosIniciais_2023,tabelaFinal_2023,resultadoTotal_2023],axis=0).reset_index(drop='index').reset_index()
+
 
 
         jcp2019['Value'] = jcp2019['Value'].astype(float)
@@ -289,7 +298,7 @@ class CalculosEProcessamentoDosDados():
         jcp2021['Value'] = jcp2021['Value'].astype(float)
         jcp2022['Value'] = jcp2022['Value'].astype(float)
         jcp2023['Value'] = jcp2023['Value'].astype(float)
-
+  
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2019)
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2020)
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2021)
@@ -300,7 +309,7 @@ class CalculosEProcessamentoDosDados():
 
 
                             
-        st.cache_data.clear()
+
         dataFrameParaExportarCSLL = []
         dataFrameParaExportarIRPJJ = []
         dfLacsLalur = pd.DataFrame(columns=['Operation','Value'])
@@ -346,7 +355,7 @@ class CalculosEProcessamentoDosDados():
         lacsLalur2021['Value'] = lacsLalur2021['Value'].astype(float)
         lacsLalur2022['Value'] = lacsLalur2022['Value'].astype(float)
         lacsLalur2023['Value'] = lacsLalur2023['Value'].astype(float) 
-
+         
         controler.inserirTabelasFinaisJCP('lacslalur',lacsLalur2019)
         controler.inserirTabelasFinaisJCP('lacslalur',lacsLalur2020)
         controler.inserirTabelasFinaisJCP('lacslalur',lacsLalur2021)
@@ -425,7 +434,7 @@ class CalculosEProcessamentoDosDados():
                 economiaGerada = pd.concat(economiaGerada, axis=1)
 
                 LacasLalurAposTrimestres = pd.concat(lacsLalurApos,axis=1)
-                tabelaUnica = pd.concat([dfCalculos,tabelaJCP,limiteDedutibili,economiaGerada],axis=0)
+                tabelaUnica = pd.concat([dfCalculos,tabelaJCP,limiteDedutibili,economiaGerada],axis=0).reset_index(drop='index').reset_index()
                 tabelaUnica['Ano'] = int(ano)
                 tabelaUnica['CNPJ'] = cnpj
                 controler.inserirTabelasFinaisJCP('resultadosjcptrimestral',tabelaUnica)

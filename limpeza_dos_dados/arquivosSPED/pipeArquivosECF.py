@@ -43,7 +43,7 @@ class SpedProcessor:
         df['Período Apuração Trimestral'] = None
         df['Data Inicial'] = pd.to_datetime(df['Data Inicial'], format='%d%m%Y').dt.strftime('%d/%m/%Y')
         df['Data Final'] = pd.to_datetime(df['Data Final'], format='%d%m%Y').dt.strftime('%d/%m/%Y')
-        
+
         return df
     
     def pegandoInfosDaEmpresa(self, file_path):
@@ -59,6 +59,26 @@ class SpedProcessor:
         resultado = df.loc[0, ['CNPJ', 'NomeDaEmpresa']].to_frame().T
 
         
+        return resultado
+    
+    def pegandoPeriodoDeAnalise(self, file_path):
+        data = []
+        with open(file_path, 'r', encoding='latin-1') as file:
+            for linha in file:
+                linha = linha.strip()
+                if linha.startswith('|'):
+                    valores = linha.split('|')[1:]
+                    data.append(valores)
+
+        df = pd.DataFrame(data).rename(columns={3:'CNPJ',4:'NomeDaEmpresa',9:'PeriodoDeAnalise'})
+        
+        periodoAnalise = np.where(df['PeriodoDeAnalise']=='01012019',df.loc[2,5],df.loc[2,'NomeDaEmpresa'])
+        df['TipoDaAnalise'] = periodoAnalise
+
+        resultado = df.loc[0, ['CNPJ', 'NomeDaEmpresa','PeriodoDeAnalise','TipoDaAnalise']].to_frame().T
+        resultado['PeriodoDeAnalise'] = resultado['PeriodoDeAnalise'].str[4:]
+        resultado['TipoDaAnalise'] = resultado['TipoDaAnalise'].str.replace('T','Trimestral').str.replace('A','Anual')
+
         return resultado
 
     def classificaPeriodoDeApuracao(self, arquivo, referencia):
@@ -125,7 +145,6 @@ class SpedProcessor:
 
         return df_sped_l100, df_sped_l300, df_sped_m300, df_sped_m350, df_sped_n630, df_sped_n670
     gc.collect()
-    print(gc.get_stats())
 
     def processar_arquivos(self):
         for file_path in self.file_paths:
@@ -140,7 +159,8 @@ class SpedProcessor:
     def concatenar_dfs(self):
         L100_final = pd.concat(self.listaL100).reset_index(drop=True).rename(columns={
             1: 'Conta Referencial', 2: 'Descrição Conta Referencial', 3: "Tipo Conta", 4: 'Nível Conta',
-            5: 'Natureza Conta', 6: 'Conta Superior', 8: 'D/C Saldo Final', 11: 'Vlr Saldo Final'}).drop(columns=[7, 9, 10, 0])
+            5: 'Natureza Conta', 6: 'Conta Superior', 12: 'D/C Saldo Final', 11: 'Vlr Saldo Final'}).drop(columns=[7, 8,9, 10, 0])
+        
         L100_final = L100_final[['CNPJ', 'Data Inicial', 'Data Final', 'Ano', 'Período Apuração','Período Apuração Trimestral',
                                  'Conta Referencial', 'Conta Superior', 'Descrição Conta Referencial',
                                  'Natureza Conta', 'Tipo Conta', 'Nível Conta', 'Vlr Saldo Final', 'D/C Saldo Final']]
@@ -185,8 +205,6 @@ class SpedProcessor:
             "N670": N670_final
         }
     gc.collect()
-    print("GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR,GARBAGE COLECTOR")
-    print(gc.get_stats())
 
     def tratandoTiposDeDados(self,dfs_concatenados):
             
@@ -238,7 +256,13 @@ if __name__=='__main__':
 
             sped_processor = SpedProcessor(file_paths)
             arquivoProcessado = sped_processor.pegandoInfosDaEmpresa(file_path)
-            
+            periodoDeAnalise = []
+            for file in file_paths:
+                periodoDeAnalise.append(sped_processor.pegandoPeriodoDeAnalise(file))
+
+                
+            st.subheader('Periodo de Analise')
+            st.dataframe(pd.concat(periodoDeAnalise))
             st.data_editor(arquivoProcessado) 
 
 

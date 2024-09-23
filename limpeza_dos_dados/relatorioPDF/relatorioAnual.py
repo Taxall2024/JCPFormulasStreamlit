@@ -10,7 +10,7 @@ from reportlab.lib.styles import getSampleStyleSheet,ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer,Image,PageBreak
 from reportlab.pdfgen import canvas
-
+from reportlab.lib.enums import TA_JUSTIFY
 texto = """
 O Juros sobre Capital Próprio – JCP é uma forma de remuneração dos sócios pelo capital investido na empresa. Uma das vantagens desse tipo de remuneração está no fato de que a base de cálculo do JCP é o patrimônio líquido aplicado à variação da Taxa de Juros de Longo Prazo – TJLP, ou seja, não depende diretamente do sucesso econômico da empresa como verificado em outros tipos de remuneração.
 Essa metodologia possui respaldo legal no artigo 9º, da Lei nº 9.249/1995, como disposto abaixo: 
@@ -25,7 +25,7 @@ class RelatorioPDFJSCP():
 
     def valorTotalTrimestral(self,uploaded_file_resultados):
 
-        resultados = pd.read_excel(uploaded_file_resultados).fillna(np.nan)
+        resultados = uploaded_file_resultados
         resultados = resultados.apply(lambda x: x.dropna().reset_index(drop=True))
         resultados = resultados.iloc[24:,[0,1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39]]
         
@@ -87,11 +87,10 @@ class RelatorioPDFJSCP():
 
     
     def valorTotal(self,uploaded_file_resultados):
-        colunas = ['Value_2019','Value_2020','Value_2021','Value_2022','Value_2023']
+        colunas = ['2019','2020','2021','2022','2023']
         
-        resultados = pd.read_excel(uploaded_file_resultados).fillna(np.nan)
+        resultados = uploaded_file_resultados
         resultados = resultados.apply(lambda x: x.dropna().reset_index(drop=True))
-        resultados = resultados.iloc[24:,:]
         try:
             for col in colunas:
                 resultados[col] = resultados[col].astype(str)
@@ -107,27 +106,20 @@ class RelatorioPDFJSCP():
             valorTotal = resultados.iloc[-1,:]
             valorImposto = resultados.iloc[-2,:]
 
-        self.valorTotalPeriodo = "{:,.2f}".format(round(sum([valorTotal['Value_2019'],valorTotal['Value_2020'],
-                                                               valorTotal['Value_2021'],valorTotal['Value_2022'],
-                                                               valorTotal['Value_2023'],]),2), grouping=True).replace('.','_').replace(',','.').replace('_',',')
+        self.valorTotalPeriodo = "{:,.2f}".format(round(sum([valorTotal['2019'],valorTotal['2020'],
+                                                               valorTotal['2021'],valorTotal['2022'],
+                                                               valorTotal['2023'],]),2), grouping=True).replace('.','_').replace(',','.').replace('_',',')
         
-        valor_somado = round(resultados[['Value_2019', 'Value_2020', 'Value_2021', 'Value_2022', 'Value_2023']].sum().sum(), 2)
+        valor_somado = round(resultados[['2019', '2020', '2021', '2022', '2023']].sum().sum(), 2)
         self.valorAntesImpostos = "{:,.2f}".format(valor_somado).replace('.','_').replace(',','.').replace('_',',')
                         
         valor_impuestos_sum = round(sum([
-            valorImposto['Value_2019'],valorImposto['Value_2020'],valorImposto['Value_2021'],
-            valorImposto['Value_2022'],valorImposto['Value_2023'],]), 2)
+            valorImposto['2019'],valorImposto['2020'],valorImposto['2021'],
+            valorImposto['2022'],valorImposto['2023'],]), 2)
 
         self.valorImpostos = "{:,.2f}".format(valor_impuestos_sum).replace('.', '_').replace(',', '.').replace('_', ',')
-        resultados.at[24,'Operation_2019'] = 'Redução no IRPJ/CSLL'
         
-        self.tabelaFinalDf = resultados.iloc[:,[0,1,3,5,7,9]].rename(columns={'Operation_2019':'',
-                                                                      'Value_2019':'2019',
-                                                                      'Value_2020':'2020',
-                                                                      'Value_2021':'2021',
-                                                                      'Value_2022':'2022',
-                                                                      'Value_2023':'2023',})
-        
+        self.tabelaFinalDf = resultados
         
         self.tabelaFinalDf['Total'] = sum([self.tabelaFinalDf['2019'],
                                           self.tabelaFinalDf['2020'],
@@ -152,9 +144,29 @@ class RelatorioPDFJSCP():
             name="Title",
             fontSize=18,  # Increase font size
             spaceAfter=20,  # Add space after the title
+            alignment=TA_JUSTIFY,  # Center the title
+            fontName="Helvetica-Bold",  # Bold font
+        )
+        title_styleCapa = ParagraphStyle(
+            name="Title",
+            fontSize=18,  # Increase font size
+            spaceAfter=20,  # Add space after the title
             alignment=1,  # Center the title
             fontName="Helvetica-Bold",  # Bold font
         )
+        img_path = "paginaEmBranco.png"
+        img = Image(img_path, width=9*inch, height=3*inch)
+        img._offs_y = 80
+        story.append(img) 
+        story.append(Paragraph(f"<font size='20'><b>{nomeEmpresa}</b></font>", title_styleCapa))
+        story.append(Spacer(1, 40))
+        story.append(Paragraph("<b>RELATÓRIO DE REVISÃO FISCAL</b>", title_styleCapa))
+        story.append(Spacer(1, 240))
+        story.append(Paragraph(f"<font size='10'><b>Brasília, {textoData}</b></font>", title_styleCapa))
+
+
+
+        story.append(PageBreak())
 
         # Add title
         story.append(Paragraph("<b>Juros sobre Capital Próprio – JCP</b>", title_style))
@@ -392,8 +404,8 @@ class RelatorioPDFJSCP():
 
         story.append(Spacer(1, 24))  
 
-        img_path = "Assinaturas.png"
-        img = Image(img_path, width=5.8*inch, height=1.9*inch)
+        img_path = "AssinaturasAtualalizado.png"
+        img = Image(img_path, width=5.6*inch, height=1.9*inch)
         img.hAlign = 'CENTER'
         story.append(img) 
         # Add the background image by wrapping the build call
