@@ -119,7 +119,7 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
         session_state_name = f"economia{anoDeAnalise}"
 
         if session_state_name not in st.session_state or st.session_state.get(session_cnpj_key, None) != cnpj_selecionado:
-            economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", anoDeAnalise).iloc[:, [2,4,3]].set_index('index').sort_values(by='index')
+            economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", anoDeAnalise).iloc[:, [3,2,4]].set_index('index').sort_values(by='index')
             st.session_state[session_state_name] = economia2019
         st.session_state[session_cnpj_key] = cnpj_selecionado
 
