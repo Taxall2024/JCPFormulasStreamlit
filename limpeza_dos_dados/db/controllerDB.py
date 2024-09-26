@@ -25,7 +25,7 @@ class dbController():
         password = st.secrets["apiAWS"]["password"]
         host = st.secrets["apiAWS"]["host"]
         port = st.secrets["apiAWS"]["port"]
-        self.engine = create_engine(f'postgresql+psycopg2://postgres:Taxall2024@taxalldb.c54ciw48evvs.us-east-1.rds.amazonaws.com:5432/taxall')
+        self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/taxall')
         self.conn = self.engine.connect()
 
 
