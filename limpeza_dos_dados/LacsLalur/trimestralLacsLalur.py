@@ -173,8 +173,8 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
         self.retencoes = np.sum(lalur['Vlr Lançamento e-Lalur'].values)
-        self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Valor CSLL", "Value": self.retencoes}])], ignore_index=True)
-        self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Valor CSLL", "Value": self.retencoes}])], ignore_index=True)
+        self.resultsLacs = pd.concat([self.resultsLacs, pd.DataFrame([{"Operation": "Retenções Fonte", "Value": self.retencoes}])], ignore_index=True)
+        self.trimestralLacsLalurAposInovacoes = pd.concat([self.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Retenções Fonte", "Value": self.retencoes}])], ignore_index=True)
     
     def retencoesOrgPublicos(self):
 

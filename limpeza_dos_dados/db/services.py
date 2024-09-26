@@ -232,17 +232,17 @@ if __name__=='__main__':
     );
 '''
     
-    #service.creatingTables('taxall',create_table_query_L300)
-    #service.creatingTables('taxall',create_table_query_M300)
-    #service.creatingTables('taxall',create_table_query_M350)
-    #service.creatingTables('taxall',create_table_query_N630)
-    #service.creatingTables('taxall',create_table_query_N670)
-    #service.creatingTables('taxall',create_table_query_operacoes)
-    #service.creatingTables('taxall',create_table_query_operacoesLacsLalur)
-    #service.creatingTables('taxall',create_table_query_operacoesTrimestral)
-    #service.creatingTables('taxall',create_table_query_operacoesTrimestralLacsLalur)
-    #service.creatingTables('taxall',create_table_cadastro_das_empresas)
-    #service.creatingTables('taxall',create_table_tipo_da_analise)
+    # service.creatingTables('taxall',create_table_query_L300)
+    # service.creatingTables('taxall',create_table_query_M300)
+    # service.creatingTables('taxall',create_table_query_M350)
+    # service.creatingTables('taxall',create_table_query_N630)
+    # service.creatingTables('taxall',create_table_query_N670)
+    # service.creatingTables('taxall',create_table_query_operacoes)
+    # service.creatingTables('taxall',create_table_query_operacoesLacsLalur)
+    # service.creatingTables('taxall',create_table_query_operacoesTrimestral)
+    # service.creatingTables('taxall',create_table_query_operacoesTrimestralLacsLalur)
+    # service.creatingTables('taxall',create_table_cadastro_das_empresas)
+    # service.creatingTables('taxall',create_table_tipo_da_analise)
 
 
 

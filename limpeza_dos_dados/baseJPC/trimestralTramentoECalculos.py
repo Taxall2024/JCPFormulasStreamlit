@@ -16,7 +16,7 @@ import gc
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
-from scrapping import ScrappingTJPL
+from scrapping.scrapping import ScrappingTJPL
 
 
 
@@ -36,6 +36,7 @@ class trimestralFiltrandoDadosParaCalculo():
         self.reservLucro = 0.0
         self.taxaJuros = 0.0
         self.resultado = 0.0
+        self.prejuAcumulado = 0.0
 
         self.resultadoJPC = pd.DataFrame(columns=["Operation", "Value"])
         self.resultadoLimiteDedu = pd.DataFrame(columns=["Operation", "Value"])
@@ -161,7 +162,7 @@ class trimestralFiltrandoDadosParaCalculo():
         else:
             if (lucroperiodoParaFun['D/C Saldo Final'] == 'C').any():
                 
-                self.resultado = self.lucroAcumulado - self.lucroperiodoParaFun
+                self.resultado = abs(self.lucroAcumulado) - abs(self.lucroperiodoParaFun)
             else:
                 self.resultado = self.lucroAcumulado          
         
@@ -183,16 +184,10 @@ class trimestralFiltrandoDadosParaCalculo():
 
     def TotalFinsCalcJSPC(self):
 
-        self.totalJSPC =  sum((self.capSocial,self.reservLucro,self.lucroAcumulado,self.ajustExercAnt,self.reservaCapital)) - (self.contaPatriNClassifica + self.prejuizoPeirod) 
+        self.totalJSPC =  sum((self.capSocial,self.reservLucro,self.resultado,self.ajustExercAnt,self.reservaCapital)) - self.prejuAcumulado #+ abs(self.prejuizoPeirod)) 
         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.LacsLalurTrimestral.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
-
-
-    def update_reservas(self):
-        self.reservLucro = self.reservLegal + self.reservEstatuaria + self.resContingencia + self.reserExp + self.outrasResLuc
-        self.resultsTabelaFinal.loc[self.resultsTabelaFinal['Operation'] == 'Reservas de Lucros', 'Value'] = self.reservLucro
-
 
     def ReservaLegal(self):
         l100 = self.l100
@@ -267,7 +262,7 @@ class trimestralFiltrandoDadosParaCalculo():
             (prejuPeriodo['Data Inicial'].dt.month >= self.mes_inicio) &
             (prejuPeriodo['Data Inicial'].dt.month <= self.mes_fim)&
             (prejuPeriodo['Trimestre'] == self.trimestre)]
-        self.prejuizoPeirodo = np.sum(prejuPeriodo['Vlr Saldo Final'].values)
+        prejuizoPeirodoValor = np.sum(prejuPeriodo['Vlr Saldo Final'].values)
 
         l100 = self.l100
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.11')&
@@ -281,11 +276,11 @@ class trimestralFiltrandoDadosParaCalculo():
             pass
         else:
             if (prejuPeriodo['D/C Saldo Final'] == 'C').any():
-                self.contaPatriNClassifica = self.contaPatriNClassifica
+                self.prejuAcumulado = self.contaPatriNClassifica
             else:
-                self.contaPatriNClassifica =  self.contaPatriNClassifica - self.prejuizoPeirod 
+                self.prejuAcumulado =  self.contaPatriNClassifica - prejuizoPeirodoValor 
 
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.contaPatriNClassifica}])], ignore_index=True)
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.prejuAcumulado}])], ignore_index=True)
         
     def calculandoJPC(self,data,trimestre):
 
@@ -313,7 +308,7 @@ class trimestralFiltrandoDadosParaCalculo():
             {"Operation": "TJLP", "Value": self.taxaJuros},
             {"Operation": "Valor do JSCP", "Value": self.valorJPC},
             {"Operation": "IRRFs/ JSPC", "Value": self.irrfJPC},
-            {"Operation": "Valor do JSCP", "Value": self.valorApropriar}]
+            {"Operation": "Valor do JSCP Apropriar", "Value": self.valorApropriar}]
         
 
         self.resultadoJPC = pd.concat([self.resultadoJPC, pd.DataFrame(results)], ignore_index=True)

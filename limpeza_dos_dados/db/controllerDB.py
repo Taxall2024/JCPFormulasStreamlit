@@ -4,6 +4,7 @@ import sqlalchemy as sa
 import streamlit as st
 from sqlalchemy.exc import DBAPIError
 import time
+import functools
 
 header = {
     "autorization":  st.secrets["general"]["auth_token"],
@@ -24,7 +25,7 @@ class dbController():
         password = st.secrets["apiAWS"]["password"]
         host = st.secrets["apiAWS"]["host"]
         port = st.secrets["apiAWS"]["port"]
-        self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/taxall')
+        self.engine = create_engine(f'postgresql+psycopg2://postgres:Taxall2024@taxalldb.c54ciw48evvs.us-east-1.rds.amazonaws.com:5432/taxall')
         self.conn = self.engine.connect()
 
 
@@ -86,6 +87,33 @@ class dbController():
         df = pd.read_sql_query(query, self.engine)
         return df
     
+    @functools.cache
+    def get_jcp_value(self, cnpj: str, tabela: str, ano: int, operation: str) -> pd.DataFrame:
+        query = f"""
+            SELECT "CNPJ", "Ano", "Value","Operation"
+            FROM {tabela}
+            WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' AND "Operation" = '{operation}'
+        """
+        df = pd.read_sql_query(query, self.engine)
+        return df
+    
+    @functools.cache
+    def get_jcp_value_trimestral(self, cnpj: str, tabela: str, ano: int, operation: str) -> pd.DataFrame:
+        query = f"""
+            SELECT "CNPJ", "Ano", "Value 1º Trimestre","Value 2º Trimestre","Value 3º Trimestre","Value 4º Trimestre",
+            "Operation 1º Trimestre",
+            "Operation 2º Trimestre",
+            "Operation 3º Trimestre",
+            "Operation 4º Trimestre"
+            FROM {tabela}
+            WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' 
+            AND "Operation 1º Trimestre" = '{operation}' 
+            AND "Operation 2º Trimestre" = '{operation}' 
+            AND "Operation 3º Trimestre" = '{operation}' 
+            AND "Operation 4º Trimestre" = '{operation}'  """
+        df = pd.read_sql_query(query, self.engine)
+        return df
+    
     def deletarDadosDaTabela(self,tabela):
         query = text("DELETE FROM {}".format(tabela))
         self.conn.execute(query)
@@ -97,9 +125,42 @@ class dbController():
         df = pd.read_sql_query(query, self.engine)
         return df
     
+    @functools.cache
     def queryResultadoFinal(self, cnpj,tabela,ano):
-        query = f"SELECT * FROM {tabela} WHERE \"CNPJ\" = '{cnpj}' AND \"Ano\" = '{ano}'"
-        df = pd.read_sql_query(query, self.engine)
+        
+        query = f""" 
+        SELECT "CNPJ", "Ano", "Value","Operation","index"
+        FROM {tabela}
+        WHERE \"CNPJ\" = '{cnpj}' AND \"Ano\" = '{ano}'"""
+        query2 = f""" 
+        SELECT "CNPJ", "Ano", "Value","Operation"
+        FROM {tabela}
+        WHERE \"CNPJ\" = '{cnpj}' AND \"Ano\" = '{ano}'"""
+        try:
+            df = pd.read_sql_query(query, self.engine)
+        except:
+            df = pd.read_sql_query(query2, self.engine)
+        
+        return df
+    
+    @functools.cache
+    def queryResultadoFinalTrimestral(self, cnpj,tabela,ano):
+        query = f"""
+        SELECT "CNPJ", "Ano","Operation 1º Trimestre" ,"Value 1º Trimestre","Operation 2º Trimestre" ,"Value 2º Trimestre",
+        "Operation 3º Trimestre" ,"Value 3º Trimestre","Operation 4º Trimestre" ,"Value 4º Trimestre","index"
+            FROM {tabela}
+            WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' """
+        
+        query2 = f"""
+        SELECT "CNPJ", "Ano","Operation 1º Trimestre" ,"Value 1º Trimestre","Operation 2º Trimestre" ,"Value 2º Trimestre",
+        "Operation 3º Trimestre" ,"Value 3º Trimestre","Operation 4º Trimestre" ,"Value 4º Trimestre"
+            FROM {tabela}
+            WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' """
+        try:
+            df = pd.read_sql_query(query, self.engine)
+        except:
+            df = pd.read_sql_query(query2, self.engine)
+        
         return df
     
     def inserirTabelasFinaisJCP(self, tabela, df):
@@ -153,7 +214,19 @@ class dbController():
 if __name__ =="__main__":
     
     controler = dbController('taxall')
-    controler.deletarDadosDaTabela('cadastrodasempresas')
+    # controler.deletarDadosDaTabela('l100')
+    # controler.deletarDadosDaTabela('l300')
+    # controler.deletarDadosDaTabela('m300')
+    # controler.deletarDadosDaTabela('m350')
+    # controler.deletarDadosDaTabela('n630')
+    # controler.deletarDadosDaTabela('n670')
+    # controler.deletarDadosDaTabela('resultadosjcp')
+    # controler.deletarDadosDaTabela('resultadosjcptrimestral')
+    # controler.deletarDadosDaTabela('tipodaanalise')
+    # controler.deletarDadosDaTabela('cadastrodasempresas')
+    # controler.deletarDadosDaTabela('lacslalur')
+    # controler.deletarDadosDaTabela('lacslalurtrimestral')
+
 
     # l100Teste = controler.get_data_by_cnpj("14576552000157","m350")
     # st.data_editor(l100Teste)

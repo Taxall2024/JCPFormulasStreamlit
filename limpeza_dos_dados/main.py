@@ -11,11 +11,13 @@ import os
 import time
 import psutil
 
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.controllerDB import dbController
-from aplicandoFormulaJPC import CalculosEProcessamentoDosDados
+from regrasDeNegocio.aplicandoFormulaJPC import CalculosEProcessamentoDosDados
 from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
 from arquivosSPED.pipeArquivosECF import SpedProcessor
+from LacsLalur.AposInovacoesLacsLalur import LacsLalurAposInovacoes
 
 controler = dbController('ECF')
 #controler = dbController('taxall')
@@ -24,6 +26,9 @@ controler = dbController('ECF')
 st.set_page_config(layout='wide')
 
 controler = dbController('taxall')
+lacslalur = LacsLalurAposInovacoes('taxall')
+
+
 start_time = time.time()
 tempoProcessamentoDasFuncoes = []
 background_image ="Untitleddesign.jpg"
@@ -34,7 +39,7 @@ st.markdown(
     )}" style="width:3000px;height:9000px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
      """,
      unsafe_allow_html=True )
-@st.cache_data(ttl='10m')
+
 def reCalculandoAno(economia2019,retirarMulta,valorIRPJ):
   
         economia2019.at[8, 'Value'] = economia2019.at[6, 'Value'] + economia2019.at[7, 'Value']
@@ -61,7 +66,7 @@ def reCalculandoAno(economia2019,retirarMulta,valorIRPJ):
         economia2019.at[31, 'Value'] = economia2019.at[30, 'Value'] - economia2019.at[29, 'Value']
         
         return economia2019
-@st.cache_data(ttl='10m')
+
 def reCalculandoTrimestral(economia2019,retirarMulta, valorIRPJ):
 
     trimestres = [1,2,3,4]
@@ -114,8 +119,7 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
         session_state_name = f"economia{anoDeAnalise}"
 
         if session_state_name not in st.session_state or st.session_state.get(session_cnpj_key, None) != cnpj_selecionado:
-            economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", anoDeAnalise).iloc[:, [1, 2,4]].set_index('index').sort_values(by='index')
-            economia2019['Value']
+            economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", anoDeAnalise).iloc[:, [2,4,3]].set_index('index').sort_values(by='index')
             st.session_state[session_state_name] = economia2019
         st.session_state[session_cnpj_key] = cnpj_selecionado
 
@@ -132,6 +136,8 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
 
             controler.update_table('resultadosjcp', economia2019_data_editor, cnpj_selecionado, anoDeAnalise)    
         
+        with st.expander('Lacs Lalur'):
+            lacslalur.gerandoTabelas()
         #Tabelas para gerar o relatorio fiscal
         tabelaRelatorio = economia2019_data_editor.copy()
         tabelaRelatorio = tabelaRelatorio.iloc[30:,:].reset_index(drop='index')
@@ -148,11 +154,14 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
         session_state_name = f"economia{anoDeAnalise}Trimestral"
 
         if session_state_name not in st.session_state or st.session_state.get(session_cnpj_key, None) != cnpj_selecionado:
-            economia2019Trimestral = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcptrimestral", anoDeAnalise).iloc[:, [0,1,2,3,4,5,6,7,8,10]].set_index('index').sort_values(by='index')
+            economia2019Trimestral = controler.queryResultadoFinalTrimestral(cnpj_selecionado, "resultadosjcptrimestral", anoDeAnalise).iloc[:, [2,3,4,5,6,7,8,9,10]].set_index('index').sort_values(by='index')
             st.session_state[session_state_name] = economia2019Trimestral
         st.session_state[session_cnpj_key] = cnpj_selecionado
         
         with st.form(f"{anoDeAnalise}{trimestre}"):
+
+            multa = st.toggle('Retirar multa', key=f'{anoDeAnalise}')
+            valorIRPJ = st.toggle('Alterar valor IRPJ de 34% para 24%',key=f'{anoDeAnalise}widgetMulta')
 
             economia2019Trimestral_data_editor = st.data_editor(st.session_state[session_state_name], key=f'data_editor_{anoDeAnalise}', height=900, use_container_width=True)
             submittedbutton1 = st.form_submit_button(f"Atualizar {anoDeAnalise}")
@@ -168,7 +177,9 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
         if st.button('Atualizar Banco de Dados',key=f'{cnpj_selecionado,anoDeAnalise}'):
 
             controler.update_table_trimestral('resultadosjcptrimestral', economia2019Trimestral_data_editor, cnpj_selecionado, anoDeAnalise)    
-
+        
+        with st.expander('Lacs Lalur'):
+            lacslalur.gerandoTabelasTrimestral()
         tabelaRelatorioTri = economia2019Trimestral_data_editor.copy()
         tabelaRelatorioTri = tabelaRelatorioTri.iloc[22:,[0,1,3,5,7]].reset_index(drop='index')
         
@@ -352,50 +363,5 @@ with st.sidebar.expander('Dados Processamento'):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# '''    anualOuTrimestral = st.sidebar.selectbox("Anual ou Trimestral", ["Ano", 'Trimestre'])  
-#     barra = st.radio("Menu", ["Calculo JCP", "Lacs e Lalur",'Relátorio']) 
-    
-#     if barra == "Relátorio":
-#         st.cache_data.clear()
-#         col1,col2,col3,col4,col5,col6 = st.columns(6)
-#         with col1:
-#             uploaded_file_resultados = st.file_uploader("Coloque o arquivo de resultado", type="xlsx")
-        
-#         if uploaded_file_resultados is not None:
-
-#             with col1:
-#                 nomeDaEmepresa = st.text_input('Digite o nome da empresa')
-#                 aliquotaImposto = st.text_input('Digite o valor da alíquota de imposto, ex(24,34)')
-#                 dataAssinatura = st.text_input('Escreva a data da assinatura do contrato, ex. 23 de agosto de 2024 ')
-#                 observacoesDoAnlista = st.text_area('Digite aqui as observações :',height=500)
-            
-
-#             pdf = RelatorioPDFJSCP()
-#             try:
-#                 pdf.valorTotal(uploaded_file_resultados)
-#             except:
-#                 pdf.valorTotalTrimestral(uploaded_file_resultados)
-
-#             pdf_buffer = pdf.create_pdf(nomeDaEmepresa, aliquotaImposto, observacoesDoAnlista, dataAssinatura)          
-#             st.download_button(label="Baixar relatório",data=pdf_buffer,file_name="relatório.pdf",mime="application/pdf")'''
 
 
