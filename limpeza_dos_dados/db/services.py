@@ -1,17 +1,21 @@
 import psycopg2
 from psycopg2 import sql
-
+import streamlit as st
 class serviceTaxAllDB():
 
     def __init__(self):
+        username = st.secrets["apiAWS"]["username"]
+        password = st.secrets["apiAWS"]["password"]
+        host = st.secrets["apiAWS"]["host"]
+        port = st.secrets["apiAWS"]["port"]
         
         try:
             self.conn = psycopg2.connect(
                 dbname="taxall",
-                user="postgres",
-                password="Taxall2024",
-                host="taxalldb.c54ciw48evvs.us-east-1.rds.amazonaws.com",
-                port="5432"
+                user=username,
+                password=password,
+                host=host,
+                port=port
             )
             print("Conexão efetuada com sucesso")
         except Exception as e:
