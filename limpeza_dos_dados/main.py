@@ -19,7 +19,7 @@ from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
 from arquivosSPED.pipeArquivosECF import SpedProcessor
 from LacsLalur.AposInovacoesLacsLalur import LacsLalurAposInovacoes
 
-controler = dbController('ECF')
+controler = dbController('taxall')
 #controler = dbController('taxall')
 
 
@@ -40,8 +40,8 @@ st.markdown(
      """,
      unsafe_allow_html=True )
 
-def reCalculandoAno(economia2019,retirarMulta,valorIRPJ):
-  
+def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool ,valorIRPJ:bool) -> pd.DataFrame:
+    #'''Função de callback para recalcular os valores apresentados e gerados para análise anual do JCP'''
         economia2019.at[8, 'Value'] = economia2019.at[6, 'Value'] + economia2019.at[7, 'Value']
         economia2019.at[17, 'Value'] = sum([economia2019.at[0, 'Value'], economia2019.at[2, 'Value'], 
                                             economia2019.at[8, 'Value'], economia2019.at[13, 'Value'],
@@ -67,8 +67,8 @@ def reCalculandoAno(economia2019,retirarMulta,valorIRPJ):
         
         return economia2019
 
-def reCalculandoTrimestral(economia2019,retirarMulta, valorIRPJ):
-
+def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorIRPJ: bool)-> pd.DataFrame:
+    #'''Função de callback para recalcular os valores apresentados e gerados para análise trimestral do JCP'''
     trimestres = [1,2,3,4]
     for i in trimestres:
         
@@ -81,33 +81,54 @@ def reCalculandoTrimestral(economia2019,retirarMulta, valorIRPJ):
         else:
             economia2019_copy.at[14, f'Value {i}º Trimestre'] = 0.0
         
-        economia2019_copy.at[16, f'Value {i}º Trimestre'] = economia2019_copy.at[14, f'Value {i}º Trimestre'] * (economia2019_copy.at[15, f'Value {i}º Trimestre'] / 100)
-        economia2019_copy.at[17, f'Value {i}º Trimestre'] = economia2019_copy.at[17, f'Value {i}º Trimestre'] * 0.15       
-        economia2019_copy.at[18, f'Value {i}º Trimestre'] = abs(economia2019_copy.at[16, f'Value {i}º Trimestre'] - economia2019_copy.at[17, f'Value {i}º Trimestre'])
-        economia2019_copy.at[20, f'Value {i}º Trimestre'] = (economia2019_copy.at[5, f'Value {i}º Trimestre'] + economia2019_copy.at[11, f'Value {i}º Trimestre']) * 0.5
-        if retirarMulta == True:            
-            economia2019_copy.at[21, f'Value {i}º Trimestre'] = economia2019_copy.at[17, f'Value {i}º Trimestre'] + (economia2019_copy.at[17, f'Value {i}º Trimestre'] * 0.2 * 0)
-        else:
-            economia2019_copy.at[21, f'Value {i}º Trimestre'] = economia2019_copy.at[17, f'Value {i}º Trimestre'] + (economia2019_copy.at[17, f'Value {i}º Trimestre'] * 0.2)    
-        
-        if valorIRPJ == True:
-            economia2019_copy.at[22, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * 0.24
-            economia2019_copy.at[22, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
-        else:
-            economia2019_copy.at[22, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * 0.34    
-            economia2019_copy.at[22, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+        if economia2019_copy.at[13, f'Value {i}º Trimestre'] > 0:
+            economia2019_copy.at[16, f'Value {i}º Trimestre'] = economia2019_copy.at[14, f'Value {i}º Trimestre'] * (economia2019_copy.at[15, f'Value {i}º Trimestre'] / 100)
+            economia2019_copy.at[17, f'Value {i}º Trimestre'] = economia2019_copy.at[17, f'Value {i}º Trimestre'] * 0.15       
+            economia2019_copy.at[18, f'Value {i}º Trimestre'] = abs(economia2019_copy.at[16, f'Value {i}º Trimestre'] - economia2019_copy.at[17, f'Value {i}º Trimestre'])
+            economia2019_copy.at[20, f'Value {i}º Trimestre'] = (economia2019_copy.at[5, f'Value {i}º Trimestre'] + economia2019_copy.at[11, f'Value {i}º Trimestre']) * 0.5
+            if retirarMulta == True:            
+                economia2019_copy.at[21, f'Value {i}º Trimestre'] = economia2019_copy.at[17, f'Value {i}º Trimestre'] + (economia2019_copy.at[17, f'Value {i}º Trimestre'] * 0.2 * 0)
+            else:
+                economia2019_copy.at[21, f'Value {i}º Trimestre'] = economia2019_copy.at[17, f'Value {i}º Trimestre'] + (economia2019_copy.at[17, f'Value {i}º Trimestre'] * 0.2)    
+            
+            if valorIRPJ == True:
+                economia2019_copy.at[22, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * 0.24
+                economia2019_copy.at[22, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
+            else:
+                economia2019_copy.at[22, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * 0.34    
+                economia2019_copy.at[22, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
 
-        economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[22, f'Value {i}º Trimestre'] - economia2019_copy.at[21, f'Value {i}º Trimestre']
-        
-        economia2019_copy[f'Value {i}º Trimestre'] = round(economia2019_copy[f'Value {i}º Trimestre'],2)
-        
+            economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[22, f'Value {i}º Trimestre'] - economia2019_copy.at[21, f'Value {i}º Trimestre']
+            
+            economia2019_copy[f'Value {i}º Trimestre'] = round(economia2019_copy[f'Value {i}º Trimestre'],2)
+        else:
+            economia2019_copy.at[16, f'Value {i}º Trimestre'] = 0
+            economia2019_copy.at[17, f'Value {i}º Trimestre'] = 0     
+            economia2019_copy.at[18, f'Value {i}º Trimestre'] = 0
+            economia2019_copy.at[20, f'Value {i}º Trimestre'] = 0
+                        
+            economia2019_copy.at[21, f'Value {i}º Trimestre'] = 0
+            if valorIRPJ == True:
+                economia2019_copy.at[22, f'Value {i}º Trimestre'] = 0
+                economia2019_copy.at[22, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
+            else:
+                economia2019_copy.at[22, f'Value {i}º Trimestre'] = 0  
+                economia2019_copy.at[22, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+
+            economia2019_copy.at[23, f'Value {i}º Trimestre'] = 0
+            economia2019_copy.at[19, f'Value {i}º Trimestre'] = 0
+
+            economia2019_copy[f'Value {i}º Trimestre'] = round(economia2019_copy[f'Value {i}º Trimestre'],2)
+
        # economia2019_copy[f'Value {i}º Trimestre'] = economia2019_copy[f'Value {i}º Trimestre'].apply(lambda x: '{:,.2f}'.format(x).replace('.', 'X').replace(',', '.').replace('X', ','))
         
         economia2019 = economia2019_copy
 
-        return economia2019
+    return economia2019
 
-def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cnpj_selecionado,tabelaParaRelatorio):
+def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframesParaDownload: pd.DataFrame, cnpj_selecionado:str,tabelaParaRelatorio:str):
+
+    #'''Cria visualizaçãos dos widgets e tabelas'''
     st.subheader(anoDeAnalise)
 
     periodoDeAnalise = st.toggle('', key=f"teste{anoDeAnalise}")
@@ -117,12 +138,12 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
     if periodoDeAnalise:
         st.write(ano)
         session_state_name = f"economia{anoDeAnalise}"
-
+        # Callbacks para atualizaçãos das alterações quando usurio fizer inputs manuais ou alterar aliquotas
         if session_state_name not in st.session_state or st.session_state.get(session_cnpj_key, None) != cnpj_selecionado:
-            economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", anoDeAnalise).iloc[:, [2,4,3]].set_index('index').sort_values(by='index')
+            economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", anoDeAnalise).iloc[:, [3,2,4]].set_index('index').sort_values(by='index')
             st.session_state[session_state_name] = economia2019
         st.session_state[session_cnpj_key] = cnpj_selecionado
-
+        # A tabela foi armazenada dentro de um form para que nao tenha execução do codigo a cada iteração do usuario, 
         with st.form(f"my_form{anoDeAnalise}{ano}"):
             multa = st.toggle('Retirar multa', key=f'{anoDeAnalise}')
             valorIRPJ = st.toggle('Alterar valor IRPJ de 34% para 24%',key=f'{anoDeAnalise}widgetMulta')
@@ -137,7 +158,8 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
             controler.update_table('resultadosjcp', economia2019_data_editor, cnpj_selecionado, anoDeAnalise)    
         
         with st.expander('Lacs Lalur'):
-            lacslalur.gerandoTabelas()
+            lacslalur.gerandoTabelas(cnpj_selecionado,anoDeAnalise)
+        
         #Tabelas para gerar o relatorio fiscal
         tabelaRelatorio = economia2019_data_editor.copy()
         tabelaRelatorio = tabelaRelatorio.iloc[30:,:].reset_index(drop='index')
@@ -152,7 +174,7 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
     else:
         st.write(trimestre) 
         session_state_name = f"economia{anoDeAnalise}Trimestral"
-
+        #Funções de callbacks para análise trimestral, lógica e igual a do anual , porém com o trimestral, a função de callback faz um loop para iterar sobre cada trimestre
         if session_state_name not in st.session_state or st.session_state.get(session_cnpj_key, None) != cnpj_selecionado:
             economia2019Trimestral = controler.queryResultadoFinalTrimestral(cnpj_selecionado, "resultadosjcptrimestral", anoDeAnalise).iloc[:, [2,3,4,5,6,7,8,9,10]].set_index('index').sort_values(by='index')
             st.session_state[session_state_name] = economia2019Trimestral
@@ -179,7 +201,8 @@ def criandoVisualizacao(trimestre, ano, anoDeAnalise, dataframesParaDownload, cn
             controler.update_table_trimestral('resultadosjcptrimestral', economia2019Trimestral_data_editor, cnpj_selecionado, anoDeAnalise)    
         
         with st.expander('Lacs Lalur'):
-            lacslalur.gerandoTabelasTrimestral()
+            lacslalur.gerandoTabelasTrimestral(cnpj_selecionado,anoDeAnalise)
+
         tabelaRelatorioTri = economia2019Trimestral_data_editor.copy()
         tabelaRelatorioTri = tabelaRelatorioTri.iloc[22:,[0,1,3,5,7]].reset_index(drop='index')
         
@@ -230,6 +253,7 @@ if __name__=='__main__':
         tabelaPerioDeAnalise = controler.get_data_by_cnpj(cnpj_selecionado,'tipodaanalise')
         tabelaPerioDeAnalise = tabelaPerioDeAnalise.iloc[:,2:]
         tabelaPerioDeAnalise['PeriodoDeAnalise'] = tabelaPerioDeAnalise['PeriodoDeAnalise'].astype(str).str.replace(',','').str[:-2] 
+    
         tabelaPerioDeAnalise = tabelaPerioDeAnalise.rename(columns={'PeriodoDeAnalise':'Periodo de Analise','TipoDaAnalise':'Tipo da Analise'})
         tabelaPerioDeAnalise = tabelaPerioDeAnalise.set_index('Periodo de Analise')
         st.dataframe(tabelaPerioDeAnalise)

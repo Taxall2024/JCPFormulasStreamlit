@@ -12,11 +12,10 @@ class serviceTaxAllDB():
         try:
             self.conn = psycopg2.connect(
                 dbname="taxall",
-                user=username,
-                password=password,
-                host=host,
-                port=port
-            )
+                user="postgres",
+                password="Taxall2024",
+                host="taxalldb.c54ciw48evvs.us-east-1.rds.amazonaws.com",
+                port="5432")
             print("Conexão efetuada com sucesso")
         except Exception as e:
             print(e)    
@@ -38,7 +37,7 @@ class serviceTaxAllDB():
         except psycopg2.errors.DuplicateDatabase:
             print(f"O banco de dados '{db_name}' já existe.")
 
-    def creatingTables(self,db,formatoDaTabela:str):
+    def creatingTables(self,db:str,formatoDaTabela:str):
 
         try:
             conn = psycopg2.connect(
@@ -64,7 +63,7 @@ class serviceTaxAllDB():
 if __name__=='__main__':
 
     service = serviceTaxAllDB()
-    #service.creating_DB('taxall')
+    service.creating_DB('taxall')
     #service.creatingTables('ECF',create_table_query_teste)
 
     create_table_query_L100 = '''

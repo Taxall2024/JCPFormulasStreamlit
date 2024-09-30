@@ -5,6 +5,7 @@ import streamlit as st
 from sqlalchemy.exc import DBAPIError
 import time
 import functools
+from psycopg2 import pool
 
 header = {
     "autorization":  st.secrets["general"]["auth_token"],
@@ -25,27 +26,33 @@ class dbController():
         password = st.secrets["apiAWS"]["password"]
         host = st.secrets["apiAWS"]["host"]
         port = st.secrets["apiAWS"]["port"]
-        self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/taxall')
-        self.conn = self.engine.connect()
-
-
-
-    def inserirTabelas(self, tabela, df):
-
-        # verificacaoCNPJ = df.iloc[0]['CNPJ'] 
-        # query = text(f"SELECT * FROM {tabela} WHERE \"CNPJ\" = :CNPJ")
-        # result = self.conn.execute(query, {'CNPJ': verificacaoCNPJ})
-
-        # rows = result.fetchall()
-
-        # if rows:
-        #     st.warning(f"CNPJ {verificacaoCNPJ} já existe na tabela {tabela}. Não inserindo dados.")
-        # else:
-        #     df.to_sql(tabela, self.engine, if_exists='append', index=False)
-        #     st.success(f"CNPJ {verificacaoCNPJ} inserido com sucesso na tabela {tabela}!")
         
-        # verificacaoCNPJ = df.iloc[0]['CNPJ'] 
-        # query = text(f"SELECT * FROM {tabela} WHERE \"CNPJ\" = :CNPJ")
+        self.conn_pool = pool.ThreadedConnectionPool(
+            minconn=1,
+            maxconn=10,
+            host=host,
+            database='taxall',
+            user=username,
+            password=password,
+            port=port
+        )
+
+
+    def get_conn(self):
+        return self.conn_pool.getconn()
+
+
+    def put_conn(self, conn):
+        self.conn_pool.putconn(conn)
+
+
+
+
+    def inserirTabelas(self, tabela: str, df: pd.DataFrame):
+
+
+        conn = self.get_conn()
+
         verificacaoCNPJ = df.iloc[0]['CNPJ']
         query = text(f"SELECT * FROM {tabela} WHERE \"CNPJ\" = :CNPJ")
         
@@ -62,7 +69,7 @@ class dbController():
                 if rows:
                     st.warning(f"CNPJ {verificacaoCNPJ} já existe na tabela {tabela}. Não inserindo dados.")
                 else:
-                    df.to_sql(tabela, self.engine, if_exists='append', index=False)
+                    df.to_sql(tabela, conn, if_exists='append', index=False)
                     st.success(f"CNPJ {verificacaoCNPJ} inserido com sucesso na tabela {tabela}!")
 
                 # Break out of the retry loop
@@ -75,124 +82,195 @@ class dbController():
        
                 time.sleep(RETRY_DELAY)
            
-                self.conn = self.engine.connect()
+                self.conn = conn
 
         if self.retry_count == MAX_RETRIES:
 
             raise Exception("Failed to execute query after {} retries".format(MAX_RETRIES))
+        
+        self.put_conn(conn)
 
+    def get_data_by_cnpj(self, cnpj: str,tabela: pd.read_sql_table):
 
-    def get_data_by_cnpj(self, cnpj,tabela):
+        conn  = self.get_conn()
+
         query = f"SELECT * FROM {tabela} WHERE \"CNPJ\" = '{cnpj}'"
-        df = pd.read_sql_query(query, self.engine)
+        df = pd.read_sql_query(query, conn)
+        
+        self.put_conn(conn)
         return df
     
     @functools.cache
     def get_jcp_value(self, cnpj: str, tabela: str, ano: int, operation: str) -> pd.DataFrame:
-        query = f"""
-            SELECT "CNPJ", "Ano", "Value","Operation"
-            FROM {tabela}
-            WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' AND "Operation" = '{operation}'
-        """
-        df = pd.read_sql_query(query, self.engine)
+
+        conn = self.get_conn()
+        try:
+            query = f"""
+                SELECT "CNPJ", "Ano", "Value","Operation"
+                FROM {tabela}
+                WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' AND "Operation" = '{operation}'
+            """
+            df = pd.read_sql_query(query, conn)
+        except sa.exc.OperationalError as e:
+            print(f"Operational error: {e}")    
+        finally:
+            self.put_conn(conn)
         return df
     
     @functools.cache
     def get_jcp_value_trimestral(self, cnpj: str, tabela: str, ano: int, operation: str) -> pd.DataFrame:
-        query = f"""
-            SELECT "CNPJ", "Ano", "Value 1º Trimestre","Value 2º Trimestre","Value 3º Trimestre","Value 4º Trimestre",
-            "Operation 1º Trimestre",
-            "Operation 2º Trimestre",
-            "Operation 3º Trimestre",
-            "Operation 4º Trimestre"
-            FROM {tabela}
-            WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' 
-            AND "Operation 1º Trimestre" = '{operation}' 
-            AND "Operation 2º Trimestre" = '{operation}' 
-            AND "Operation 3º Trimestre" = '{operation}' 
-            AND "Operation 4º Trimestre" = '{operation}'  """
-        df = pd.read_sql_query(query, self.engine)
+
+        conn = self.get_conn()
+        try:
+            query = f"""
+                SELECT "CNPJ", "Ano", "Value 1º Trimestre","Value 2º Trimestre","Value 3º Trimestre","Value 4º Trimestre",
+                "Operation 1º Trimestre",
+                "Operation 2º Trimestre",
+                "Operation 3º Trimestre",
+                "Operation 4º Trimestre"
+                FROM {tabela}
+                WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' 
+                AND "Operation 1º Trimestre" = '{operation}' 
+                AND "Operation 2º Trimestre" = '{operation}' 
+                AND "Operation 3º Trimestre" = '{operation}' 
+                AND "Operation 4º Trimestre" = '{operation}'  """
+            df = pd.read_sql_query(query, conn)
+        except sa.exc.OperationalError as e:
+            print(f"Operational error: {e}")       
+        finally:   
+            self.put_conn(conn)
         return df
     
-    def deletarDadosDaTabela(self,tabela):
-        query = text("DELETE FROM {}".format(tabela))
-        self.conn.execute(query)
-        print(f'Os valores para tabela {tabela} foram DELETADOS!')
-        self.conn.commit()
+    def deletarDadosDaTabela(self,tabela : str):
+        conn = self.get_conn()
+        try:
+            query = text("DELETE FROM {}".format(tabela))
+            self.conn.execute(query)
+            print(f'Os valores para tabela {tabela} foram DELETADOS!')
+            self.conn.commit()
+        except sa.exc.OperationalError as e:
+            print(f"Operational error: {e}")               
+        finally:
+            self.put_conn(conn)
 
-    def get_all_data(self,tabela):
-        query = f"SELECT * FROM {tabela}"
-        df = pd.read_sql_query(query, self.engine)
+    def get_all_data(self, tabela: str ):
+
+        conn = self.get_conn()
+        try:
+            query = f"SELECT * FROM {tabela}"
+            df = pd.read_sql_query(query, conn)
+        except sa.exc.OperationalError as e:
+            print(f"Operational error: {e}")               
+        finally:
+            self.put_conn(conn)
         return df
     
     @functools.cache
-    def queryResultadoFinal(self, cnpj,tabela,ano):
+    def queryResultadoFinal(self, cnpj: str,tabela: str ,ano: int)-> pd.DataFrame:
         
-        query = f""" 
-        SELECT "CNPJ", "Ano", "Value","Operation","index"
-        FROM {tabela}
-        WHERE \"CNPJ\" = '{cnpj}' AND \"Ano\" = '{ano}'"""
-        query2 = f""" 
-        SELECT "CNPJ", "Ano", "Value","Operation"
-        FROM {tabela}
-        WHERE \"CNPJ\" = '{cnpj}' AND \"Ano\" = '{ano}'"""
+        conn = self.get_conn()
         try:
-            df = pd.read_sql_query(query, self.engine)
-        except:
-            df = pd.read_sql_query(query2, self.engine)
+            query = f""" 
+            SELECT "CNPJ", "Ano", "Value","Operation","index"
+            FROM {tabela}
+            WHERE \"CNPJ\" = '{cnpj}' AND \"Ano\" = '{ano}'"""
+            query2 = f""" 
+            SELECT "CNPJ", "Ano", "Value","Operation"
+            FROM {tabela}
+            WHERE \"CNPJ\" = '{cnpj}' AND \"Ano\" = '{ano}'"""
+
+            try:
+                df = pd.read_sql_query(query, conn)
+            except:
+                df = pd.read_sql_query(query2, conn)
+        except sa.exc.OperationalError as e:
+            print(f"Operational error: {e}")           
+        finally:    
+            self.put_conn(conn)
         
         return df
-    
+        
+
     @functools.cache
-    def queryResultadoFinalTrimestral(self, cnpj,tabela,ano):
-        query = f"""
-        SELECT "CNPJ", "Ano","Operation 1º Trimestre" ,"Value 1º Trimestre","Operation 2º Trimestre" ,"Value 2º Trimestre",
-        "Operation 3º Trimestre" ,"Value 3º Trimestre","Operation 4º Trimestre" ,"Value 4º Trimestre","index"
-            FROM {tabela}
-            WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' """
-        
-        query2 = f"""
-        SELECT "CNPJ", "Ano","Operation 1º Trimestre" ,"Value 1º Trimestre","Operation 2º Trimestre" ,"Value 2º Trimestre",
-        "Operation 3º Trimestre" ,"Value 3º Trimestre","Operation 4º Trimestre" ,"Value 4º Trimestre"
-            FROM {tabela}
-            WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' """
+    def queryResultadoFinalTrimestral(self, cnpj:str, tabela: str,ano: int):
+        conn = self.get_conn()
         try:
-            df = pd.read_sql_query(query, self.engine)
-        except:
-            df = pd.read_sql_query(query2, self.engine)
+            query = f"""
+            SELECT "CNPJ", "Ano","Operation 1º Trimestre" ,"Value 1º Trimestre","Operation 2º Trimestre" ,"Value 2º Trimestre",
+            "Operation 3º Trimestre" ,"Value 3º Trimestre","Operation 4º Trimestre" ,"Value 4º Trimestre","index"
+                FROM {tabela}
+                WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' """
+            
+            query2 = f"""
+            SELECT "CNPJ", "Ano","Operation 1º Trimestre" ,"Value 1º Trimestre","Operation 2º Trimestre" ,"Value 2º Trimestre",
+            "Operation 3º Trimestre" ,"Value 3º Trimestre","Operation 4º Trimestre" ,"Value 4º Trimestre"
+                FROM {tabela}
+                WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' """
+            try:
+                df = pd.read_sql_query(query, conn)
+            except:
+                df = pd.read_sql_query(query2, conn)
+        except sa.exc.OperationalError as e:
+            print(f"Operational error: {e}")   
+        finally:
+            self.put_conn(conn)    
         
         return df
     
-    def inserirTabelasFinaisJCP(self, tabela, df):
-        verificacaoAno = int(df.iloc[0]['Ano'])
-        verificacaoCNPJ = df.iloc[0]['CNPJ']
+    def inserirTabelasFinaisJCP(self, tabela: str, df: pd.DataFrame):
+        
+        conn = self.get_conn()
+        try:
+            verificacaoAno = int(df.iloc[0]['Ano'])
+            verificacaoCNPJ = df.iloc[0]['CNPJ']
 
-        query = text(f"SELECT * FROM {tabela} WHERE \"Ano\" = :Ano AND \"CNPJ\" = :CNPJ")
-        result = self.conn.execute(query, {'Ano': verificacaoAno, 'CNPJ': float(verificacaoCNPJ)})
+            query = text(f"SELECT * FROM {tabela} WHERE \"Ano\" = :Ano AND \"CNPJ\" = :CNPJ")
+            result = self.conn.execute(query, {'Ano': verificacaoAno, 'CNPJ': float(verificacaoCNPJ)})
 
-        rows = result.fetchall()
+            rows = result.fetchall()
 
-        if rows:
-            st.warning(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} já existem na tabela {tabela}. Não inserindo dados.")
-        else:
-            df.to_sql(tabela, self.engine, if_exists='append', index=False)
-            st.success(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} inserido com sucesso no banco ECF!")
+            if rows:
+                st.warning(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} já existem na tabela {tabela}. Não inserindo dados.")
+            else:
+                df.to_sql(tabela, conn, if_exists='append', index=False)
+                st.success(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} inserido com sucesso no banco ECF!")
+        except sa.exc.OperationalError as e:
+            print(f"Operational error: {e}")   
+        finally:
+            self.put_conn(conn) 
 
-    def update_table(self, tabela, df, cnpj, ano):
+    def update_table(self, tabela: str, df:pd.DataFrame, cnpj:str, ano:int):
+
+        conn = self.get_conn()
+        cursor = conn.cursor()
         operations = df['Operation'].unique()
         try:
             for operation in operations:
                 value = float(df.loc[df['Operation'] == operation, 'Value'].iloc[0]) 
-                query = text(f"UPDATE {tabela} SET \"Value\" = :Value WHERE \"CNPJ\" = :CNPJ AND \"Ano\" = :Ano AND \"Operation\" = :Operation")
-                params = {'Value': value, 'CNPJ': cnpj, 'Ano': ano, 'Operation': operation}
-                self.conn.execute(query, params)
+                query = f"""
+                    UPDATE {tabela}
+                    SET "Value" = %s
+                    WHERE "CNPJ" = %s
+                    AND "Ano" = %s
+                    AND "Operation" = %s
+                """
+                
+                params = (value, cnpj, ano, operation)
+                
+                # Execute a query com os parâmetros
+                cursor.execute(query, params)
             st.success(f'Os valores foram Atualizados')
-            self.conn.commit()
+            conn.commit()
+
         except Exception as e:
             st.warning(f'Não foi possivel atualizar os valores para {operation} por {e}')
-    
+        finally:
+            self.put_conn(conn)
 
-    def update_table_trimestral(self, tabela, df, cnpj, ano):
+    def update_table_trimestral(self, tabela:str, df:pd.DataFrame, cnpj:str, ano: int):
+
+        conn = self.get_conn()
+        cursor = conn.cursor()
         operations = [op for trimestre in [1,2,3,4] for op in df[f'Operation {trimestre}º Trimestre'].unique()]
 
         try:
@@ -201,15 +279,27 @@ class dbController():
                     filtered_df = df.loc[df[f'Operation {trimestre}º Trimestre'] == operation]
                     if not filtered_df.empty:
                         value = float(filtered_df[f'Value {trimestre}º Trimestre'].iloc[0]) 
-                        query = text(f"UPDATE {tabela} SET \"Value {trimestre}º Trimestre\" = :Value WHERE \"CNPJ\" = :CNPJ AND \"Ano\" = :Ano AND \"Operation {trimestre}º Trimestre\" = :Operation")
-                        params = {'Value': value, 'CNPJ': cnpj, 'Ano': ano, 'Operation': operation}
-                        self.conn.execute(query, params)
+                        query = f"""
+                            UPDATE {tabela}
+                            SET "Value {trimestre}º Trimestre" = %s
+                            WHERE "CNPJ" = %s
+                            AND "Ano" = %s
+                            AND "Operation {trimestre}º Trimestre" = %s
+                        """
+                        
+                        params = (value, cnpj, ano, operation)
+                        
+                        # Execute a query com os parâmetros
+                        cursor.execute(query, params)
                     else:
                         st.warning(f'Não há valores para {operation} no {trimestre}º trimestre')
                 st.success(f'Os valores para {trimestre}º trimestre foram Atualizados')
-                self.conn.commit()
+                conn.commit()
         except Exception as e:
                 st.warning(f'Não foi possivel atualizar os valores para {operation} por {e}')
+        
+        finally:
+            self.put_conn(conn)
 
 if __name__ =="__main__":
     

@@ -16,7 +16,7 @@ import gc
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from LacsLalur.trimestralLacsLalur import LacsLalurCSLLTrimestral
-from scrapping.scrapping import ScrappingTJPL
+from scrapping import ScrappingTJPL
 
 
 

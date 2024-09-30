@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from xlsxwriter import Workbook
 
 from baseJPC.tratamentosDosDadosParaCalculo import FiltrandoDadosParaCalculo
-from scrapping.scrapping import ScrappingTJPL
+from scrapping import ScrappingTJPL
 
 import requests
 import functools
