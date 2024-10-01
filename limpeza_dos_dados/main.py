@@ -74,7 +74,7 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorI
         
         economia2019_copy = economia2019.copy()  
         economia2019_copy.at[13, f'Value {i}º Trimestre'] = sum([economia2019_copy.at[0, f'Value {i}º Trimestre'], economia2019_copy.at[1, f'Value {i}º Trimestre'], 
-                                                            economia2019_copy.at[2, f'Value {i}º Trimestre'], economia2019_copy.at[4, f'Value {i}º Trimestre'],
+                                                            economia2019_copy.at[2, f'Value {i}º Trimestre'], economia2019_copy.at[4, f'Value {i}º Trimestre'],economia2019_copy.at[5, f'Value {i}º Trimestre'],
                                                             economia2019_copy.at[11, f'Value {i}º Trimestre'],economia2019_copy.at[12, f'Value {i}º Trimestre']])-economia2019_copy.at[9, f'Value {i}º Trimestre']
         if economia2019_copy.at[13, f'Value {i}º Trimestre'] > 0:
             economia2019_copy.at[14, f'Value {i}º Trimestre'] = economia2019_copy.at[13, f'Value {i}º Trimestre']
