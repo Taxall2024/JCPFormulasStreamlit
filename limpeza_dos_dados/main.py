@@ -221,7 +221,7 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
             lacslalur.gerandoTabelasTrimestral(cnpj_selecionado,anoDeAnalise)
 
         tabelaRelatorioTri = economia2019Trimestral_data_editor.copy()
-        tabelaRelatorioTri = tabelaRelatorioTri.iloc[22:,[0,1,3,5,7]].reset_index(drop='index')
+        tabelaRelatorioTri = tabelaRelatorioTri.iloc[24:,[0,1,3,5,7]].reset_index(drop='index')
         
         tabelaRelatorioTri[f'Value_{anoDeAnalise}'] = sum([tabelaRelatorioTri.at[1,'Value 1º Trimestre'],tabelaRelatorioTri.at[1,'Value 2º Trimestre'],
                                                         tabelaRelatorioTri.at[1,'Value 3º Trimestre'],tabelaRelatorioTri.at[1,'Value 4º Trimestre']])

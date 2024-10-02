@@ -123,12 +123,17 @@ class dbController():
     
     def deletarDadosDaTabela(self,tabela):
         query = text("DELETE FROM {}".format(tabela))
-        with self.conn.execute:
-            self.conn.execute(query)
-            print(f'Os valores para tabela {tabela} foram DELETADOS!')
-            self.conn.commit()
 
-
+        self.conn.execute(query)
+        print(f'Os valores para tabela {tabela} foram DELETADOS!')
+        self.conn.commit()
+   
+    def deletarDadosDaTabelaPorCnpj(self, cnpj, tabela):
+        # Use parameterized query to avoid SQL injection and properly handle data types
+        query = text(f"DELETE FROM {tabela} WHERE \"CNPJ\" = :cnpj")
+        self.conn.execute(query, {"cnpj": cnpj})
+        print(f'Os valores para tabela {tabela} e CNPJ {cnpj} foram DELETADOS!')
+        self.conn.commit()
 
 
     def get_all_data(self,tabela):
@@ -245,19 +250,31 @@ class dbController():
 if __name__ =="__main__":
     
     controler = dbController('taxall')
-    controler.deletarDadosDaTabela('l100')
-    controler.deletarDadosDaTabela('l300')
-    controler.deletarDadosDaTabela('m300')
-    controler.deletarDadosDaTabela('m350')
-    controler.deletarDadosDaTabela('n630')
-    controler.deletarDadosDaTabela('n670')
-    controler.deletarDadosDaTabela('resultadosjcp')
-    controler.deletarDadosDaTabela('resultadosjcptrimestral')
-    controler.deletarDadosDaTabela('tipodaanalise')
-    controler.deletarDadosDaTabela('cadastrodasempresas')
-    controler.deletarDadosDaTabela('lacslalur')
-    controler.deletarDadosDaTabela('lacslalurtrimestral')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','l100')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','l300')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','m300')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','m350')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','n630')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','n670')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','resultadosjcp')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','resultadosjcptrimestral')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','tipodaanalise')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','cadastrodasempresas')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','lacslalur')
+    controler.deletarDadosDaTabelaPorCnpj('07608821000154','lacslalurtrimestral')
 
+    # controler.deletarDadosDaTabela('l100')
+    # controler.deletarDadosDaTabela('l300')
+    # controler.deletarDadosDaTabela('m300')
+    # controler.deletarDadosDaTabela('m350')
+    # controler.deletarDadosDaTabela('n630')
+    # controler.deletarDadosDaTabela('n670')
+    # controler.deletarDadosDaTabela('resultadosjcp')
+    # controler.deletarDadosDaTabela('resultadosjcptrimestral')
+    # controler.deletarDadosDaTabela('tipodaanalise')
+    # controler.deletarDadosDaTabela('cadastrodasempresas')
+    # controler.deletarDadosDaTabela('lacslalur')
+    # controler.deletarDadosDaTabela('lacslalurtrimestral')
 
     # l100Teste = controler.get_data_by_cnpj("14576552000157","m350")
     # st.data_editor(l100Teste)
