@@ -86,6 +86,20 @@ class trimestralFiltrandoDadosParaCalculo():
     def set_date(self, data):
         self.data = data   
 
+    def patrimonioLiquido(self):
+        self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
+        self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.prejuizoPeirod,self.acosTesouraria,
+        self.lucroAcumulado,self.ajustExercAnt])-self.prejuAcumulado
+
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Patrimônio líquido", "Value": self.patrimonioliquido}])], ignore_index=True)
+
+    def ajustesDeCalculo(self):
+        
+        self.ajustesCalculo = 0 
+
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ajustes de Calculos", "Value": self.ajustesCalculo}])], ignore_index=True)
+
+
     def capitalSocial(self):
             l100 = self.l100
             l100 = l100[(l100['Descrição Conta Referencial']=='CAPITAL REALIZADO - DE RESIDENTE NO PAÍS')&
@@ -166,6 +180,11 @@ class trimestralFiltrandoDadosParaCalculo():
             else:
                 self.resultado = self.lucroAcumulado          
         
+        if (l100['D/C Saldo Final'] == 'C').any():
+            self.resultado = self.resultado
+        else:
+            self.resultado = self.resultado * - 1    
+
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.resultado}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Operation": "Lucros Acumulados", "Value": self.resultado}])], ignore_index=True)
     
@@ -177,14 +196,19 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.ajustExercAnt = np.sum(l100['Vlr Saldo Final'].values)        
+        self.ajustExercAnt = np.sum(l100['Vlr Saldo Final'].values)
+
+        if (l100['D/C Saldo Final'] == 'C').any():
+            self.exerciciosAnteriores = self.ajustExercAnt
+        else:
+            self.exerciciosAnteriores = self.ajustExercAnt * -1
         
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ajustes Exercícios Anteriores", "Value": self.ajustExercAnt}])], ignore_index=True)
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Ajustes Exercícios Anteriores", "Value": self.exerciciosAnteriores}])], ignore_index=True)
 
 
     def TotalFinsCalcJSPC(self):
 
-        self.totalJSPC =  sum((self.capSocial,self.reservLucro,self.resultado,self.ajustExercAnt,self.reservaCapital)) - self.prejuAcumulado #+ abs(self.prejuizoPeirod)) 
+        self.totalJSPC =  sum((self.capSocial,self.reservLucro,self.resultado,self.exerciciosAnteriores,self.reservaCapital)) - self.prejuAcumulado 
         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
         self.trimestralLacsLalurAposInovacoes = pd.concat([self.LacsLalurTrimestral.trimestralLacsLalurAposInovacoes, pd.DataFrame([{"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
@@ -203,14 +227,24 @@ class trimestralFiltrandoDadosParaCalculo():
     
     def ReservasLucros(self):
 
+        reservLegal = self.l100
+        reservLegal = reservLegal[(reservLegal['Conta Referencial']=='2.03.02.03.01')&
+            (reservLegal['Data Inicial'].dt.year == self.ano) &
+            (reservLegal['Data Inicial'].dt.month >= self.mes_inicio) &
+            (reservLegal['Data Inicial'].dt.month <= self.mes_fim)&
+            (reservLegal['Trimestre'] == self.trimestre)]
+        reservLegal = np.sum(reservLegal['Vlr Saldo Final'].values)
+
         l100 = self.l100
         l100 = l100[(l100['Conta Referencial']=='2.03.02.03')&
             (l100['Data Inicial'].dt.year == self.ano) &
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.reservLucro = np.sum(l100['Vlr Saldo Final'].values)
+        self.reservLucro1 = np.sum(l100['Vlr Saldo Final'].values)
 
+        self.reservLucro = self.reservLucro - reservLegal
+        
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reservas de Lucros", "Value": self.reservLucro}])], ignore_index=True)
     
     
@@ -249,8 +283,10 @@ class trimestralFiltrandoDadosParaCalculo():
 
         if (l100['D/C Saldo Final'] == 'C').any():
             lucroPrejuizo = 'Lucro do Período'
+            self.verificandoPreju = False
         else:
-            lucroPrejuizo = 'Prejuízo do Período'    
+            lucroPrejuizo = 'Prejuízo do Período'
+            self.verificandoPreju = True    
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": f"{lucroPrejuizo} ", "Value": self.prejuizoPeirod}])], ignore_index=True)
 
@@ -279,6 +315,11 @@ class trimestralFiltrandoDadosParaCalculo():
                 self.prejuAcumulado = self.contaPatriNClassifica
             else:
                 self.prejuAcumulado =  self.contaPatriNClassifica - prejuizoPeirodoValor 
+        
+        if (l100['D/C Saldo Final'] == 'C').any():
+            self.prejuAcumulado = self.prejuAcumulado
+        else:
+            self.prejuAcumulado = self.prejuAcumulado * -1          
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Prejuízos Acumulados", "Value": self.prejuAcumulado}])], ignore_index=True)
         
@@ -296,10 +337,11 @@ class trimestralFiltrandoDadosParaCalculo():
     
         self.taxaJuros = self.dataframe.loc[data, trimestre]
         
-        if self.totalJSPC < 0:
+        if self.totalJSPC < 0 or self.verificandoPreju == True:
             self.valorJPC = 0
         else:     
             self.valorJPC = round(self.totalJSPC * (self.taxaJuros / 100), 2)
+
         self.irrfJPC = round(self.valorJPC * 0.15, 2)
         self.valorApropriar = round(self.valorJPC - self.irrfJPC, 2)
 
@@ -349,7 +391,7 @@ class trimestralFiltrandoDadosParaCalculo():
 
 
     def runPipe(self):
-    
+        self.ajustesDeCalculo()
         self.capitalSocial()
         self.capitalIntegralizador()
         self.ReservasDeCapital()
@@ -366,6 +408,7 @@ class trimestralFiltrandoDadosParaCalculo():
         self.acoesTesouraria()
         self.lucrosAcumulados()
         self.ajustesExerAnteriores()
+        self.patrimonioLiquido()
         self.TotalFinsCalcJSPC()
 
         #-- Metódos que fazer calculos dos valores finais do JCP

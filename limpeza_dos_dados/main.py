@@ -10,7 +10,7 @@ import sys
 import os
 import time
 import psutil
-
+import functools
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.controllerDB import dbController
@@ -36,7 +36,7 @@ st.markdown(
      f"""
      <iframe src="data:image/jpg;base64,{base64.b64encode(open(background_image, 'rb').read()).decode(
 
-    )}" style="width:3000px;height:9000px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
+    )}" style="width:4000px;height:3000px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
      """,
      unsafe_allow_html=True )
 
@@ -72,51 +72,67 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorI
     trimestres = [1,2,3,4]
     for i in trimestres:
         
-        economia2019_copy = economia2019.copy()  
-        economia2019_copy.at[13, f'Value {i}º Trimestre'] = sum([economia2019_copy.at[0, f'Value {i}º Trimestre'], economia2019_copy.at[1, f'Value {i}º Trimestre'], 
-                                                            economia2019_copy.at[2, f'Value {i}º Trimestre'], economia2019_copy.at[4, f'Value {i}º Trimestre'],economia2019_copy.at[5, f'Value {i}º Trimestre'],
-                                                            economia2019_copy.at[11, f'Value {i}º Trimestre'],economia2019_copy.at[12, f'Value {i}º Trimestre']])-economia2019_copy.at[9, f'Value {i}º Trimestre']
-        if economia2019_copy.at[13, f'Value {i}º Trimestre'] > 0:
-            economia2019_copy.at[14, f'Value {i}º Trimestre'] = economia2019_copy.at[13, f'Value {i}º Trimestre']
-        else:
-            economia2019_copy.at[14, f'Value {i}º Trimestre'] = 0.0
+        economia2019_copy = economia2019.copy() 
         
-        if economia2019_copy.at[13, f'Value {i}º Trimestre'] > 0:
-            economia2019_copy.at[16, f'Value {i}º Trimestre'] = economia2019_copy.at[14, f'Value {i}º Trimestre'] * (economia2019_copy.at[15, f'Value {i}º Trimestre'] / 100)
-            economia2019_copy.at[17, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * 0.15       
-            economia2019_copy.at[18, f'Value {i}º Trimestre'] = abs(economia2019_copy.at[16, f'Value {i}º Trimestre'] - economia2019_copy.at[17, f'Value {i}º Trimestre'])
-            economia2019_copy.at[20, f'Value {i}º Trimestre'] = (economia2019_copy.at[5, f'Value {i}º Trimestre'] + economia2019_copy.at[11, f'Value {i}º Trimestre']) * 0.5
-            if retirarMulta == True:            
-                economia2019_copy.at[21, f'Value {i}º Trimestre'] = economia2019_copy.at[17, f'Value {i}º Trimestre'] + (economia2019_copy.at[17, f'Value {i}º Trimestre'] * 0.2 * 0)
+
+        #economia2019_copy.at[6, f'Value {i}º Trimestre'] = economia2019_copy.at[6, f'Value {i}º Trimestre'] - economia2019_copy.at[5, f'Value {i}º Trimestre'] 
+        #Calculando Total Para Fins de JSPC  -- 
+        economia2019_copy.at[15, f'Value {i}º Trimestre'] = sum([economia2019_copy.at[1, f'Value {i}º Trimestre'], economia2019_copy.at[2, f'Value {i}º Trimestre'], 
+                                                            economia2019_copy.at[3, f'Value {i}º Trimestre'], economia2019_copy.at[5, f'Value {i}º Trimestre'],economia2019_copy.at[6, f'Value {i}º Trimestre'],
+                                                            economia2019_copy.at[12, f'Value {i}º Trimestre'],economia2019_copy.at[13, f'Value {i}º Trimestre']])-economia2019_copy.at[10, f'Value {i}º Trimestre']
+        
+        #Veriricação se o valor de JSCP e negativo para ser a conta caso positivo
+        if economia2019_copy.at[15, f'Value {i}º Trimestre'] > 0:
+            economia2019_copy.at[16, f'Value {i}º Trimestre'] = economia2019_copy.at[15, f'Value {i}º Trimestre'] - economia2019_copy.at[0,f'Value {i}º Trimestre']
+        else:
+            economia2019_copy.at[16, f'Value {i}º Trimestre'] = 0.0
+        
+        if economia2019_copy.at[15, f'Value {i}º Trimestre'] > 0:
+
+            #Calculando o Valor de JSCP(Valor da base multiplicado pela TJLP)
+            economia2019_copy.at[18, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * (economia2019_copy.at[17, f'Value {i}º Trimestre'] / 100)
+            
+            #Valor do IRRF (Multiplica o valor de JSCP por 15%)
+            economia2019_copy.at[19, f'Value {i}º Trimestre'] = economia2019_copy.at[18, f'Value {i}º Trimestre'] * 0.15       
+            
+            # Valor de JSCP a apropriar pelo cliente( subtrair o valor de JSCP por pelo valor do IRRF )
+            economia2019_copy.at[20, f'Value {i}º Trimestre'] = abs(economia2019_copy.at[18, f'Value {i}º Trimestre'] - economia2019_copy.at[19, f'Value {i}º Trimestre'])
+            
+            # 50% do lucro acumulado, se faz pelas somas da reserva de lucros, reserva legal e lucros acumulados subtrai prejuizo acumulado e divide pela metade
+            economia2019_copy.at[22, f'Value {i}º Trimestre'] = ((economia2019_copy.at[5, f'Value {i}º Trimestre'] + economia2019_copy.at[6, f'Value {i}º Trimestre'] + economia2019_copy.at[12, f'Value {i}º Trimestre']) - economia2019_copy.at[10, f'Value {i}º Trimestre']) * 0.5
+            if retirarMulta == True:
+                #Calculo  do valor da DARF( Soma o valor de IRRF mas 20 % do mesmo, em cenarios em que nao se retira a multa)            
+                economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[19, f'Value {i}º Trimestre'] + (economia2019_copy.at[19, f'Value {i}º Trimestre'] * 0.2 * 0)
             else:
-                economia2019_copy.at[21, f'Value {i}º Trimestre'] = economia2019_copy.at[17, f'Value {i}º Trimestre'] + (economia2019_copy.at[17, f'Value {i}º Trimestre'] * 0.2)    
+                economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[19, f'Value {i}º Trimestre'] + (economia2019_copy.at[19, f'Value {i}º Trimestre'] * 0.2)    
             
             if valorIRPJ == True:
-                economia2019_copy.at[22, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * 0.24
-                economia2019_copy.at[22, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
+                # Valor da redução da multa( 24% ou 34% do valor de JSCP)
+                economia2019_copy.at[24, f'Value {i}º Trimestre'] = economia2019_copy.at[18, f'Value {i}º Trimestre'] * 0.24
+                economia2019_copy.at[24, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
             else:
-                economia2019_copy.at[22, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * 0.34    
-                economia2019_copy.at[22, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
-
-            economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[22, f'Value {i}º Trimestre'] - economia2019_copy.at[21, f'Value {i}º Trimestre']
+                economia2019_copy.at[24, f'Value {i}º Trimestre'] = economia2019_copy.at[18, f'Value {i}º Trimestre'] * 0.34    
+                economia2019_copy.at[24, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+            # Valor de economia gerada( Subtrir a redução no IRPJ pelo valor de DARF)
+            economia2019_copy.at[25, f'Value {i}º Trimestre'] = economia2019_copy.at[24, f'Value {i}º Trimestre'] - economia2019_copy.at[23, f'Value {i}º Trimestre']
             
             economia2019_copy[f'Value {i}º Trimestre'] = round(economia2019_copy[f'Value {i}º Trimestre'],2)
         else:
-            economia2019_copy.at[16, f'Value {i}º Trimestre'] = 0
-            economia2019_copy.at[17, f'Value {i}º Trimestre'] = 0     
             economia2019_copy.at[18, f'Value {i}º Trimestre'] = 0
+            economia2019_copy.at[19, f'Value {i}º Trimestre'] = 0     
             economia2019_copy.at[20, f'Value {i}º Trimestre'] = 0
+            economia2019_copy.at[22, f'Value {i}º Trimestre'] = 0
                         
-            economia2019_copy.at[21, f'Value {i}º Trimestre'] = 0
-            if valorIRPJ == True:
-                economia2019_copy.at[22, f'Value {i}º Trimestre'] = 0
-                economia2019_copy.at[22, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
-            else:
-                economia2019_copy.at[22, f'Value {i}º Trimestre'] = 0  
-                economia2019_copy.at[22, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
-
             economia2019_copy.at[23, f'Value {i}º Trimestre'] = 0
-            economia2019_copy.at[19, f'Value {i}º Trimestre'] = 0
+            if valorIRPJ == True:
+                economia2019_copy.at[24, f'Value {i}º Trimestre'] = 0
+                economia2019_copy.at[24, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
+            else:
+                economia2019_copy.at[24, f'Value {i}º Trimestre'] = 0  
+                economia2019_copy.at[24, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+
+            economia2019_copy.at[25, f'Value {i}º Trimestre'] = 0
+            economia2019_copy.at[21, f'Value {i}º Trimestre'] = 0
 
             economia2019_copy[f'Value {i}º Trimestre'] = round(economia2019_copy[f'Value {i}º Trimestre'],2)
 
@@ -201,6 +217,7 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
             controler.update_table_trimestral('resultadosjcptrimestral', economia2019Trimestral_data_editor, cnpj_selecionado, anoDeAnalise)    
         
         with st.expander('Lacs Lalur'):
+            
             lacslalur.gerandoTabelasTrimestral(cnpj_selecionado,anoDeAnalise)
 
         tabelaRelatorioTri = economia2019Trimestral_data_editor.copy()

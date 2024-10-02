@@ -97,18 +97,22 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         lucroperio = l300[(l300['Descrição Conta Referencial']=='RESULTADO LÍQUIDO DO PERÍODO')&
             (l300['Data Inicial'].str.contains(self.data))&(
             l300['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
-        lucroperio = lucroperio['Vlr Saldo Final'].sum()
+        lucroperio1 = lucroperio['Vlr Saldo Final'].sum()
 
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.01')&
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
         
-        if (l100['D/C Saldo Final'] == 'C').any():
-            self.lucroAcumulado = np.where(np.sum(l100['Vlr Saldo Final'].values)-lucroperio<0,0,np.sum(l100['Vlr Saldo Final'].values)-lucroperio)
+        if (lucroperio['D/C Saldo Final'] == 'C').any():
+            self.lucroAcumulado = np.where(np.sum(l100['Vlr Saldo Final'].values)-lucroperio1<0,0,np.sum(l100['Vlr Saldo Final'].values)-lucroperio1)
         else:
             self.lucroAcumulado = np.sum(l100['Vlr Saldo Final'].values)
         
-        self.lucroAcumulado = np.where(np.sum(l100['Vlr Saldo Final'].values)-lucroperio<0,0,np.sum(l100['Vlr Saldo Final'].values)-lucroperio)
+        if (l100['D/C Saldo Final'] == 'C').any():
+            self.lucroAcumulado = self.lucroAcumulado
+        else:
+            self.lucroAcumulado = self.lucroAcumulado * -1    
+
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
         self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
@@ -235,11 +239,15 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
         self.contaPatriNClassifica = np.sum(l100['Vlr Saldo Final'].values)
 
-        if (l100['D/C Saldo Final'] == 'C').any():
+        if (lucroOuPrejuPeriodo['D/C Saldo Final'] == 'C').any():
             self.prejuAcumulado = abs(self.contaPatriNClassifica)
         else:
             self.prejuAcumulado = abs(self.contaPatriNClassifica - self.lucroOuPrejuPeriodo)
-        
+        if (l100['D/C Saldo Final'] == 'C').any():
+            self.prejuAcumulado = self.prejuAcumulado
+        else:
+            self.prejuAcumulado = self.prejuAcumulado * -1
+
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Prejuízos Acumulados", "Value": self.prejuAcumulado}])], ignore_index=True)
     
 
