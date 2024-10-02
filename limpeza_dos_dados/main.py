@@ -201,7 +201,7 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
             multa = st.toggle('Retirar multa', key=f'{anoDeAnalise}')
             valorIRPJ = st.toggle('Alterar valor IRPJ de 34% para 24%',key=f'{anoDeAnalise}widgetMulta')
 
-            economia2019Trimestral_data_editor = st.data_editor(st.session_state[session_state_name], key=f'data_editor_{anoDeAnalise}', height=900, use_container_width=True)
+            economia2019Trimestral_data_editor = st.data_editor(st.session_state[session_state_name], key=f'data_editor_{anoDeAnalise}', height=1000, use_container_width=True)
             submittedbutton1 = st.form_submit_button(f"Atualizar {anoDeAnalise}")
 
         if submittedbutton1:

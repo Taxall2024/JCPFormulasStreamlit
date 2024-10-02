@@ -87,9 +87,16 @@ class trimestralFiltrandoDadosParaCalculo():
         self.data = data   
 
     def patrimonioLiquido(self):
-        self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
-        self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.prejuizoPeirod,self.acosTesouraria,
-        self.lucroAcumulado,self.ajustExercAnt])-self.prejuAcumulado
+
+        if self.verificandoPreju == True:
+
+            self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.prejuizoPeirod,self.acosTesouraria,
+            self.lucroAcumulado,self.ajustExercAnt])-(self.prejuAcumulado + self.prejuizoPeirod)
+        else:
+            self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.prejuizoPeirod,self.acosTesouraria,
+            self.lucroAcumulado,self.ajustExercAnt,+ self.prejuizoPeirod])- self.prejuAcumulado 
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Patrimônio líquido", "Value": self.patrimonioliquido}])], ignore_index=True)
 
@@ -243,8 +250,11 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Trimestre'] == self.trimestre)]
         self.reservLucro1 = np.sum(l100['Vlr Saldo Final'].values)
 
-        self.reservLucro = self.reservLucro - reservLegal
-        
+        if self.reservLucro1 > 0:
+            self.reservLucro = self.reservLucro - reservLegal
+        else:
+            self.reservLucro = self.reservLucro
+
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Reservas de Lucros", "Value": self.reservLucro}])], ignore_index=True)
     
     
