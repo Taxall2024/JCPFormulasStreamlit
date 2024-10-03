@@ -74,8 +74,12 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorI
         
         economia2019_copy = economia2019.copy() 
         
+        economia2019_copy.at[14, f'Value {i}º Trimestre'] = np.sum([economia2019_copy.at[1, f'Value {i}º Trimestre'],economia2019_copy.at[2, f'Value {i}º Trimestre'],economia2019_copy.at[3, f'Value {i}º Trimestre'],
+                                                                    economia2019_copy.at[4, f'Value {i}º Trimestre'],economia2019_copy.at[5, f'Value {i}º Trimestre'],
+                                                                    economia2019_copy.at[6, f'Value {i}º Trimestre'],economia2019_copy.at[7, f'Value {i}º Trimestre'],economia2019_copy.at[8, f'Value {i}º Trimestre'],
+                                                                    economia2019_copy.at[9, f'Value {i}º Trimestre'],economia2019_copy.at[11, f'Value {i}º Trimestre'],
+                                                                    economia2019_copy.at[12, f'Value {i}º Trimestre']]) - economia2019_copy.at[10, f'Value {i}º Trimestre']
 
-        #economia2019_copy.at[6, f'Value {i}º Trimestre'] = economia2019_copy.at[6, f'Value {i}º Trimestre'] - economia2019_copy.at[5, f'Value {i}º Trimestre'] 
         #Calculando Total Para Fins de JSPC  -- 
         economia2019_copy.at[15, f'Value {i}º Trimestre'] = sum([economia2019_copy.at[1, f'Value {i}º Trimestre'], economia2019_copy.at[2, f'Value {i}º Trimestre'], 
                                                             economia2019_copy.at[3, f'Value {i}º Trimestre'], economia2019_copy.at[5, f'Value {i}º Trimestre'],economia2019_copy.at[6, f'Value {i}º Trimestre'],
@@ -230,7 +234,6 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
                                                         tabelaRelatorioTri.at[0,'Value 3º Trimestre'],tabelaRelatorioTri.at[0,'Value 4º Trimestre']])
         
         tabelaRelatorioTri = tabelaRelatorioTri.iloc[:,5].reset_index(drop='index')
-
         resultaTrimestral = economia2019Trimestral_data_editor
         resultaTrimestral.columns = [f"{col}_{anoDeAnalise}" for col in resultaTrimestral.columns]
         
@@ -348,7 +351,7 @@ if __name__=='__main__':
             pdf = RelatorioPDFJSCP()
             
             pdf.valorTotal(dataframeParaRelatorio)
-
+            st.dataframe(dataframeParaRelatorio)
             pdf_buffer = pdf.create_pdf(nomeEmpresaSelecionada, aliquotaImposto, observacoesDoAnlista, dataAssinatura)          
 
             st.download_button(label="Baixar relatório",data=pdf_buffer,file_name="relatório.pdf",mime="application/pdf")
