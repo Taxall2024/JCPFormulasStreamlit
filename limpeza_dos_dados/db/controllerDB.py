@@ -18,6 +18,7 @@ header = {
 MAX_RETRIES = 5
 
 RETRY_DELAY = 5
+
 class dbController():
     
     def __init__(self,banco):
@@ -29,15 +30,12 @@ class dbController():
         password = st.secrets["apiAWS"]["password"]
         host = st.secrets["apiAWS"]["host"]
         port = st.secrets["apiAWS"]["port"]
-        self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/taxall',pool_size=10,max_overflow=10,)
-        self.conn = self.engine.connect()
-
-    def __del__(self):
-        if hasattr(self, 'conn'):
-            self.conn.close()
-        if hasattr(self, 'engine'):
+        try:
+            self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/taxall',pool_size=10,max_overflow=10,)
+            self.conn = self.engine.connect()
+        finally:
             self.engine.dispose()
-
+            self.conn.close()
 
     def inserirTabelas(self, tabela, df):
 
@@ -82,7 +80,10 @@ class dbController():
     def get_data_by_cnpj(self, cnpj,tabela):
         query = f"SELECT * FROM {tabela} WHERE \"CNPJ\" = '{cnpj}'"
         with self.engine.connect():
-            df = pd.read_sql_query(query, self.engine)
+            try:
+                df = pd.read_sql_query(query, self.engine)
+            finally:
+                self.engine.dispose()    
 
         
         return df
@@ -95,8 +96,10 @@ class dbController():
             WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' AND "Operation" = '{operation}'
         """
         with self.engine.connect():
-            df = pd.read_sql_query(query, self.engine)
-
+            try:
+                df = pd.read_sql_query(query, self.engine)
+            finally:
+                self.engine.dispose()
      
         return df
 
@@ -116,14 +119,17 @@ class dbController():
             AND "Operation 4º Trimestre" = '{operation}'  """
         
         with self.engine.connect():
-            df = pd.read_sql_query(query, self.engine)
+            try:
+                df = pd.read_sql_query(query, self.engine)
+            finally:
+                self.engine.dispose()    
 
        
         return df
     
     def deletarDadosDaTabela(self,tabela):
         query = text("DELETE FROM {}".format(tabela))
-
+        
         self.conn.execute(query)
         print(f'Os valores para tabela {tabela} foram DELETADOS!')
         self.conn.commit()
@@ -138,9 +144,11 @@ class dbController():
 
     def get_all_data(self,tabela):
         query = f"SELECT * FROM {tabela}"
-        with self.engine.connect():
-            df = pd.read_sql_query(query, self.engine)
-
+        try:
+            with self.engine.connect():
+                df = pd.read_sql_query(query, self.engine)
+        finally:
+            self.engine.dispose()
       
         return df
 
@@ -157,10 +165,12 @@ class dbController():
         WHERE \"CNPJ\" = '{cnpj}' AND \"Ano\" = '{ano}'"""
         with self.engine.connect():
             try:
-                df = pd.read_sql_query(query, self.engine)
-            except:
-                df = pd.read_sql_query(query2, self.engine)
-       
+                try:
+                    df = pd.read_sql_query(query, self.engine)
+                except:
+                    df = pd.read_sql_query(query2, self.engine)
+            finally:
+                self.engine.dispose()
         return df
 
     @functools.cache
@@ -177,12 +187,14 @@ class dbController():
             FROM {tabela}
             WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' """
 
-        with self.engine.connect():    
-            try:
-                df = pd.read_sql_query(query, self.engine)
-            except:
-                df = pd.read_sql_query(query2, self.engine)
-
+        with self.engine.connect(): 
+            try:   
+                try:
+                    df = pd.read_sql_query(query, self.engine)
+                except:
+                    df = pd.read_sql_query(query2, self.engine)
+            finally:
+                self.engine.dispose()
       
         return df
     
@@ -200,9 +212,11 @@ class dbController():
             st.warning(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} já existem na tabela {tabela}. Não inserindo dados.")
         else:
             with self.engine.connect():
-                df.to_sql(tabela, self.engine, if_exists='append', index=False)
-                st.success(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} inserido com sucesso no banco ECF!")
-
+                try:
+                    df.to_sql(tabela, self.engine, if_exists='append', index=False)
+                    st.success(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} inserido com sucesso no banco ECF!")
+                finally:
+                    self.engine.dispose()
 
     def update_table(self, tabela, df, cnpj, ano):
         operations = df['Operation'].unique()
@@ -221,7 +235,8 @@ class dbController():
             except Exception as e:
                 # Se ocorrer um erro, a transação será revertida automaticamente
                 st.warning(f'Não foi possível atualizar os valores para {operation} por {e}')
-
+            finally:
+                self.conn.close()
 
     def update_table_trimestral(self, tabela, df, cnpj, ano):
         operations = [op for trimestre in [1,2,3,4] for op in df[f'Operation {trimestre}º Trimestre'].unique()]
@@ -244,7 +259,8 @@ class dbController():
                 # Se ocorrer um erro, a transação será revertida automaticamente
                 st.warning(f'Não foi possível atualizar os valores para {operation} por {e}')
 
-
+            finally:
+                self.conn.close()
 
 
 if __name__ =="__main__":
