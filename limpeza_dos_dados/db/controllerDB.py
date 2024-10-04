@@ -34,8 +34,8 @@ class dbController():
             self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/taxall',pool_size=10,max_overflow=10,)
             self.conn = self.engine.connect()
         finally:
-            self.engine.dispose()
-            self.conn.close()
+            ''#self.engine.dispose()
+            #self.conn.close()
 
     def inserirTabelas(self, tabela, df):
 
@@ -83,7 +83,7 @@ class dbController():
             try:
                 df = pd.read_sql_query(query, self.engine)
             finally:
-                self.engine.dispose()    
+               '' #self.engine.dispose()    
 
         
         return df
@@ -148,7 +148,7 @@ class dbController():
             with self.engine.connect():
                 df = pd.read_sql_query(query, self.engine)
         finally:
-            self.engine.dispose()
+            ''#self.engine.dispose()
       
         return df
 
@@ -216,7 +216,7 @@ class dbController():
                     df.to_sql(tabela, self.engine, if_exists='append', index=False)
                     st.success(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} inserido com sucesso no banco ECF!")
                 finally:
-                    self.engine.dispose()
+                   '' #self.engine.dispose()
 
     def update_table(self, tabela, df, cnpj, ano):
         operations = df['Operation'].unique()
@@ -236,7 +236,7 @@ class dbController():
                 # Se ocorrer um erro, a transação será revertida automaticamente
                 st.warning(f'Não foi possível atualizar os valores para {operation} por {e}')
             finally:
-                self.conn.close()
+                ''#self.conn.close()
 
     def update_table_trimestral(self, tabela, df, cnpj, ano):
         operations = [op for trimestre in [1,2,3,4] for op in df[f'Operation {trimestre}º Trimestre'].unique()]
@@ -266,31 +266,31 @@ class dbController():
 if __name__ =="__main__":
     
     controler = dbController('taxall')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','l100')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','l300')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','m300')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','m350')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','n630')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','n670')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','resultadosjcp')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','resultadosjcptrimestral')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','tipodaanalise')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','cadastrodasempresas')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','lacslalur')
-    controler.deletarDadosDaTabelaPorCnpj('07608821000154','lacslalurtrimestral')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','l100')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','l300')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','m300')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','m350')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','n630')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','n670')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','resultadosjcp')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','resultadosjcptrimestral')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','tipodaanalise')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','cadastrodasempresas')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','lacslalur')
+    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','lacslalurtrimestral')
 
-    # controler.deletarDadosDaTabela('l100')
-    # controler.deletarDadosDaTabela('l300')
-    # controler.deletarDadosDaTabela('m300')
-    # controler.deletarDadosDaTabela('m350')
-    # controler.deletarDadosDaTabela('n630')
-    # controler.deletarDadosDaTabela('n670')
-    # controler.deletarDadosDaTabela('resultadosjcp')
-    # controler.deletarDadosDaTabela('resultadosjcptrimestral')
-    # controler.deletarDadosDaTabela('tipodaanalise')
-    # controler.deletarDadosDaTabela('cadastrodasempresas')
-    # controler.deletarDadosDaTabela('lacslalur')
-    # controler.deletarDadosDaTabela('lacslalurtrimestral')
+    controler.deletarDadosDaTabela('l100')
+    controler.deletarDadosDaTabela('l300')
+    controler.deletarDadosDaTabela('m300')
+    controler.deletarDadosDaTabela('m350')
+    controler.deletarDadosDaTabela('n630')
+    controler.deletarDadosDaTabela('n670')
+    controler.deletarDadosDaTabela('resultadosjcp')
+    controler.deletarDadosDaTabela('resultadosjcptrimestral')
+    controler.deletarDadosDaTabela('tipodaanalise')
+    controler.deletarDadosDaTabela('cadastrodasempresas')
+    controler.deletarDadosDaTabela('lacslalur')
+    controler.deletarDadosDaTabela('lacslalurtrimestral')
 
     # l100Teste = controler.get_data_by_cnpj("14576552000157","m350")
     # st.data_editor(l100Teste)
