@@ -19,8 +19,7 @@ from relatorioPDF.relatorioAnual import RelatorioPDFJSCP
 from arquivosSPED.pipeArquivosECF import SpedProcessor
 from LacsLalur.AposInovacoesLacsLalur import LacsLalurAposInovacoes
 
-controler = dbController('taxall')
-#controler = dbController('taxall')
+
 
 
 st.set_page_config(layout='wide')
@@ -40,32 +39,111 @@ st.markdown(
      """,
      unsafe_allow_html=True )
 
-def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool ,valorIRPJ:bool) -> pd.DataFrame:
-    #'''Função de callback para recalcular os valores apresentados e gerados para análise anual do JCP'''
-        economia2019.at[8, 'Value'] = economia2019.at[6, 'Value'] + economia2019.at[7, 'Value']
-        economia2019.at[17, 'Value'] = sum([economia2019.at[0, 'Value'], economia2019.at[2, 'Value'], 
-                                            economia2019.at[8, 'Value'], economia2019.at[13, 'Value'],
-                                            economia2019.at[14, 'Value'], economia2019.at[12, 'Value'],
-                                            economia2019.at[15, 'Value']])
-        economia2019.at[22, 'Value'] = economia2019.at[17, 'Value']
-        economia2019.at[24, 'Value'] = economia2019.at[22, 'Value'] * (economia2019.at[23, 'Value'] / 100)
-        economia2019.at[25, 'Value'] = economia2019.at[24, 'Value'] * 0.15
-        economia2019.at[26, 'Value'] = economia2019.at[24, 'Value'] - economia2019.at[25, 'Value']
-        economia2019.at[27, 'Value'] = economia2019.at[20, 'Value'] * 0.5
-        economia2019.at[28, 'Value'] = (economia2019.at[8, 'Value'] + economia2019.at[14, 'Value']) * 0.5
-        if retirarMulta == True:
-            economia2019.at[29, 'Value'] = economia2019.at[25, 'Value'] + (economia2019.at[25, 'Value'] * 0.2 * 0)
-        else:
-            economia2019.at[29, 'Value'] = economia2019.at[25, 'Value'] + (economia2019.at[25, 'Value'] * 0.2)
-        if valorIRPJ == True:        
-            economia2019.at[30, 'Value'] = economia2019.at[24, 'Value'] * 0.24
-            economia2019.at[30,'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
-        else:    
-            economia2019.at[30, 'Value'] = economia2019.at[24, 'Value'] * 0.34
-            economia2019.at[30,'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
-        economia2019.at[31, 'Value'] = economia2019.at[30, 'Value'] - economia2019.at[29, 'Value']
+# def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool ,valorIRPJ:bool) -> pd.DataFrame:
+#     #'''Função de callback para recalcular os valores apresentados e gerados para análise anual do JCP'''
+#         economia2019.at[8, 'Value'] = economia2019.at[6, 'Value'] + economia2019.at[7, 'Value']
+#         economia2019.at[17, 'Value'] = sum([economia2019.at[0, 'Value'], economia2019.at[2, 'Value'], 
+#                                             economia2019.at[8, 'Value'], economia2019.at[13, 'Value'],
+#                                             economia2019.at[14, 'Value'], economia2019.at[12, 'Value'],
+#                                             economia2019.at[15, 'Value']])
+#         economia2019.at[22, 'Value'] = economia2019.at[17, 'Value']
+#         economia2019.at[24, 'Value'] = economia2019.at[22, 'Value'] * (economia2019.at[23, 'Value'] / 100)
+#         economia2019.at[25, 'Value'] = economia2019.at[24, 'Value'] * 0.15
+#         economia2019.at[26, 'Value'] = economia2019.at[24, 'Value'] - economia2019.at[25, 'Value']
+#         economia2019.at[27, 'Value'] = economia2019.at[20, 'Value'] * 0.5
+#         economia2019.at[28, 'Value'] = (economia2019.at[8, 'Value'] + economia2019.at[14, 'Value']) * 0.5
+#         if retirarMulta == True:
+#             economia2019.at[29, 'Value'] = economia2019.at[25, 'Value'] + (economia2019.at[25, 'Value'] * 0.2 * 0)
+#         else:
+#             economia2019.at[29, 'Value'] = economia2019.at[25, 'Value'] + (economia2019.at[25, 'Value'] * 0.2)
+#         if valorIRPJ == True:        
+#             economia2019.at[30, 'Value'] = economia2019.at[24, 'Value'] * 0.24
+#             economia2019.at[30,'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
+#         else:    
+#             economia2019.at[30, 'Value'] = economia2019.at[24, 'Value'] * 0.34
+#             economia2019.at[30,'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+#         economia2019.at[31, 'Value'] = economia2019.at[30, 'Value'] - economia2019.at[29, 'Value']
         
-        return economia2019
+#         return economia2019
+
+def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool, valorIRPJ: bool)-> pd.DataFrame:
+    #'''Função de callback para recalcular os valores apresentados e gerados para análise trimestral do JCP'''
+
+
+    
+    economia2019_copy = economia2019.copy() 
+    
+    economia2019_copy.at[14, f'Value'] = np.sum([economia2019_copy.at[1, f'Value'],economia2019_copy.at[2, f'Value'],economia2019_copy.at[3, f'Value'],
+                                                                economia2019_copy.at[4, f'Value'],economia2019_copy.at[5, f'Value'],
+                                                                economia2019_copy.at[6, f'Value'],economia2019_copy.at[7, f'Value'],economia2019_copy.at[8, f'Value'],
+                                                                economia2019_copy.at[9, f'Value'],economia2019_copy.at[11, f'Value'],
+                                                                economia2019_copy.at[12, f'Value']]) - economia2019_copy.at[10, f'Value']
+
+    #Calculando Total Para Fins de JSPC  -- 
+    economia2019_copy.at[15, f'Value'] = sum([economia2019_copy.at[1, f'Value'], economia2019_copy.at[2, f'Value'], 
+                                                        economia2019_copy.at[3, f'Value'], economia2019_copy.at[5, f'Value'],economia2019_copy.at[6, f'Value'],
+                                                        economia2019_copy.at[12, f'Value'],economia2019_copy.at[13, f'Value']])-economia2019_copy.at[10, f'Value']
+    
+    #Veriricação se o valor de JSCP e negativo para ser a conta caso positivo
+    if economia2019_copy.at[15, f'Value'] > 0:
+        economia2019_copy.at[16, f'Value'] = economia2019_copy.at[15, f'Value'] - economia2019_copy.at[0,f'Value']
+    else:
+        economia2019_copy.at[16, f'Value'] = 0.0
+    
+    if economia2019_copy.at[15, f'Value'] > 0:
+
+        #Calculando o Valor de JSCP(Valor da base multiplicado pela TJLP)
+        economia2019_copy.at[18, f'Value'] = economia2019_copy.at[16, f'Value'] * (economia2019_copy.at[17, f'Value'] / 100)
+        
+        #Valor do IRRF (Multiplica o valor de JSCP por 15%)
+        economia2019_copy.at[19, f'Value'] = economia2019_copy.at[18, f'Value'] * 0.15       
+        
+        # Valor de JSCP a apropriar pelo cliente( subtrair o valor de JSCP por pelo valor do IRRF )
+        economia2019_copy.at[20, f'Value'] = abs(economia2019_copy.at[18, f'Value'] - economia2019_copy.at[19, f'Value'])
+        
+        # 50% do lucro acumulado, se faz pelas somas da reserva de lucros, reserva legal e lucros acumulados subtrai prejuizo acumulado e divide pela metade
+        economia2019_copy.at[22, f'Value'] = ((economia2019_copy.at[5, f'Value'] + economia2019_copy.at[6, f'Value'] + economia2019_copy.at[12, f'Value']) - economia2019_copy.at[10, f'Value']) * 0.5
+        if retirarMulta == True:
+            #Calculo  do valor da DARF( Soma o valor de IRRF mas 20 % do mesmo, em cenarios em que nao se retira a multa)            
+            economia2019_copy.at[23, f'Value'] = economia2019_copy.at[19, f'Value'] + (economia2019_copy.at[19, f'Value'] * 0.2 * 0)
+        else:
+            economia2019_copy.at[23, f'Value'] = economia2019_copy.at[19, f'Value'] + (economia2019_copy.at[19, f'Value'] * 0.2)    
+        
+        if valorIRPJ == True:
+            # Valor da redução da multa( 24% ou 34% do valor de JSCP)
+            economia2019_copy.at[24, f'Value'] = economia2019_copy.at[18, f'Value'] * 0.24
+            economia2019_copy.at[24, f'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
+        else:
+            economia2019_copy.at[24, f'Value'] = economia2019_copy.at[18, f'Value'] * 0.34    
+            economia2019_copy.at[24, f'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+        # Valor de economia gerada( Subtrir a redução no IRPJ pelo valor de DARF)
+        economia2019_copy.at[25, f'Value'] = economia2019_copy.at[24, f'Value'] - economia2019_copy.at[23, f'Value']
+        
+        economia2019_copy[f'Value'] = round(economia2019_copy[f'Value'],2)
+    else:
+        economia2019_copy.at[18, f'Value'] = 0
+        economia2019_copy.at[19, f'Value'] = 0     
+        economia2019_copy.at[20, f'Value'] = 0
+        economia2019_copy.at[22, f'Value'] = 0
+                    
+        economia2019_copy.at[23, f'Value'] = 0
+        if valorIRPJ == True:
+            economia2019_copy.at[24, f'Value'] = 0
+            economia2019_copy.at[24, f'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
+        else:
+            economia2019_copy.at[24, f'Value'] = 0  
+            economia2019_copy.at[24, f'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+
+        economia2019_copy.at[25, f'Value'] = 0
+        economia2019_copy.at[21, f'Value'] = 0
+
+        economia2019_copy[f'Value'] = round(economia2019_copy[f'Value'],2)
+
+        
+    economia2019 = economia2019_copy
+
+    return economia2019
+
 
 def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorIRPJ: bool)-> pd.DataFrame:
     #'''Função de callback para recalcular os valores apresentados e gerados para análise trimestral do JCP'''
@@ -140,11 +218,11 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorI
 
             economia2019_copy[f'Value {i}º Trimestre'] = round(economia2019_copy[f'Value {i}º Trimestre'],2)
 
-       # economia2019_copy[f'Value {i}º Trimestre'] = economia2019_copy[f'Value {i}º Trimestre'].apply(lambda x: '{:,.2f}'.format(x).replace('.', 'X').replace(',', '.').replace('X', ','))
         
         economia2019 = economia2019_copy
 
     return economia2019
+
 
 def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframesParaDownload: pd.DataFrame, cnpj_selecionado:str,tabelaParaRelatorio:str):
 
@@ -156,33 +234,83 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
     session_cnpj_key = f'cnpj_selecionado_{anoDeAnalise}'
 
     if periodoDeAnalise:
-        st.write(ano)
+
+        st.write(ano) 
         session_state_name = f"economia{anoDeAnalise}"
-        # Callbacks para atualizaçãos das alterações quando usurio fizer inputs manuais ou alterar aliquotas
+        #Funções de callbacks para análise trimestral, lógica e igual a do anual , porém com o trimestral, a função de callback faz um loop para iterar sobre cada trimestre
         if session_state_name not in st.session_state or st.session_state.get(session_cnpj_key, None) != cnpj_selecionado:
             economia2019 = controler.queryResultadoFinal(cnpj_selecionado, "resultadosjcp", anoDeAnalise).iloc[:, [3,2,4]].set_index('index').sort_values(by='index')
             st.session_state[session_state_name] = economia2019
+        
         st.session_state[session_cnpj_key] = cnpj_selecionado
-        # A tabela foi armazenada dentro de um form para que nao tenha execução do codigo a cada iteração do usuario, 
+        
         with st.form(f"my_form{anoDeAnalise}{ano}"):
+
             multa = st.toggle('Retirar multa', key=f'{anoDeAnalise}')
             valorIRPJ = st.toggle('Alterar valor IRPJ de 34% para 24%',key=f'{anoDeAnalise}widgetMulta')
-            economia2019_data_editor = st.data_editor(st.session_state[session_state_name], key=f'{anoDeAnalise}deano', height=1175, use_container_width=True)
+
+            economia2019_data_editor = st.data_editor(st.session_state[session_state_name], key=f'{anoDeAnalise}deano', height=1000, use_container_width=True)
             submitted = st.form_submit_button(f"Atualizar {anoDeAnalise}")
 
         if submitted:
-            st.session_state[session_state_name] = reCalculandoAno(economia2019_data_editor, multa,valorIRPJ)
+            if 'form_submit' not in st.session_state or not st.session_state.form_submit:
+                st.session_state[session_state_name] = reCalculandoAno(economia2019_data_editor, multa,valorIRPJ)
+                st.session_state.form_submit = True
+            else:
+                st.session_state.form_submit = False
 
         if st.button('Atualizar Banco de Dados',key=f'{cnpj_selecionado,anoDeAnalise}'):
 
             controler.update_table('resultadosjcp', economia2019_data_editor, cnpj_selecionado, anoDeAnalise)    
         
+        #======== --- Tbaelas Lacs e Lalur Aós inovações
+
         with st.expander('Lacs Lalur'):
-            lacslalur.gerandoTabelas(cnpj_selecionado,anoDeAnalise)
+           lacslaurAno = lacslalur.gerandoTabelas(cnpj_selecionado,anoDeAnalise)
+           st.dataframe(lacslaurAno)
+
+        ## ---- Tabelas comparativas Lacs e Lalur antes e após inovações do período anual
+        
+        lacslalurOrignal = lacslalur.tabelaComparativaLacsLalurAno(cnpj_selecionado,anoDeAnalise).iloc[[15,36],[3,2]].reset_index(drop='index')
+   
+        aposInovacoesLacslalur = lacslaurAno.iloc[[11,32],:]
+        
+        tabelaComparativa = pd.concat([lacslalurOrignal,aposInovacoesLacslalur]).reset_index(drop='index')
+
+        tabelaComparativa.at[2,f'Operation'] = 'Subtotal CSLL  Após Inovações'
+        tabelaComparativa.at[3,f'Operation'] = 'Sub total IRPJ Após Inovações'
+        tabelaComparativa.at[4,f'Operation'] = ''
+        tabelaComparativa.at[5,f'Operation'] = 'Comparativo CSLL'
+        tabelaComparativa.at[6,f'Operation'] = 'Comparativo IRPJ'
+        tabelaComparativa.at[7,f'Operation'] = ''
+        tabelaComparativa.at[8,f'Operation'] = ''       
+        
+        
+        tabelaComparativa.at[5,'Value'] = tabelaComparativa.at[0,'Value'] - tabelaComparativa.at[2,'Value'] 
+        tabelaComparativa.at[6,'Value'] = tabelaComparativa.at[1,'Value'] - tabelaComparativa.at[3,'Value'] 
+        
+        totalCSLL = round(np.sum([tabelaComparativa.at[5,f'Value'],
+                            tabelaComparativa.at[5,f'Value'],
+                            tabelaComparativa.at[5,f'Value'],
+                            tabelaComparativa.at[5,f'Value']]),2)
+        totalIRPJ = round(np.sum([tabelaComparativa.at[6,f'Value'],
+                            tabelaComparativa.at[6,f'Value'],
+                            tabelaComparativa.at[6,f'Value'],
+                            tabelaComparativa.at[6,f'Value']]),2)
+        
+        with st.expander('Tabela Comparativa'):
+            totalCSLL_formatted = "{:,.2f}".format(totalCSLL)
+            totalIRPJ_formatted = "{:,.2f}".format(totalIRPJ)
+            tabelaComparativa = tabelaComparativa.reindex([0,2,4,5,8,1,3,7,6])
+            st.dataframe(tabelaComparativa,key=anoDeAnalise)
+            st.metric(label=f'Total CSLL {anoDeAnalise}: ', value=totalCSLL_formatted)
+            st.metric(label=f'Total IRPJ {anoDeAnalise}: ', value=totalIRPJ_formatted)
+
+    
         
         #Tabelas para gerar o relatorio fiscal
         tabelaRelatorio = economia2019_data_editor.copy()
-        tabelaRelatorio = tabelaRelatorio.iloc[30:,:].reset_index(drop='index')
+        tabelaRelatorio = tabelaRelatorio.iloc[24:,:].reset_index(drop='index')
         tabelaRelatorio = tabelaRelatorio.drop(columns='Operation')
         tabelaRelatorio.columns = [f"{col}_{anoDeAnalise}" for col in tabelaRelatorio.columns]
 
@@ -191,7 +319,10 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
         resultadoAnual.columns = [f"{col}_{anoDeAnalise}" for col in resultadoAnual.columns]
         resultadoAnual = resultadoAnual.drop([4,5,6,7,15,20]).reset_index(drop='index')
 
+
+
     else:
+        #Exibição e logica de callbacks tabela principal
         st.write(trimestre) 
         session_state_name = f"economia{anoDeAnalise}Trimestral"
         #Funções de callbacks para análise trimestral, lógica e igual a do anual , porém com o trimestral, a função de callback faz um loop para iterar sobre cada trimestre
@@ -220,9 +351,84 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
 
             controler.update_table_trimestral('resultadosjcptrimestral', economia2019Trimestral_data_editor, cnpj_selecionado, anoDeAnalise)    
         
+        #### ---- Lacs e Lalur após inovações editavel 
         with st.expander('Lacs Lalur'):
+            session_state_lacs = f"economia_{anoDeAnalise}_lacslalur"
+
+            st.session_state[session_cnpj_key] = cnpj_selecionado
+
+         
+            if session_state_lacs not in st.session_state or st.session_state.get(session_state_lacs) is None or not st.session_state[session_state_lacs].equals(lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise)):
+               
+                lacslalurTrimestral = lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise)
+                st.session_state[session_state_lacs] = lacslalurTrimestral
+
+            with st.form(f"{anoDeAnalise}__===__{trimestre}"):
+
+                lacslalurTrimestral_data_editor = st.data_editor(st.session_state[session_state_lacs], key=f'data_{anoDeAnalise}', height=800, use_container_width=True)
+    
+                submittedbutton1 = st.form_submit_button(f"Recalcular Tabela {anoDeAnalise}")
+
+
+            if submittedbutton1:
+
+                updated_lacslalur = lacslalur.LacsLalurAposInovacoesTrimestralCallback(lacslalurTrimestral_data_editor)
+
+                st.session_state[session_state_lacs] = updated_lacslalur
+                
+                lacslalurTrimestral = updated_lacslalur
+
+                st.write("Tabela recalculada com sucesso!")
+                st.dataframe(lacslalurTrimestral)
+
+        ####---- Tabela Comparativa Lacs e Lalur antes e apos Inovações 
+        lacslalurOrignal = lacslalur.tabelaComparativaLacsLalur(cnpj_selecionado,anoDeAnalise).iloc[[10,32],2:].reset_index(drop='index')
+
+        try:
+            aposInovacoesLacslalur = lacslalurTrimestral.iloc[[12,32],:]
+        except:
+            aposInovacoesLacslalur = lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise).iloc[[12,32],:]
+        
+        tabelaComparativa = pd.concat([lacslalurOrignal,aposInovacoesLacslalur]).reset_index(drop='index')
+        
+
+        tabelaComparativa.at[2,f'Operation 1º Trimestre'] = 'Subtotal CSLL  Após Inovações'
+        tabelaComparativa.at[3,f'Operation 1º Trimestre'] = 'Sub total IRPJ Após Inovações'
+        tabelaComparativa.at[4,f'Operation 1º Trimestre'] = ''
+        tabelaComparativa.at[5,f'Operation 1º Trimestre'] = 'Comparativo CSLL'
+        tabelaComparativa.at[6,f'Operation 1º Trimestre'] = 'Comparativo IRPJ'
+        tabelaComparativa.at[7,f'Operation 1º Trimestre'] = ''
+        tabelaComparativa.at[8,f'Operation 1º Trimestre'] = ''
+        tabelaComparativa.drop(columns=['Operation 2º Trimestre','Operation 3º Trimestre','Operation 4º Trimestre'],inplace=True)
             
-            lacslalur.gerandoTabelasTrimestral(cnpj_selecionado,anoDeAnalise)
+        
+        for i in [1,2,3,4]:
+            tabelaComparativa.at[5,f'Value {i}º Trimestre'] = tabelaComparativa.at[0,f'Value {i}º Trimestre'] - tabelaComparativa.at[2,f'Value {i}º Trimestre'] 
+            tabelaComparativa.at[6,f'Value {i}º Trimestre'] = tabelaComparativa.at[1,f'Value {i}º Trimestre'] - tabelaComparativa.at[3,f'Value {i}º Trimestre'] 
+        
+        totalCSLL = round(np.sum([tabelaComparativa.at[5,f'Value 1º Trimestre'],
+                            tabelaComparativa.at[5,f'Value 2º Trimestre'],
+                            tabelaComparativa.at[5,f'Value 3º Trimestre'],
+                            tabelaComparativa.at[5,f'Value 4º Trimestre']]),2)
+        totalIRPJ = round(np.sum([tabelaComparativa.at[6,f'Value 1º Trimestre'],
+                            tabelaComparativa.at[6,f'Value 2º Trimestre'],
+                            tabelaComparativa.at[6,f'Value 3º Trimestre'],
+                            tabelaComparativa.at[6,f'Value 4º Trimestre']]),2)
+        
+        with st.expander('Tabela Comparativa'):
+            totalCSLL_formatted = "{:,.2f}".format(totalCSLL)
+            totalIRPJ_formatted = "{:,.2f}".format(totalIRPJ)
+            tabelaComparativa = tabelaComparativa.reindex([0,2,4,5,8,1,3,7,6])
+            st.dataframe(tabelaComparativa)
+            st.metric(label=f'Total CSLL {anoDeAnalise}: ', value=totalCSLL_formatted)
+            st.metric(label=f'Total IRPJ {anoDeAnalise}: ', value=totalIRPJ_formatted)
+
+
+
+
+
+
+
 
         tabelaRelatorioTri = economia2019Trimestral_data_editor.copy()
         tabelaRelatorioTri = tabelaRelatorioTri.iloc[24:,[0,1,3,5,7]].reset_index(drop='index')
@@ -243,7 +449,6 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
     else:
          dataframesParaDownload.append(resultaTrimestral)
          tabelaParaRelatorio.append(tabelaRelatorioTri) 
-
 
 if __name__=='__main__':
 
@@ -303,9 +508,8 @@ if __name__=='__main__':
 
             criandoVisualizacao(trimestre,ano,2023,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
+       
 
-
-    
         arquivoParaDownload = pd.concat(dataframesParaDownload,axis=1)
 
         output8 = io.BytesIO()
@@ -322,7 +526,9 @@ if __name__=='__main__':
         colunas = ['2019','2020','2021','2022','2023']
         
         try:
+        
             dataframeParaRelatorio = pd.concat(tabelaParaRelatorio,axis=1,ignore_index=True).rename(columns={0:'',1:'2019',2:'2020',3:'2021',4:'2022',5:'2023'})
+            
             for i in colunas:
                 dataframeParaRelatorio[i] = dataframeParaRelatorio[i].apply(lambda x: f"{float(x):,.2f}" if pd.notnull(x) else x).str.replace('.', '_').str.replace(',', '.').str.replace('_', ',')
 
@@ -336,9 +542,7 @@ if __name__=='__main__':
             for i in colunas:
                 dataframeParaRelatorio[i] = dataframeParaRelatorio[i].apply(lambda x: f"{float(x):,.2f}" if pd.notnull(x) else x).str.replace('.', '_').str.replace(',', '.').str.replace('_', ',')
 
-
-           
-
+            
         with col1: 
             st.write('')
             st.write('')
@@ -351,7 +555,6 @@ if __name__=='__main__':
             pdf = RelatorioPDFJSCP()
             
             pdf.valorTotal(dataframeParaRelatorio)
-            st.dataframe(dataframeParaRelatorio)
             pdf_buffer = pdf.create_pdf(nomeEmpresaSelecionada, aliquotaImposto, observacoesDoAnlista, dataAssinatura)          
 
             st.download_button(label="Baixar relatório",data=pdf_buffer,file_name="relatório.pdf",mime="application/pdf")
@@ -386,7 +589,7 @@ if __name__=='__main__':
             # except Exception as e:
             #     st.write(e)
 
-
+    controler.engine.dispose()
 
 
 finish_time = time.time()

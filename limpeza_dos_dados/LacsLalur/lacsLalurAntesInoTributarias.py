@@ -196,7 +196,7 @@ class LacsLalurCSLL():
         self.lucroAntIRPJ = np.sum(lalur['Vlr Lançamento e-Lalur'].values)
 
         self.results = pd.concat([self.results, pd.DataFrame([{"Ano":self.data,"CNPJ":self.cnpj,"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
-        self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Ano":self.data,"CNPJ":self.cnpj,"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
+        #self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"Ano":self.data,"CNPJ":self.cnpj,"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
         self.LacsLalurAposInovacoes = pd.concat([self.LacsLalurAposInovacoes, pd.DataFrame([{"Ano":self.data,"CNPJ":self.cnpj,"Operation": "Lucro antes IRPJ", "Value": self.lucroAntIRPJ}])], ignore_index=True)
 
     

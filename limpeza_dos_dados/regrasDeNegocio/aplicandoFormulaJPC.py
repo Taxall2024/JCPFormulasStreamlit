@@ -14,98 +14,10 @@ from baseJPC.trimestralTramentoECalculos import trimestralFiltrandoDadosParaCalc
 from arquivosSPED.pipeArquivosECF import SpedProcessor
 from regrasDeNegocio.calculosAnual import Calculo
 from db.controllerDB import dbController
-
+from LacsLalur.AposInovacoesLacsLalur import LacsLalurAposInovacoes
 
 
 controler = dbController('taxall')
-
-def LacsLalurAposInovacoes(dataframe):
-            lacsLalurAposInovacoesDF = pd.DataFrame(dataframe)
-            ganbiarraParaPegarPrejuizoIRPJ = lacsLalurAposInovacoesDF.loc[12].to_frame().T
-            lacsLalurAposInovacoesDF = lacsLalurAposInovacoesDF.drop([8,9,10,11,12,13,19,24]).reset_index(drop='index').iloc[[2,1,0,7,3,4,6,8,9,10,11,
-                                                                                                    12,5,15,16,18,19,20,21,22,
-                                                                                                    23,24,25,26,27,28,29],:].reset_index(drop='index')
-            #Calculo das exclusoes, (Adicionando valor de JCP)
-            lacsLalurAposInovacoesDF.at[2,'Value'] = lacsLalurAposInovacoesDF.at[2,'Value'] + lacsLalurAposInovacoesDF.at[3,'Value']
-            #Calculo da base CSLL
-            lacsLalurAposInovacoesDF.at[4,'Value'] = (lacsLalurAposInovacoesDF.at[0,'Value'] + lacsLalurAposInovacoesDF.at[1,'Value']) - lacsLalurAposInovacoesDF.at[2,'Value']
-            #Calclulo da Base de Calculo CSLL
-            lacsLalurAposInovacoesDF.at[6,'Value'] = lacsLalurAposInovacoesDF.at[4,'Value'] + lacsLalurAposInovacoesDF.at[5,'Value']
-            #Calclulo do valor  CSLL
-            if lacsLalurAposInovacoesDF.at[6,'Value'] > 0 :
-                lacsLalurAposInovacoesDF.at[7,'Value'] = lacsLalurAposInovacoesDF.at[6,'Value'] * 0.09
-            else:
-                0    
-            #Calculando Subtotal CSLL Recolher
-            lacsLalurAposInovacoesDF.at[11,'Value'] = lacsLalurAposInovacoesDF.at[7,'Value'] - lacsLalurAposInovacoesDF.at[8,'Value'] - lacsLalurAposInovacoesDF.at[9,'Value'] - lacsLalurAposInovacoesDF.at[10,'Value']                
-            #Calculo Base IRPJ
-            lacsLalurAposInovacoesDF.at[12,'Value'] = lacsLalurAposInovacoesDF.at[0,'Value'] - lacsLalurAposInovacoesDF.at[7,'Value']
-
-            #Calculo Base de Calculo IRPJ
-            lacsLalurAposInovacoesDF.at[27,'Value'] = lacsLalurAposInovacoesDF.at[12,'Value'] + lacsLalurAposInovacoesDF.at[13,'Value'] -lacsLalurAposInovacoesDF.at[2,'Value']
-            lacsLalurAposInovacoesDF.at[27,'Operation'] = 'Base de calculo IRPJ'
-            #Calculo Lucro Real IRPJ
-            #lacsLalurAposInovacoesDF = pd.concat([lacsLalurAposInovacoesDF ,ganbiarraParaPegarPrejuizoIRPJ],ignore_index=True).reset_index(drop='index')
-            lacsLalurAposInovacoesDF.at[15,'Value'] = lacsLalurAposInovacoesDF.at[4,'Value'] #- lacsLalurAposInovacoesDF.at[28,'Value']
-            #Calculo valor do IRPJ
-            #lacsLalurAposInovacoesDF.at[16,'Value'] = lacsLalurAposInovacoesDF.at[15,'Value'] * 0.15
-            lacsLalurAposInovacoesDF.at[16,'Value'] = np.where(lacsLalurAposInovacoesDF.at[15,'Value']>0,
-                                                                lacsLalurAposInovacoesDF.at[15,'Value'] * 0.15,0)
-            
-
-            #Calculo valor do IRPJ Adicional
-            lacsLalurAposInovacoesDF.at[17,'Value'] = np.where(lacsLalurAposInovacoesDF.at[15,'Value']< 240000,
-                                                                (lacsLalurAposInovacoesDF.at[15,'Value'] - 240000)*0.1,0)
-
-            #Calculo Total Devido IRPJ
-            lacsLalurAposInovacoesDF.at[18,'Value'] = lacsLalurAposInovacoesDF.at[16,'Value'] + lacsLalurAposInovacoesDF.at[17,'Value']
-            #Calculo PAT
-            lacsLalurAposInovacoesDF.at[19,'Value'] = lacsLalurAposInovacoesDF.at[16,'Value'] * 0.04
-            #Sub total IRPJ a recolher
-            lacsLalurAposInovacoesDF.at[28,'Value'] = (lacsLalurAposInovacoesDF.at[18,'Value']-
-                                                            lacsLalurAposInovacoesDF.at[19,'Value']-
-                                                            lacsLalurAposInovacoesDF.at[20,'Value']-
-                                                            lacsLalurAposInovacoesDF.at[21,'Value']-
-                                                                lacsLalurAposInovacoesDF.at[22,'Value']-
-                                                                lacsLalurAposInovacoesDF.at[23,'Value']-
-                                                                lacsLalurAposInovacoesDF.at[24,'Value']-
-                                                                    lacsLalurAposInovacoesDF.at[25,'Value']-
-                                                                    lacsLalurAposInovacoesDF.at[26,'Value'])
-            lacsLalurAposInovacoesDF.at[28,'Operation'] = 'Sub total IRPJ a Recolher'                                                  
-            return lacsLalurAposInovacoesDF                      
-
-def LacsLalurAposInovacoesTrimestral(dataframe,resultJSCP):
-    df = pd.concat([dataframe,resultJSCP]).reset_index(drop='index')
-    df = df.iloc[[1,2,3,34,4,5,6,7,9,10,11,12,15,13,14,18,19,20,
-                    21,22,23,24,25,26,27,28,29,30,31,32,33,],:]
-    #Calculo exclusoes
-    df.at[3,'Value'] = df.at[3,'Value'] + df.at[34,'Value'] 
-    #Calculo Base 
-    df.at[4,'Value'] = df.at[2,'Value'] + df.at[1,'Value'] - df.at[3,'Value'] + df.at[1,'Value']
-    #Calculo base CSLL
-    df.at[6,'Value'] = df.at[4,'Value'] - df.at[5,'Value'] 
-    #Valor CSLL
-    df.at[7,'Value'] = np.where(df.at[6,'Value']>0,df.at[6,'Value']*0.09,0) 
-    #Valor Sub total CSLL a Recolher
-    df.at[11,'Value'] = df.at[7,'Value'] - df.at[9,'Value'] 
-    #Valor Sub total Base IRPJ
-    df.at[19,'Value'] = (df.at[13,'Value'] + df.at[14,'Value']+df.at[12,'Value']) - df.at[3,'Value']
-    #Calculando Lucro Real
-    df.at[21,'Value'] = df.at[19,'Value'] - df.at[20,'Value']
-    #Valor IRPJ
-    df.at[22,'Value'] = np.where(df.at[21,'Value']>0,df.at[21,'Value']*0.15,0) 
-    #Valor IRPJ Adicionais
-    df.at[23,'Value'] = np.where(df.at[21,'Value']>60000,(df.at[21,'Value']-60000)*0.10,0) 
-    #Total devido IRPJ antes retenções
-    df.at[24,'Value'] = df.at[22,'Value'] + df.at[23,'Value'] 
-    #Total devido IRPJ antes retenções
-    df.at[33,'Value'] = df.at[24,'Value'] - (df.at[25,'Value'] - df.at[26,'Value'] - df.at[27,'Value']
-                                                -df.at[28,'Value'] - df.at[29,'Value']-df.at[30,'Value'] -
-                                                    df.at[31,'Value']-df.at[32,'Value'])  
-    df = df.reset_index(drop='index')
-    df['Value'] =  df['Value'].apply(lambda x: "{:,.2f}".format(x).replace(',','_').replace('.',',').replace('_','.'))
-
-    return df
 
 
 class CalculosEProcessamentoDosDados():                    
@@ -274,8 +186,6 @@ class CalculosEProcessamentoDosDados():
         jcp2022 = pd.concat([calculosIniciais_2022,tabelaFinal_2022,resultadoTotal_2022],axis=0).reset_index(drop='index').reset_index()
         jcp2023 = pd.concat([calculosIniciais_2023,tabelaFinal_2023,resultadoTotal_2023],axis=0).reset_index(drop='index').reset_index()
 
-
-
         jcp2019['Value'] = jcp2019['Value'].astype(float)
         jcp2020['Value'] = jcp2020['Value'].astype(float)
         jcp2021['Value'] = jcp2021['Value'].astype(float)
@@ -401,7 +311,6 @@ class CalculosEProcessamentoDosDados():
                         lacs.LacsLalurTrimestral.trimestralLacsLalurAposInovacoesFn()
                         
                         df = lacs.LacsLalurTrimestral.triLacsLalurFinal
-                        df = LacsLalurAposInovacoesTrimestral(df,resultJSCP)
 
 
 
@@ -477,13 +386,7 @@ class CalculosEProcessamentoDosDados():
             tabelaFinalLacsLalur['Value 3º Trimestre'] = round(tabelaFinalLacsLalur['Value 3º Trimestre'].astype(float),2)
             tabelaFinalLacsLalur['Value 4º Trimestre'] = round(tabelaFinalLacsLalur['Value 4º Trimestre'].astype(float),2)
             controler.inserirTabelasFinaisJCP('lacslalurtrimestral',tabelaFinalLacsLalur)
-
-            tabelaFinalLacsLalurUnificad.append(tabelaFinalLacsLalur.add_suffix(ano))
+      
     
-                
-        arquivoFinalParaExportacaoTriLacs = pd.concat(tabelaFinalLacsLalurUnificad,axis=1)    
-          
-                
-
 
       

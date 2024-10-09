@@ -10,8 +10,8 @@ import os
 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from db.controllerDB import dbController
-controler = dbController('ECF')
+#from db.controllerDB import dbController
+#controler = dbController('taxall')
 class SpedProcessor:
    
     def __init__(self, file_paths):
@@ -35,7 +35,16 @@ class SpedProcessor:
                     data.append(valores)
 
         df = pd.DataFrame(data).iloc[:, :13]
+        self.verificacaoTrimestralOuAnual = bool(None)
+        
+        if (df.iloc[2,5] == 'A')|(df.iloc[2,4] == 'A'):
+            self.verificacaoTrimestralOuAnual = True
+
+        elif( df.iloc[2,5] == 'T')|( df.iloc[2,4] == 'T'):
+            self.verificacaoTrimestralOuAnual = False        
+
         df['Data Inicial'] = df.iloc[0, 9]
+        df['Data Final'] = df.iloc[0, 10]
         df['Data Final'] = df.iloc[0, 10]
         df['Ano'] = df['Data Inicial'].astype(str).str[4:]
         df['CNPJ'] = df.iloc[0, 3]
@@ -44,7 +53,20 @@ class SpedProcessor:
         df['Data Inicial'] = pd.to_datetime(df['Data Inicial'], format='%d%m%Y').dt.strftime("%Y-%m-%d")
         df['Data Final'] = pd.to_datetime(df['Data Final'], format='%d%m%Y').dt.strftime("%Y-%m-%d")
 
-        return df
+        if self.verificacaoTrimestralOuAnual == True:
+
+            start_idx = df[df.iloc[:, 0].str.startswith('L030') & df.iloc[:, 3].str.endswith('A00')].index[0]
+            end_idx = df[df.iloc[:, 0].str.startswith('N030') & df.iloc[:, 3].str.endswith('A01')].index[0]
+            
+            df1 = df.loc[start_idx:end_idx].reset_index(drop='index')
+
+        elif self.verificacaoTrimestralOuAnual == False:
+            start_idx = df[df.iloc[:, 0].str.startswith('L030') & df.iloc[:, 3].str.endswith('T01')].index[0]
+            end_idx = df[df.iloc[:, 0].str.startswith('N990')].index[0]
+            
+            df1 = df.loc[start_idx:end_idx].reset_index(drop='index')
+
+        return df1
     
     def pegandoInfosDaEmpresa(self, file_path):
         data = []
@@ -86,19 +108,10 @@ class SpedProcessor:
         data_index = 0
 
         perido_apuracao = [
-                'A01 – Balanço de Suspensão e Redução até Janeiro',
-                'A02 – Balanço de Suspensão e Redução até Fevereiro',
-                'A03 – Balanço de Suspensão e Redução até Março',
-                'A04 – Balanço de Suspensão e Redução até Abril',
-                'A05 – Balanço de Suspensão e Redução até Maio',
-                'A06 – Balanço de Suspensão e Redução até Junho',
-                'A07 – Balanço de Suspensão e Redução até Julho',
-                'A08 – Balanço de Suspensão e Redução até Agosto',
-                'A09 – Balanço de Suspensão e Redução até Setembro',
-                'A10 – Balanço de Suspensão e Redução até Outubro',
-                'A11 – Balanço de Suspensão e Redução até Novembro',
-                'A12 – Balanço de Suspensão e Redução até Dezembro',
-                'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual']
+                'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual',
+                'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual',
+                'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual',
+                'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual',]
         
         trimestres = ['T01 – 1º Trimestre',
                     'T02 – 2º Trimestre',
@@ -113,12 +126,16 @@ class SpedProcessor:
                     bloco_iniciado = True
 
                 if data_index < len(perido_apuracao):
-                    arquivo.loc[i:, 'Período Apuração'] = perido_apuracao[data_index]
+                    try:
+                        arquivo.loc[i:, 'Período Apuração'] = perido_apuracao[data_index]
+                    except:
+                        pass
                     try:
                         arquivo.loc[i:, 'Período Apuração Trimestral'] = trimestres[data_index] 
                     except:
                         pass
         return arquivo
+
 
     @functools.cache
     def gerandoArquivosECF(self, caminho):
@@ -126,7 +143,6 @@ class SpedProcessor:
 
         df_sped_l100 = df_sped[(df_sped[0] == 'L100') | (df_sped[0] == 'N030')].reset_index(drop=True)
         df_sped_l100 = self.classificaPeriodoDeApuracao(df_sped_l100, 'ATIVO')
-
 
         df_sped_l300 = df_sped[df_sped[0] == 'L300'].reset_index(drop=True)
         df_sped_l300 = self.classificaPeriodoDeApuracao(df_sped_l300, 'RESULTADO LÍQUIDO DO PERÍODO')
@@ -144,6 +160,7 @@ class SpedProcessor:
         df_sped_n670['Período Apuração'] = 'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual'
 
         return df_sped_l100, df_sped_l300, df_sped_m300, df_sped_m350, df_sped_n630, df_sped_n670
+    
     gc.collect()
 
     def processar_arquivos(self):
@@ -266,12 +283,12 @@ if __name__=='__main__':
             st.data_editor(arquivoProcessado) 
 
 
-    #         sped_processor.processar_arquivos()
-    #         dfs_concatenados = sped_processor.concatenar_dfs()
-    #         L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
+            sped_processor.processar_arquivos()
+            dfs_concatenados = sped_processor.concatenar_dfs()
+            L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
 
-    # st.subheader('L100')
-    # st.data_editor(L100_final)
+    st.subheader('L100')
+    st.data_editor(L100_final)
     
     # controler.inserirTabelas('l100',L100_final)
     # controler.inserirTabelas('l300',L300_final)

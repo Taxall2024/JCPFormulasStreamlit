@@ -7,13 +7,26 @@ import time
 import functools
 from psycopg2 import pool
 from sqlalchemy import create_engine
+import threading
 
 
+import psycopg2
+from psycopg2 import sql
+class ConnectionMonitor(threading.Thread):
+    def __init__(self, engine, connection_limit):
+        super().__init__()
+        self.engine = engine
+        self.connection_limit = connection_limit
+        self.pool = engine.pool
+    
+    def run(self):
+        while True:
+            if isinstance(self.pool, QueuePool):
+                if self.pool.checkedout() >= self.connection_limit:
+                    self.engine.dispose()
+                    print("Conexões fechadas devido ao limite de conexões atingido.")
+            time.sleep(1)
 
-header = {
-    "autorization":  st.secrets["general"]["auth_token"],
-    "content-type":"application/json"
-}
 
 MAX_RETRIES = 5
 
@@ -23,19 +36,27 @@ class dbController():
     
     def __init__(self,banco):
         
-        # self.engine = create_engine(f'postgresql+psycopg2://{st.secrets["general"]["auth_token"]}/ECF', 
-        #                connect_args={'options': '-c datestyle=iso,mdy'})
-        
         username = st.secrets["apiAWS"]["username"]
         password = st.secrets["apiAWS"]["password"]
         host = st.secrets["apiAWS"]["host"]
         port = st.secrets["apiAWS"]["port"]
-        try:
-            self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/taxall',pool_size=10,max_overflow=10,)
-            self.conn = self.engine.connect()
-        finally:
-            ''#self.engine.dispose()
-            #self.conn.close()
+        dblocalCon = st.secrets['general']['auth_token']
+        #self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp',                                  
+
+        self.engine = create_engine(f'postgresql+psycopg2://{dblocalCon}/ECF', 
+                           pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)
+        
+        self.conn = self.engine.connect()
+
+        #self.closeCons()
+
+
+    def closeCons(self):
+ 
+        self.engine.dispose()
+        self.conn.close()
+        print("Conexões fechadas devido ao limite de conexões atingido.")
+
 
     def inserirTabelas(self, tabela, df):
 
@@ -75,17 +96,14 @@ class dbController():
         if self.retry_count == MAX_RETRIES:
 
             raise Exception("Failed to execute query after {} retries".format(MAX_RETRIES))
-
+        self.closeCons()
 
     def get_data_by_cnpj(self, cnpj,tabela):
         query = f"SELECT * FROM {tabela} WHERE \"CNPJ\" = '{cnpj}'"
         with self.engine.connect():
-            try:
-                df = pd.read_sql_query(query, self.engine)
-            finally:
-               '' #self.engine.dispose()    
-
-        
+            
+            df = pd.read_sql_query(query, self.engine)  
+        self.closeCons()
         return df
 
     @functools.cache
@@ -96,11 +114,9 @@ class dbController():
             WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' AND "Operation" = '{operation}'
         """
         with self.engine.connect():
-            try:
-                df = pd.read_sql_query(query, self.engine)
-            finally:
-                self.engine.dispose()
-     
+            
+            df = pd.read_sql_query(query, self.engine)
+            self.closeCons()
         return df
 
     @functools.cache
@@ -119,12 +135,10 @@ class dbController():
             AND "Operation 4º Trimestre" = '{operation}'  """
         
         with self.engine.connect():
-            try:
-                df = pd.read_sql_query(query, self.engine)
-            finally:
-                self.engine.dispose()    
+            
+            df = pd.read_sql_query(query, self.engine) 
 
-       
+        self.closeCons()
         return df
     
     def deletarDadosDaTabela(self,tabela):
@@ -144,12 +158,10 @@ class dbController():
 
     def get_all_data(self,tabela):
         query = f"SELECT * FROM {tabela}"
-        try:
-            with self.engine.connect():
+        
+        with self.engine.connect():
                 df = pd.read_sql_query(query, self.engine)
-        finally:
-            ''#self.engine.dispose()
-      
+        self.closeCons()
         return df
 
     @functools.cache
@@ -164,13 +176,13 @@ class dbController():
         FROM {tabela}
         WHERE \"CNPJ\" = '{cnpj}' AND \"Ano\" = '{ano}'"""
         with self.engine.connect():
+            
             try:
-                try:
-                    df = pd.read_sql_query(query, self.engine)
-                except:
-                    df = pd.read_sql_query(query2, self.engine)
-            finally:
-                self.engine.dispose()
+                df = pd.read_sql_query(query, self.engine)
+            except:
+                df = pd.read_sql_query(query2, self.engine)
+
+        self.closeCons()        
         return df
 
     @functools.cache
@@ -188,17 +200,18 @@ class dbController():
             WHERE "CNPJ" = '{cnpj}' AND "Ano" = '{ano}' """
 
         with self.engine.connect(): 
-            try:   
-                try:
-                    df = pd.read_sql_query(query, self.engine)
-                except:
-                    df = pd.read_sql_query(query2, self.engine)
-            finally:
-                self.engine.dispose()
-      
+        
+            try:
+                df = pd.read_sql_query(query, self.engine)
+            except:
+                df = pd.read_sql_query(query2, self.engine)
+        self.closeCons()
         return df
     
     def inserirTabelasFinaisJCP(self, tabela, df):
+
+        self.engine
+        self.conn = self.engine.connect()
         verificacaoAno = int(df.iloc[0]['Ano'])
         verificacaoCNPJ = df.iloc[0]['CNPJ']
 
@@ -212,11 +225,11 @@ class dbController():
             st.warning(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} já existem na tabela {tabela}. Não inserindo dados.")
         else:
             with self.engine.connect():
-                try:
-                    df.to_sql(tabela, self.engine, if_exists='append', index=False)
-                    st.success(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} inserido com sucesso no banco ECF!")
-                finally:
-                   '' #self.engine.dispose()
+                
+                df.to_sql(tabela, self.engine, if_exists='append', index=False)
+                st.success(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} inserido com sucesso no banco ECF!")
+            
+        self.closeCons()
 
     def update_table(self, tabela, df, cnpj, ano):
         operations = df['Operation'].unique()
@@ -235,8 +248,8 @@ class dbController():
             except Exception as e:
                 # Se ocorrer um erro, a transação será revertida automaticamente
                 st.warning(f'Não foi possível atualizar os valores para {operation} por {e}')
-            finally:
-                ''#self.conn.close()
+
+        self.closeCons()
 
     def update_table_trimestral(self, tabela, df, cnpj, ano):
         operations = [op for trimestre in [1,2,3,4] for op in df[f'Operation {trimestre}º Trimestre'].unique()]
@@ -258,61 +271,39 @@ class dbController():
             except Exception as e:
                 # Se ocorrer um erro, a transação será revertida automaticamente
                 st.warning(f'Não foi possível atualizar os valores para {operation} por {e}')
+        self.closeCons()
 
-            finally:
-                self.conn.close()
+
 
 
 if __name__ =="__main__":
+    ''
     
-    controler = dbController('taxall')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','l100')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','l300')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','m300')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','m350')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','n630')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','n670')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','resultadosjcp')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','resultadosjcptrimestral')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','tipodaanalise')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','cadastrodasempresas')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','lacslalur')
-    # controler.deletarDadosDaTabelaPorCnpj('07608821000154','lacslalurtrimestral')
+    #controler = dbController('taxall')
 
-    controler.deletarDadosDaTabela('l100')
-    controler.deletarDadosDaTabela('l300')
-    controler.deletarDadosDaTabela('m300')
-    controler.deletarDadosDaTabela('m350')
-    controler.deletarDadosDaTabela('n630')
-    controler.deletarDadosDaTabela('n670')
-    controler.deletarDadosDaTabela('resultadosjcp')
-    controler.deletarDadosDaTabela('resultadosjcptrimestral')
-    controler.deletarDadosDaTabela('tipodaanalise')
-    controler.deletarDadosDaTabela('cadastrodasempresas')
-    controler.deletarDadosDaTabela('lacslalur')
-    controler.deletarDadosDaTabela('lacslalurtrimestral')
-
-    # l100Teste = controler.get_data_by_cnpj("14576552000157","m350")
-    # st.data_editor(l100Teste)
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','l100')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','l300')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','m300')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','m350')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','n630')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','n670')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','resultadosjcp')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','resultadosjcptrimestral')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','tipodaanalise')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','cadastrodasempresas')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','lacslalur')
+    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','lacslalurtrimestral')
 
 
-#     df = pd.DataFrame({
-#     'CNPJ': [12345678000195, 98765432000167],
-#     'Data Inicial': ['2023-01-01', '2023-01-01'],
-#     'Data Final': ['2023-12-31', '2023-12-31'],
-#     'Ano': [2023, 2023],
-#     'Período Apuração': ['Anual', 'Anual'],
-#     'Período Apuração Trimestral': ['Q1', 'Q2'],
-#     'Conta Referencial': ['111', '222'],
-#     'Conta Superior': ['110', '220'],
-#     'Descrição Conta Referencial': ['Caixa', 'Banco'],
-#     'Natureza Conta': ['Ativo', 'Ativo'],
-#     'Tipo Conta': ['Sintética', 'Sintética'],
-#     'Nível Conta': [1, 1],
-#     'Vlr Saldo Final': [50000.00, 75000.00],
-#     'D/C Saldo Final': ['D', 'C']
-# })
-
-#     controler.inserirTabelas('l100',df)
-
-
+    # controler.deletarDadosDaTabela('l100')
+    # controler.deletarDadosDaTabela('l300')
+    # controler.deletarDadosDaTabela('m300')
+    # controler.deletarDadosDaTabela('m350')
+    # controler.deletarDadosDaTabela('n630')
+    # controler.deletarDadosDaTabela('n670')
+    # controler.deletarDadosDaTabela('resultadosjcp')
+    # controler.deletarDadosDaTabela('resultadosjcptrimestral')
+    # controler.deletarDadosDaTabela('tipodaanalise')
+    # controler.deletarDadosDaTabela('cadastrodasempresas')
+    # controler.deletarDadosDaTabela('lacslalur')
+    # controler.deletarDadosDaTabela('lacslalurtrimestral')

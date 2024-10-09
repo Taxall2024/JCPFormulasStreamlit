@@ -5,6 +5,10 @@ import openpyxl as op
 import functools
 import gc
 
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from LacsLalur.lacsLalurAntesInoTributarias import LacsLalurCSLL
 
 
@@ -50,7 +54,27 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     def set_date(self, data):
         self.data = data         
  
- 
+    def ajustesDeCalculo(self):
+        
+        self.ajustesCalculo = int(0) 
+
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Ajustes de Calculos", "Value": self.ajustesCalculo}])], ignore_index=True)
+
+    def patrimonioLiquido(self):
+
+
+        if self.verificandoPreju == True:
+
+            self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.prejuizoPeirod,self.acosTesouraria,
+            self.lucroAcumulado,self.ajustExercAnt])-(self.prejuAcumulado + self.prejuizoPeirod)
+        else:
+            self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.prejuizoPeirod,self.acosTesouraria,
+            self.lucroAcumulado,self.ajustExercAnt, self.prejuizoPeirod]) - self.prejuAcumulado 
+
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Patrimônio líquido", "Value": self.patrimonioliquido}])], ignore_index=True)
+
     def capitalSocial(self):
         l100 = self.l100
         l100 = l100[(l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&(
@@ -115,16 +139,23 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
 
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
-        self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
+        #self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Lucros Acumulados", "Value": self.lucroAcumulado}])], ignore_index=True)
       
     
     def ajustesExerAnteriores(self):
+
         l100 = self.l100
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.10')&
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
         self.ajustExercAnt = np.sum(l100['Vlr Saldo Final'].values)
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Exercícios Anteriores", "Value": self.ajustExercAnt}])], ignore_index=True)
+
+        if (l100['D/C Saldo Final'] == 'C').any():
+            self.ajustExercAnt = self.ajustExercAnt
+        else:
+            self.ajustExercAnt = self.ajustExercAnt * -1  
+
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Ajustes Exercícios Anteriores", "Value": self.ajustExercAnt}])], ignore_index=True)
 
         
     def lucroPeriodo(self):
@@ -135,12 +166,16 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.lucro_periodo_value = np.sum(l100['Vlr Saldo Final'].values)
         
         if (l100['D/C Saldo Final'] == 'C').any():
+            
+            self.verificandoPreju = False
             lucroPrejuizo = 'Lucro do Período'
         else:
+            
+            self.verificandoPreju = True
             lucroPrejuizo = 'Prejuízo do Período' 
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": f"{lucroPrejuizo}", "Value": self.lucro_periodo_value}])], ignore_index=True)
-        self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": f"{lucroPrejuizo}", "Value": self.lucro_periodo_value}])], ignore_index=True)
+        #self.resultsTabelaFinal = pd.concat([self.resultsTabelaFinal, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": f"{lucroPrejuizo}", "Value": self.lucro_periodo_value}])], ignore_index=True)
 
 
     def TotalFinsCalcJSPC(self):
@@ -173,23 +208,18 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
 
         self.outrasResLuc = 0.0
 
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Outras Reservas de Lucros", "Value": self.outrasResLuc}])], ignore_index=True)
-    
 
     def ResultadoDoExercicio(self):
 
         self.resultExercicio = 0.0
 
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Resultado do Exercício", "Value": self.resultExercicio}])], ignore_index=True)
-
+ 
     def lucroPrejuAcumulado(self):
-
 
 
         self.lucroPrejAcumu = 0.0
 
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Lucros/Prejuízos acumulados", "Value": self.lucroPrejAcumu}])], ignore_index=True)
-
+  
     def ReservasLucros(self):
         self.reservLucro = self.reservLegal + self.outrasResLuc
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Reservas de Lucros", "Value": self.reservLucro}])], ignore_index=True)
@@ -216,11 +246,9 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     
     def PrejuizoPeriodo(self):
 
-  
-
         self.prejuizoPeirod = 0.0
 
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Prejuízo do Período", "Value": self.prejuizoPeirod}])], ignore_index=True)
+        
         
     
   
@@ -253,6 +281,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
 
     def runPipe(self):
            
+            self.ajustesDeCalculo()
             self.capitalSocial()
             self.capitalIntegralizador()
             self.ReservasDeCapital()
@@ -266,13 +295,15 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
 
             self.acoesTesouraria()
             self.contPatrimonioNaoClass()
+            self.lucroPeriodo()
             self.PrejuizoPeriodo()
             self.prejuizosAcumulados()
 
             self.acoesTesouraria()
             self.lucrosAcumulados()
+
             self.ajustesExerAnteriores()
-            self.lucroPeriodo()
+            self.patrimonioLiquido()
             self.TotalFinsCalcJSPC()
             
             return self.resultsCalcJcp
@@ -286,6 +317,6 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         self.baseDeCalculo()
         self.compensacaoPrejuizo()   
         self.LucroLiquidoAntesIRPJ()
-        self.baseCSLL()
+        #self.baseCSLL()
 
         return self.resultsTabelaFinal
