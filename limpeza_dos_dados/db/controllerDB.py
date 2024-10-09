@@ -41,10 +41,11 @@ class dbController():
         host = st.secrets["apiAWS"]["host"]
         port = st.secrets["apiAWS"]["port"]
         dblocalCon = st.secrets['general']['auth_token']
-        #self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp',                                  
+        self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp', 
+                        pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)                                 
 
-        self.engine = create_engine(f'postgresql+psycopg2://{dblocalCon}/ECF', 
-                           pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)
+        # self.engine = create_engine(f'postgresql+psycopg2://{dblocalCon}/ECF', 
+        #                    pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)
         
         self.conn = self.engine.connect()
 
