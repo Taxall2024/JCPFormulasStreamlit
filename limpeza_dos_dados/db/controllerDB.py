@@ -234,6 +234,8 @@ class dbController():
 
     def update_table(self, tabela, df, cnpj, ano):
         operations = df['Operation'].unique()
+        self.engine
+        self.conn = self.engine.connect()
         
         # Gerenciador de contexto para a transação
         with self.conn.begin() as transaction:
@@ -253,6 +255,8 @@ class dbController():
         self.closeCons()
 
     def update_table_trimestral(self, tabela, df, cnpj, ano):
+        self.engine
+        self.conn = self.engine.connect()
         operations = [op for trimestre in [1,2,3,4] for op in df[f'Operation {trimestre}º Trimestre'].unique()]
     # Gerenciador de contexto para a transação
         with self.conn.begin() as transaction:
