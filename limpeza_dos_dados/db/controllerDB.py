@@ -12,20 +12,6 @@ import threading
 
 import psycopg2
 from psycopg2 import sql
-class ConnectionMonitor(threading.Thread):
-    def __init__(self, engine, connection_limit):
-        super().__init__()
-        self.engine = engine
-        self.connection_limit = connection_limit
-        self.pool = engine.pool
-    
-    def run(self):
-        while True:
-            if isinstance(self.pool, QueuePool):
-                if self.pool.checkedout() >= self.connection_limit:
-                    self.engine.dispose()
-                    print("Conexões fechadas devido ao limite de conexões atingido.")
-            time.sleep(1)
 
 
 MAX_RETRIES = 5
@@ -36,16 +22,19 @@ class dbController():
     
     def __init__(self,banco):
         
-        username = st.secrets["apiAWS"]["username"]
-        password = st.secrets["apiAWS"]["password"]
-        host = st.secrets["apiAWS"]["host"]
-        port = st.secrets["apiAWS"]["port"]
-        dblocalCon = st.secrets['general']['auth_token']
-        self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp', 
-                        pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)                                 
+        # username = st.secrets["apiAWS"]["username"]
+        # password = st.secrets["apiAWS"]["password"]
+        # host = st.secrets["apiAWS"]["host"]
+        # port = st.secrets["apiAWS"]["port"]
+        # dblocalCon = st.secrets['general']['auth_token']
+        # self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp', 
+        #                 pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)                                 
 
-        # self.engine = create_engine(f'postgresql+psycopg2://{dblocalCon}/ECF', 
-        #                    pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)
+        self.engine = create_engine(f'postgresql+psycopg2://postgres:Taxall2024@localhost:5432/ECF', 
+                           pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)
+        
+        # self.engine = create_engine(f'postgresql+psycopg2://postgres:Taxall2024@taxallhub.c54ciw48evvs.us-east-1.rds.amazonaws.com:5432/jcp',
+        #                             pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)   
         
         self.conn = self.engine.connect()
 
@@ -56,11 +45,10 @@ class dbController():
  
         self.engine.dispose()
         self.conn.close()
-        print("Conexões fechadas devido ao limite de conexões atingido.")
+        print("Conexão fechada.")
 
 
     def inserirTabelas(self, tabela, df):
-
 
         verificacaoCNPJ = df.iloc[0]['CNPJ']
         query = text(f"SELECT * FROM {tabela} WHERE \"CNPJ\" = :CNPJ")
@@ -284,20 +272,21 @@ class dbController():
 if __name__ =="__main__":
     ''
     
-    #controler = dbController('taxall')
+    controler = dbController('taxall')
+    
 
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','l100')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','l300')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','m300')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','m350')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','n630')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','n670')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','resultadosjcp')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','resultadosjcptrimestral')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','tipodaanalise')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','cadastrodasempresas')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','lacslalur')
-    # controler.deletarDadosDaTabelaPorCnpj('79283065000141','lacslalurtrimestral')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','l100')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','l300')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','m300')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','m350')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','n630')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','n670')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','resultadosjcp')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','resultadosjcptrimestral')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','tipodaanalise')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','cadastrodasempresas')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','lacslalur')
+    controler.deletarDadosDaTabelaPorCnpj('83892174000133','lacslalurtrimestral')
 
 
     # controler.deletarDadosDaTabela('l100')
@@ -312,3 +301,5 @@ if __name__ =="__main__":
     # controler.deletarDadosDaTabela('cadastrodasempresas')
     # controler.deletarDadosDaTabela('lacslalur')
     # controler.deletarDadosDaTabela('lacslalurtrimestral')
+
+

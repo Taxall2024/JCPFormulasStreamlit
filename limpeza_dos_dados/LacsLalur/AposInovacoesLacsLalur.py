@@ -21,12 +21,15 @@ class LacsLalurAposInovacoes(dbController):
         tabelaLacsLalur = self.queryResultadoFinal(cnpj=cnpj,tabela='lacslalur',ano=ano)
         jcp = self.get_jcp_value(cnpj,'resultadosjcp',ano,"Valor do JSCP")
         tabelaFInal = pd.concat([tabelaLacsLalur,jcp]).reset_index(drop='index')
+        lacs = self.get_all_data(tabela='m350')
+
+
 
         tabelaFInal2 = self.LacsLalurAposInovacoesCalculos(tabelaFInal)
-        #st.dataframe(tabelaFInal2,height=1500)
+
         return tabelaFInal2
     
-    def gerandoTabelasTrimestral(self, cnpj, ano):
+    def gerandoTabelasTrimestral(self, cnpj:str, ano:int) -> pd.DataFrame:
         tabelaLacsLalur = self.queryResultadoFinalTrimestral(cnpj=cnpj, tabela='lacslalurtrimestral', ano=ano)
         jcp = self.get_jcp_value_trimestral(cnpj, 'resultadosjcptrimestral', ano, "Valor do JSCP")
         tabelaFInal = pd.concat([tabelaLacsLalur, jcp]).reset_index(drop='index')
@@ -107,12 +110,20 @@ class LacsLalurAposInovacoes(dbController):
             df.at[2,f'Value {i}'] = df.at[2,f'Value {i}'] + df.at[33,f'Value {i}'] 
             #Calculo Base 
             df.at[3,f'Value {i}'] = df.at[0,f'Value {i}'] + df.at[1,f'Value {i}'] - df.at[2,f'Value {i}'] 
+            #Comp Preju Fiscal
+            df.at[4,f'Value {i}'] =   np.where(df.at[4,f'Value {i}'] > df.at[3,f'Value {i}'] * 0.3,
+                                               df.at[3,f'Value {i}'] * 0.3,
+                                               df.at[4,f'Value {i}'])  
             #Calculo base CSLL
             df.at[5,f'Value {i}'] = df.at[3,f'Value {i}'] - df.at[4,f'Value {i}'] 
             #Valor CSLL
             df.at[6,f'Value {i}'] = np.where(df.at[5,f'Value {i}']>0,df.at[5,f'Value {i}']*0.09,0) 
             #Valor Sub total CSLL a Recolher
             df.at[10,f'Value {i}'] = df.at[6,f'Value {i}'] - df.at[7,f'Value {i}'] - df.at[8,f'Value {i}'] 
+            #CSLL IRPJ
+            df.at[12,f'Value {i}'] = df.at[6,f'Value {i}'] 
+            #exclusoes
+            df.at[17,f'Value {i}'] = df.at[2,f'Value {i}']
             #Valor Sub total Base IRPJ
             df.at[18,f'Value {i}'] = (df.at[11,f'Value {i}'] + df.at[14,f'Value {i}']) - df.at[2,f'Value {i}']
             #Calculando Lucro Real
@@ -123,10 +134,14 @@ class LacsLalurAposInovacoes(dbController):
             df.at[22,f'Value {i}'] = np.where(df.at[20,f'Value {i}']>60000,(df.at[20,f'Value {i}']-60000)*0.10,0) 
             #Total devido IRPJ antes retenções
             df.at[23,f'Value {i}'] = df.at[22,f'Value {i}'] + df.at[21,f'Value {i}'] 
+            #Verificação pat
+            df.at[24,f'Value {i}'] = np.where(df.at[21,f'Value {i}'] * 0.04 < df.at[24,f'Value {i}'], 
+                                              df.at[21,f'Value {i}'] * 0.04,
+                                              df.at[24,f'Value {i}']) 
             #Total devido IRPJ antes retenções
             df.at[32,f'Value {i}'] = (df.at[23,f'Value {i}'] - df.at[24,f'Value {i}'] - 
-                                    df.at[25,f'Value {i}']- df.at[27,f'Value {i}'] - 
-                                    df.at[28,f'Value {i}'] - df.at[29,f'Value {i}']-
+                                        df.at[25,f'Value {i}']- df.at[27,f'Value {i}'] - 
+                                        df.at[28,f'Value {i}'] - df.at[29,f'Value {i}']-
                                         df.at[30,f'Value {i}'] - df.at[31,f'Value {i}'])
 
 
@@ -166,7 +181,6 @@ class LacsLalurAposInovacoes(dbController):
 
         return df
 
- 
     def tabelaComparativaLacsLalur(self,cnpj,ano):
         tabelaLacsLalur = self.queryResultadoFinalTrimestral(cnpj=cnpj, tabela='lacslalurtrimestral', ano=ano)
 
@@ -181,6 +195,6 @@ if __name__=='__main__':
 
     aposInovacoes = LacsLalurAposInovacoes('taxall')
 
-    aposInovacoes.gerandoTabelas()
-
-    aposInovacoes.gerandoTabelasTrimestral()
+    resultadoAnual =  aposInovacoes.gerandoTabelas('79283065000141',2019)
+    st.dataframe(resultadoAnual,height=1000)
+    #aposInovacoes.gerandoTabelasTrimestral()

@@ -58,7 +58,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         
         self.ajustesCalculo = int(0) 
 
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Ajustes de Calculos", "Value": self.ajustesCalculo}])], ignore_index=True)
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "(-) Ajustes de Calculos", "Value": self.ajustesCalculo}])], ignore_index=True)
 
     def patrimonioLiquido(self):
 
@@ -96,7 +96,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     
     def ReservasDeCapital(self):
         l100 = self.l100
-        l100 = l100[(l100['Conta Referencial']=='2.03.02.01.99')&
+        l100 = l100[(l100['Conta Referencial']=='2.03.02.01')&
         (l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')&
             (l100['Data Inicial'].str.contains(self.data))]
         self.reservaCapital = np.sum(l100['Vlr Saldo Final'].values)
@@ -186,20 +186,14 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
     
-
-    def update_totalfinsparaJPC(self):
-        self.totalJSPC = self.capSocial + self.reservaCapital + self.lucroAcumulado + self.reservLucro
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)
-
-
-    def update_reservas(self):
-        self.reservLucro = self.reservLegal + self.outrasResLuc
-        self.resultsTabelaFinal.loc[self.resultsTabelaFinal['Operation'] == 'Reservas de Lucros', 'Value'] = self.reservLucro
-
-    
+ 
     def ReservaLegal(self):
-
-        self.reservLegal = 0.0
+        l100 = self.l100
+        l100 = l100[(l100['Conta Referencial']=='2.03.02.03.01')&
+            (l100['Data Inicial'].str.contains(self.data))&(
+            l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
+        self.reservLegal = np.sum(l100['Vlr Saldo Final'].values)
+        
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Reserva legal", "Value": self.reservLegal}])], ignore_index=True)
 
 
@@ -221,7 +215,18 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
 
   
     def ReservasLucros(self):
-        self.reservLucro = self.reservLegal + self.outrasResLuc
+
+        l100 = self.l100
+        l100 = l100[(l100['Conta Referencial']=='2.03.02.03')&
+            (l100['Data Inicial'].str.contains(self.data))&(
+            l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
+        self.reservLucro1 = np.sum(l100['Vlr Saldo Final'].values)
+
+        if self.reservLucro1 == 0:
+            self.reservLucro = self.reservLucro1
+        else:
+            self.reservLucro = self.reservLucro1 - self.reservLegal
+
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Reservas de Lucros", "Value": self.reservLucro}])], ignore_index=True)
     
 
@@ -272,11 +277,11 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         else:
             self.prejuAcumulado = abs(self.contaPatriNClassifica - self.lucroOuPrejuPeriodo)
         if (l100['D/C Saldo Final'] == 'C').any():
-            self.prejuAcumulado = self.prejuAcumulado
-        else:
             self.prejuAcumulado = self.prejuAcumulado * -1
+        else:
+            self.prejuAcumulado = self.prejuAcumulado 
 
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Prejuízos Acumulados", "Value": self.prejuAcumulado}])], ignore_index=True)
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "(-) Prejuízos Acumulados", "Value": self.prejuAcumulado}])], ignore_index=True)
     
 
     def runPipe(self):

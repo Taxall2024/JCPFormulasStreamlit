@@ -186,11 +186,11 @@ class CalculosEProcessamentoDosDados():
         jcp2022 = pd.concat([calculosIniciais_2022,tabelaFinal_2022,resultadoTotal_2022],axis=0).reset_index(drop='index').reset_index()
         jcp2023 = pd.concat([calculosIniciais_2023,tabelaFinal_2023,resultadoTotal_2023],axis=0).reset_index(drop='index').reset_index()
 
-        jcp2019['Value'] = jcp2019['Value'].astype(float)
-        jcp2020['Value'] = jcp2020['Value'].astype(float)
-        jcp2021['Value'] = jcp2021['Value'].astype(float)
-        jcp2022['Value'] = jcp2022['Value'].astype(float)
-        jcp2023['Value'] = jcp2023['Value'].astype(float)
+        jcp2019['Value'] = round(jcp2019['Value'].astype(float),2)
+        jcp2020['Value'] = round(jcp2020['Value'].astype(float),2)
+        jcp2021['Value'] = round(jcp2021['Value'].astype(float),2)
+        jcp2022['Value'] = round(jcp2022['Value'].astype(float),2)
+        jcp2023['Value'] = round(jcp2023['Value'].astype(float),2)
 
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2019)
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2020)
@@ -329,6 +329,10 @@ class CalculosEProcessamentoDosDados():
                 tabelaUnica = pd.concat([dfCalculos,tabelaJCP,limiteDedutibili,economiaGerada],axis=0).reset_index(drop='index').reset_index()
                 tabelaUnica['Ano'] = int(ano)
                 tabelaUnica['CNPJ'] = cnpj
+                tabelaUnica['Value 1º Trimestre'] = round(tabelaUnica['Value 1º Trimestre'].astype(float),2)
+                tabelaUnica['Value 2º Trimestre'] = round(tabelaUnica['Value 2º Trimestre'].astype(float),2)
+                tabelaUnica['Value 3º Trimestre'] = round(tabelaUnica['Value 3º Trimestre'].astype(float),2)
+                tabelaUnica['Value 4º Trimestre'] = round(tabelaUnica['Value 4º Trimestre'].astype(float),2)
                 controler.inserirTabelasFinaisJCP('resultadosjcptrimestral',tabelaUnica)
 
                 tabelaUnicaLista.append(tabelaUnica.add_suffix(ano))

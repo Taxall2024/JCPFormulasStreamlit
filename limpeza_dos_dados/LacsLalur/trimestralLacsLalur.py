@@ -180,11 +180,12 @@ class LacsLalurCSLLTrimestral():
 
         lalur = self.ecf670
         filtroUm = lalur[
-            (lalur['Código Lançamento']== 15)|(lalur['Código Lançamento']== 16)|(lalur['Código Lançamento']== 18)&
+            (lalur['Código Lançamento']== 15)&
             (lalur['Data Inicial'].dt.year == self.ano) &
             (lalur['Data Inicial'].dt.month >= self.mes_inicio) &
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
+        
 
         filtroDois = lalur[
             (lalur['Código Lançamento']== 16)&
@@ -199,7 +200,7 @@ class LacsLalurCSLLTrimestral():
             (lalur['Data Inicial'].dt.month >= self.mes_inicio) &
             (lalur['Data Inicial'].dt.month <= self.mes_fim)&
             (lalur['Trimestre'] == self.trimestre)]
-        
+
                                 
         self.retencoesOrgPub = sum([filtroUm['Vlr Lançamento'].sum(),
                                 filtroDois['Vlr Lançamento'].sum(),

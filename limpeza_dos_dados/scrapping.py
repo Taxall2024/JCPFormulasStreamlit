@@ -18,9 +18,9 @@ class ScrappingTJPL():
         dataframe = dataframe.transpose().reset_index(drop=True).set_index(dataframe.columns[0])
         dataframe.columns = dataframe.iloc[0]
         dataframe = dataframe.iloc[1:, :].applymap(lambda x: str(x)[:-1]).applymap(lambda x: x.replace(',', '.')).applymap(lambda x: '0' if x == '' else x).replace('na', np.nan).astype(float)
-        dataframe['1º Tri'] = round(dataframe[['Janeiro', 'Fevereiro', 'Março']].sum(axis=1), 2)
-        dataframe['2º Tri'] = round(dataframe[['Abril', 'Maio', 'Junho']].sum(axis=1), 2)
-        dataframe['3º Tri'] = round(dataframe[['Julho', 'Agosto', 'Setembro']].sum(axis=1), 2)
-        dataframe['4º Tri'] = round(dataframe[['Outubro', 'Novembro', 'Dezembro']].sum(axis=1), 2)
-        dataframe['Ano'] = round(dataframe[['1º Tri', '2º Tri', '3º Tri', '4º Tri']].sum(axis=1), 2)
+        dataframe['1º Tri'] = np.floor(dataframe[['Janeiro', 'Fevereiro', 'Março']].sum(axis=1) * 100) / 100
+        dataframe['2º Tri'] = np.floor(dataframe[['Abril', 'Maio', 'Junho']].sum(axis=1) * 100) / 100
+        dataframe['3º Tri'] = np.floor(dataframe[['Julho', 'Agosto', 'Setembro']].sum(axis=1) * 100) / 100
+        dataframe['4º Tri'] = np.floor(dataframe[['Outubro', 'Novembro', 'Dezembro']].sum(axis=1) * 100) / 100
+        dataframe['Ano'] = np.floor(dataframe[['1º Tri', '2º Tri', '3º Tri', '4º Tri']].sum(axis=1) * 100) / 100
         return dataframe

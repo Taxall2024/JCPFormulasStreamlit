@@ -35,36 +35,10 @@ st.markdown(
      f"""
      <iframe src="data:image/jpg;base64,{base64.b64encode(open(background_image, 'rb').read()).decode(
 
-    )}" style="width:4000px;height:3000px;position: absolute;top:-3vh;right:-350px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
+    )}" style="width:4000px;height:3000px;position: absolute;top:-3vh;right:-1250px;opacity: 0.5;background-size: cover;background-position: center;"></iframe>
      """,
      unsafe_allow_html=True )
 
-# def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool ,valorIRPJ:bool) -> pd.DataFrame:
-#     #'''Função de callback para recalcular os valores apresentados e gerados para análise anual do JCP'''
-#         economia2019.at[8, 'Value'] = economia2019.at[6, 'Value'] + economia2019.at[7, 'Value']
-#         economia2019.at[17, 'Value'] = sum([economia2019.at[0, 'Value'], economia2019.at[2, 'Value'], 
-#                                             economia2019.at[8, 'Value'], economia2019.at[13, 'Value'],
-#                                             economia2019.at[14, 'Value'], economia2019.at[12, 'Value'],
-#                                             economia2019.at[15, 'Value']])
-#         economia2019.at[22, 'Value'] = economia2019.at[17, 'Value']
-#         economia2019.at[24, 'Value'] = economia2019.at[22, 'Value'] * (economia2019.at[23, 'Value'] / 100)
-#         economia2019.at[25, 'Value'] = economia2019.at[24, 'Value'] * 0.15
-#         economia2019.at[26, 'Value'] = economia2019.at[24, 'Value'] - economia2019.at[25, 'Value']
-#         economia2019.at[27, 'Value'] = economia2019.at[20, 'Value'] * 0.5
-#         economia2019.at[28, 'Value'] = (economia2019.at[8, 'Value'] + economia2019.at[14, 'Value']) * 0.5
-#         if retirarMulta == True:
-#             economia2019.at[29, 'Value'] = economia2019.at[25, 'Value'] + (economia2019.at[25, 'Value'] * 0.2 * 0)
-#         else:
-#             economia2019.at[29, 'Value'] = economia2019.at[25, 'Value'] + (economia2019.at[25, 'Value'] * 0.2)
-#         if valorIRPJ == True:        
-#             economia2019.at[30, 'Value'] = economia2019.at[24, 'Value'] * 0.24
-#             economia2019.at[30,'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
-#         else:    
-#             economia2019.at[30, 'Value'] = economia2019.at[24, 'Value'] * 0.34
-#             economia2019.at[30,'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
-#         economia2019.at[31, 'Value'] = economia2019.at[30, 'Value'] - economia2019.at[29, 'Value']
-        
-#         return economia2019
 
 def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool, valorIRPJ: bool)-> pd.DataFrame:
     #'''Função de callback para recalcular os valores apresentados e gerados para análise trimestral do JCP'''
@@ -77,7 +51,7 @@ def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool, valorIRPJ: bo
                                                                 economia2019_copy.at[4, f'Value'],economia2019_copy.at[5, f'Value'],
                                                                 economia2019_copy.at[6, f'Value'],economia2019_copy.at[7, f'Value'],economia2019_copy.at[8, f'Value'],
                                                                 economia2019_copy.at[9, f'Value'],economia2019_copy.at[11, f'Value'],
-                                                                economia2019_copy.at[12, f'Value']]) - economia2019_copy.at[10, f'Value']
+                                                                economia2019_copy.at[12, f'Value'],economia2019_copy.at[13, f'Value']]) - economia2019_copy.at[10, f'Value']
 
     #Calculando Total Para Fins de JSPC  -- 
     economia2019_copy.at[15, f'Value'] = sum([economia2019_copy.at[1, f'Value'], economia2019_copy.at[2, f'Value'], 
@@ -156,7 +130,7 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorI
                                                                     economia2019_copy.at[4, f'Value {i}º Trimestre'],economia2019_copy.at[5, f'Value {i}º Trimestre'],
                                                                     economia2019_copy.at[6, f'Value {i}º Trimestre'],economia2019_copy.at[7, f'Value {i}º Trimestre'],economia2019_copy.at[8, f'Value {i}º Trimestre'],
                                                                     economia2019_copy.at[9, f'Value {i}º Trimestre'],economia2019_copy.at[11, f'Value {i}º Trimestre'],
-                                                                    economia2019_copy.at[12, f'Value {i}º Trimestre']]) - economia2019_copy.at[10, f'Value {i}º Trimestre']
+                                                                    economia2019_copy.at[12, f'Value {i}º Trimestre'],economia2019_copy.at[13, f'Value {i}º Trimestre']]) - economia2019_copy.at[10, f'Value {i}º Trimestre']
 
         #Calculando Total Para Fins de JSPC  -- 
         economia2019_copy.at[15, f'Value {i}º Trimestre'] = sum([economia2019_copy.at[1, f'Value {i}º Trimestre'], economia2019_copy.at[2, f'Value {i}º Trimestre'], 
@@ -424,12 +398,6 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
             st.metric(label=f'Total IRPJ {anoDeAnalise}: ', value=totalIRPJ_formatted)
 
 
-
-
-
-
-
-
         tabelaRelatorioTri = economia2019Trimestral_data_editor.copy()
         tabelaRelatorioTri = tabelaRelatorioTri.iloc[24:,[0,1,3,5,7]].reset_index(drop='index')
         
@@ -562,33 +530,31 @@ if __name__=='__main__':
 
     with st.spinner('Carregando dados'):
         if seletorDePagina =='Processar dados':
-            #try:
-            uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
+            try:
+                uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
 
-            if uploaded_files:
-                                file_paths = []
-                                for uploaded_file in uploaded_files:
-                                    file_path = uploaded_file.name
-                                    with open(file_path, 'wb') as f:
-                                        f.write(uploaded_file.getbuffer())
-                                    file_paths.append(file_path)
-                                
-                                periodoDeAnalise = []
-                                sped_processor = SpedProcessor(file_paths)                            
-                                for file in file_paths:
-                                    periodoDeAnalise.append(sped_processor.pegandoPeriodoDeAnalise(file))
+                if uploaded_files:
+                                    file_paths = []
+                                    for uploaded_file in uploaded_files:
+                                        file_path = uploaded_file.name
+                                        with open(file_path, 'wb') as f:
+                                            f.write(uploaded_file.getbuffer())
+                                        file_paths.append(file_path)
+                                    
+                                    periodoDeAnalise = []
+                                    sped_processor = SpedProcessor(file_paths)                            
+                                    for file in file_paths:
+                                        periodoDeAnalise.append(sped_processor.pegandoPeriodoDeAnalise(file))
 
-                                periodosETipoDeAnalise = pd.concat(periodoDeAnalise)
-                                controler.inserirTabelas('tipodaanalise',periodosETipoDeAnalise)
+                                    periodosETipoDeAnalise = pd.concat(periodoDeAnalise)
+                                    controler.inserirTabelas('tipodaanalise',periodosETipoDeAnalise)
 
-            calculos = CalculosEProcessamentoDosDados()
-                #try:
-            calculos.filtrarCalcularECadastras(file_paths,file_path)
-            #     except:
-            #         pass
-            # except Exception as e:
-            #     st.write(e)
+                calculos = CalculosEProcessamentoDosDados()
+                
+                calculos.filtrarCalcularECadastras(file_paths,file_path)
 
+            except:
+                pass
     controler.engine.dispose()
 
 

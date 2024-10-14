@@ -172,10 +172,10 @@ class SpedProcessor:
         df_sped_m350 = self.classificaPeriodoDeApuracao(df_sped_m350, 'ATIVIDADE GERAL')
         
         df_sped_n630 = df_sped[df_sped[0] == 'N630'].reset_index(drop=True)
-        df_sped_n630['Período Apuração'] = 'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual'
+        df_sped_n630 = self.classificaPeriodoDeApuracao(df_sped_n630,'BASE DE CÁLCULO DO IRPJ')
 
         df_sped_n670 = df_sped[df_sped[0] == 'N670'].reset_index(drop=True)
-        df_sped_n670['Período Apuração'] = 'A00 – Receita Bruta/Balanço de Suspensão e Redução Anual'
+        df_sped_n670 = self.classificaPeriodoDeApuracao(df_sped_n670,'RECEITAS BRUTAS UTILIZADAS NO CÁLCULO DA CSLL POR PROPORCIONALIDADE')
 
         return df_sped_l100, df_sped_l300, df_sped_m300, df_sped_m350, df_sped_n630, df_sped_n670
     
@@ -276,41 +276,41 @@ class SpedProcessor:
     
 
 
-# if __name__=='__main__':
+if __name__=='__main__':
 
 
 
-#     uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
-#     if uploaded_files:
-#             file_paths = []
-#             for uploaded_file in uploaded_files:
-#                 file_path = uploaded_file.name
-#                 with open(file_path, 'wb') as f:
-#                     f.write(uploaded_file.getbuffer())
-#                 file_paths.append(file_path)
+    uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
+    if uploaded_files:
+            file_paths = []
+            for uploaded_file in uploaded_files:
+                file_path = uploaded_file.name
+                with open(file_path, 'wb') as f:
+                    f.write(uploaded_file.getbuffer())
+                file_paths.append(file_path)
 
-#             sped_processor = SpedProcessor(file_paths)
-#             arquivoProcessado = sped_processor.pegandoInfosDaEmpresa(file_path)
-#             periodoDeAnalise = []
-#             for file in file_paths:
-#                 periodoDeAnalise.append(sped_processor.pegandoPeriodoDeAnalise(file))
+            sped_processor = SpedProcessor(file_paths)
+            arquivoProcessado = sped_processor.pegandoInfosDaEmpresa(file_path)
+            periodoDeAnalise = []
+            for file in file_paths:
+                periodoDeAnalise.append(sped_processor.pegandoPeriodoDeAnalise(file))
 
                 
-#             st.subheader('Periodo de Analise')
-#             st.dataframe(pd.concat(periodoDeAnalise))
-#             st.data_editor(arquivoProcessado) 
+            st.subheader('Periodo de Analise')
+            st.dataframe(pd.concat(periodoDeAnalise))
+            st.data_editor(arquivoProcessado) 
 
 
-#             sped_processor.processar_arquivos()
-#             dfs_concatenados = sped_processor.concatenar_dfs()
-#             L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
+            sped_processor.processar_arquivos()
+            dfs_concatenados = sped_processor.concatenar_dfs()
+            L100_final, L300_final, M300_final, M350_final, N630_final, N670_final = sped_processor.tratandoTiposDeDados(dfs_concatenados)
 
-    # st.subheader('L100')
-    # st.data_editor(L100_final)
-    # st.subheader('M300')
-    # st.dataframe(M300_final)
-    # st.subheader('M350')
-    # st.dataframe(M350_final)
+    st.subheader('L100')
+    st.data_editor(L100_final)
+    st.subheader('N630')
+    st.dataframe(N630_final)
+    st.subheader('N670')
+    st.dataframe(N670_final)
 
     # controler.inserirTabelas('l100',L100_final)
     # controler.inserirTabelas('l300',L300_final)
