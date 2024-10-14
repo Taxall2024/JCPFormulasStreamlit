@@ -11,11 +11,11 @@ class serviceTaxAllDB():
         
         try:
             self.conn = psycopg2.connect(
-                dbname="taxall",
-                user="postgres",
-                password="Taxall2024",
-                host="taxalldb.c54ciw48evvs.us-east-1.rds.amazonaws.com",
-                port="5432")
+                dbname="jcp",
+                user=username,
+                password=password,
+                host=host,
+                port=port)
             print("Conexão efetuada com sucesso")
         except Exception as e:
             print(e)    
@@ -63,7 +63,7 @@ class serviceTaxAllDB():
 if __name__=='__main__':
 
     service = serviceTaxAllDB()
-    service.creating_DB('taxall')
+    #service.creating_DB('jcp')
     #service.creatingTables('ECF',create_table_query_teste)
 
     create_table_query_L100 = '''
@@ -72,8 +72,8 @@ if __name__=='__main__':
         "Data Inicial" DATE NOT NULL,
         "Data Final" DATE NOT NULL,
         "Ano" INT,
-        "Período Apuração" VARCHAR(50),
-        "Período Apuração Trimestral" VARCHAR(50),
+        "Período Apuração" VARCHAR(100),
+        "Período Apuração Trimestral" VARCHAR(300),
         "Conta Referencial" VARCHAR(50),
         "Conta Superior" VARCHAR(50),
         "Descrição Conta Referencial" VARCHAR(255),
@@ -81,8 +81,7 @@ if __name__=='__main__':
         "Tipo Conta" VARCHAR(50),
         "Nível Conta" INT,
         "Vlr Saldo Final" NUMERIC,
-        "D/C Saldo Final" VARCHAR(2),
-        PRIMARY KEY (CNPJ, Ano)
+        "D/C Saldo Final" VARCHAR(4),
     )
     '''
 
@@ -92,8 +91,8 @@ if __name__=='__main__':
             "Data Inicial" DATE NOT NULL,
             "Data Final" DATE NOT NULL,
             "Ano" INT,
-            "Período Apuração" VARCHAR(50),
-            "Período Apuração Trimestral" VARCHAR(50),
+            "Período Apuração" VARCHAR(300),
+            "Período Apuração Trimestral" VARCHAR(300),
             "Conta Referencial" VARCHAR(50),
             "Conta Superior" VARCHAR(50),
             "Descrição Conta Referencial" VARCHAR(255),
@@ -101,8 +100,7 @@ if __name__=='__main__':
             "Tipo Conta" VARCHAR(50),
             "Nível Conta" INT,
             "Vlr Saldo Final" NUMERIC,
-            "D/C Saldo Final" VARCHAR(2),
-            PRIMARY KEY (CNPJ, Ano)
+            "D/C Saldo Final" VARCHAR(4),
         )
         '''
 
@@ -112,8 +110,8 @@ if __name__=='__main__':
             "Data Inicial" DATE NOT NULL,
             "Data Final" DATE NOT NULL,
             "Ano" INT,
-            "Período Apuração" VARCHAR(50),
-            "Período Apuração Trimestral" VARCHAR(50),
+            "Período Apuração" VARCHAR(300),
+            "Período Apuração Trimestral" VARCHAR(300),
             "Conta Referencial" VARCHAR(50),
             "Código Lançamento e-Lalur" FLOAT,
             "Descrição Lançamento e-Lalur" VARCHAR(255),
@@ -122,7 +120,6 @@ if __name__=='__main__':
             "Indicador Relação Parte A" VARCHAR(50),
             "Vlr Lançamento e-Lalur" NUMERIC,
             "Histórico e-Lalur" VARCHAR(50),
-            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
 
@@ -132,15 +129,14 @@ if __name__=='__main__':
             "Data Inicial" DATE NOT NULL,
             "Data Final" DATE NOT NULL,
             "Ano" INT,
-            "Período Apuração" VARCHAR(50),
-            "Período Apuração Trimestral" VARCHAR(50),
+            "Período Apuração" VARCHAR(300),
+            "Período Apuração Trimestral" VARCHAR(300),
             "Código Lançamento e-Lacs" FLOAT,
             "Descrição Lançamento e-Lalur" VARCHAR(255),
             "Tipo Lançamento" VARCHAR(50),
             "Indicador Relação Parte A" VARCHAR(50),
             "Vlr Lançamento e-Lacs" NUMERIC,
             "Histórico e-Lacs" VARCHAR(50),
-            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
 
@@ -150,12 +146,11 @@ if __name__=='__main__':
             "Data Inicial" DATE NOT NULL,
             "Data Final" DATE NOT NULL,
             "Ano" INT,
-            "Período Apuração" VARCHAR(50),
-            "Período Apuração Trimestral" VARCHAR(50),
+            "Período Apuração" VARCHAR(300),
+            "Período Apuração Trimestral" VARCHAR(300),
             "Código Lançamento" FLOAT,
             "Descrição Lançamento" VARCHAR(255),
             "Vlr Lançamento" NUMERIC,
-            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
 
@@ -165,19 +160,18 @@ if __name__=='__main__':
             "Data Inicial" DATE NOT NULL,
             "Data Final" DATE NOT NULL,
             "Ano" INT,
-            "Período Apuração" VARCHAR(50),
-            "Período Apuração Trimestral" VARCHAR(50),
+            "Período Apuração" VARCHAR(300),
+            "Período Apuração Trimestral" VARCHAR(300),
             "Código Lançamento" FLOAT,
             "Descrição Lançamento" VARCHAR(255),
             "Vlr Lançamento" NUMERIC,
-            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
     
     create_table_query_operacoes = '''
     CREATE TABLE IF NOT EXISTS resultadosJCP (
         "CNPJ" NUMERIC NOT NULL,
-        "Operation" VARCHAR(100) NOT NULL,
+        "Operation" VARCHAR(300) NOT NULL,
         "Value" NUMERIC NOT NULL,
         "Ano" INT NOT NULL,
         "index" NUMERIC NOT NULL
@@ -193,13 +187,13 @@ if __name__=='__main__':
 '''
     create_table_query_operacoesTrimestral = '''
     CREATE TABLE IF NOT EXISTS resultadosJCPTrimestral (
-        "Operation 1º Trimestre" VARCHAR(100) NOT NULL,
+        "Operation 1º Trimestre" VARCHAR(200) NOT NULL,
         "Value 1º Trimestre" NUMERIC NOT NULL,
-        "Operation 2º Trimestre" VARCHAR(100) NOT NULL,
+        "Operation 2º Trimestre" VARCHAR(200) NOT NULL,
         "Value 2º Trimestre" NUMERIC NOT NULL,
-        "Operation 3º Trimestre" VARCHAR(100) NOT NULL,
+        "Operation 3º Trimestre" VARCHAR(200) NOT NULL,
         "Value 3º Trimestre" NUMERIC NOT NULL,
-        "Operation 4º Trimestre" VARCHAR(100) NOT NULL,
+        "Operation 4º Trimestre" VARCHAR(200) NOT NULL,
         "Value 4º Trimestre" NUMERIC NOT NULL,
         "Ano" INT NOT NULL,
         "CNPJ" NUMERIC NOT NULL,
@@ -235,17 +229,22 @@ if __name__=='__main__':
     );
 '''
     
-    # service.creatingTables('taxall',create_table_query_L300)
-    # service.creatingTables('taxall',create_table_query_M300)
-    # service.creatingTables('taxall',create_table_query_M350)
-    # service.creatingTables('taxall',create_table_query_N630)
-    # service.creatingTables('taxall',create_table_query_N670)
-    # service.creatingTables('taxall',create_table_query_operacoes)
-    # service.creatingTables('taxall',create_table_query_operacoesLacsLalur)
-    # service.creatingTables('taxall',create_table_query_operacoesTrimestral)
-    # service.creatingTables('taxall',create_table_query_operacoesTrimestralLacsLalur)
-    # service.creatingTables('taxall',create_table_cadastro_das_empresas)
-    # service.creatingTables('taxall',create_table_tipo_da_analise)
+
+
+
+
+
+    service.creatingTables('jcp',create_table_query_L300.encode('utf-8'))
+    #service.creatingTables('jcp',create_table_query_M300)
+    # service.creatingTables('jcp',create_table_query_M350)
+    # service.creatingTables('jcp',create_table_query_N630)
+    # service.creatingTables('jcp',create_table_query_N670)
+    # service.creatingTables('jcp',create_table_query_operacoes)
+    # service.creatingTables('jcp',create_table_query_operacoesLacsLalur)
+    # service.creatingTables('jcp',create_table_query_operacoesTrimestral)
+    # service.creatingTables('jcp',create_table_query_operacoesTrimestralLacsLalur)
+    # service.creatingTables('jcp',create_table_cadastro_das_empresas)
+    # service.creatingTables('jcp',create_table_tipo_da_analise)
 
 
 

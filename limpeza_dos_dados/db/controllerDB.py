@@ -7,11 +7,11 @@ import time
 import functools
 from psycopg2 import pool
 from sqlalchemy import create_engine
-import threading
-
 
 import psycopg2
 from psycopg2 import sql
+
+from db.redisModule import RedisCache
 
 
 MAX_RETRIES = 5
@@ -22,17 +22,19 @@ class dbController():
     
     def __init__(self,banco):
         
-        username = st.secrets["apiAWS"]["username"]
-        password = st.secrets["apiAWS"]["password"]
-        host = st.secrets["apiAWS"]["host"]
-        port = st.secrets["apiAWS"]["port"]
-        dblocalCon = st.secrets['general']['auth_token']
-        self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp', 
-                        pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)                                
+        # username = st.secrets["apiAWS"]["username"]
+        # password = st.secrets["apiAWS"]["password"]
+        # host = st.secrets["apiAWS"]["host"]
+        # port = st.secrets["apiAWS"]["port"]
+        # dblocalCon = st.secrets['general']['auth_token']
+        # self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp', 
+        #                 pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)                                
         
+        self.engine = create_engine(f'postgresql+psycopg2://postgres:Taxall2024@localhost:5432/ECF',
+                                    pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)   
         self.conn = self.engine.connect()
+        self.cache = RedisCache()
 
-        #self.closeCons()
 
 
     def closeCons(self):
@@ -51,11 +53,10 @@ class dbController():
 
         while self.retry_count < MAX_RETRIES:
             try:
-                # Execute the query
+               
                 with self.engine.connect() as conn:
                     result = conn.execute(query, {'CNPJ': verificacaoCNPJ})
 
-                # Fetch the results
                     rows = result.fetchall()
 
                 if rows:
@@ -64,7 +65,6 @@ class dbController():
                     df.to_sql(tabela, self.engine, if_exists='append', index=False)
                     st.success(f"CNPJ {verificacaoCNPJ} inserido com sucesso na tabela {tabela}!")
 
-                # Break out of the retry loop
                 break
 
             except sa.exc.OperationalError as e:
@@ -82,10 +82,16 @@ class dbController():
         self.closeCons()
 
     def get_data_by_cnpj(self, cnpj,tabela):
+
+        cache_key = f"{tabela}:{cnpj}"
+        if self.cache.exists(cache_key):
+            return self.cache.get(cache_key)
         query = f"SELECT * FROM {tabela} WHERE \"CNPJ\" = '{cnpj}'"
         with self.engine.connect():
-            
             df = pd.read_sql_query(query, self.engine)  
+
+        self.cache.set(cache_key,df)
+
         self.closeCons()
         return df
 
@@ -104,6 +110,12 @@ class dbController():
 
     @functools.cache
     def get_jcp_value_trimestral(self, cnpj: str, tabela: str, ano: int, operation: str) -> pd.DataFrame:
+
+
+        cache_key = f"{tabela}:{cnpj}_jcp_trimestral"
+        if self.cache.exists(cache_key):
+            return self.cache.get(cache_key)
+
         query = f"""
             SELECT "CNPJ", "Ano", "Value 1º Trimestre","Value 2º Trimestre","Value 3º Trimestre","Value 4º Trimestre",
             "Operation 1º Trimestre",
@@ -120,7 +132,8 @@ class dbController():
         with self.engine.connect():
             
             df = pd.read_sql_query(query, self.engine) 
-
+        self.cache.get(cache_key,df)
+        
         self.closeCons()
         return df
     
@@ -263,24 +276,24 @@ class dbController():
 
 
 
-# if __name__ =="__main__":
-#     ''
+if __name__ =="__main__":
+    ''
     
-#     controler = dbController('taxall')
+    controler = dbController('taxall')
     
 
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','l100')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','l300')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','m300')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','m350')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','n630')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','n670')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','resultadosjcp')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','resultadosjcptrimestral')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','tipodaanalise')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','cadastrodasempresas')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','lacslalur')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','lacslalurtrimestral')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','l100')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','l300')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','m300')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','m350')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','n630')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','n670')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','resultadosjcp')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','resultadosjcptrimestral')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','tipodaanalise')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','cadastrodasempresas')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','lacslalur')
+    controler.deletarDadosDaTabelaPorCnpj('04496152000188','lacslalurtrimestral')
 
 
     # controler.deletarDadosDaTabela('l100')
