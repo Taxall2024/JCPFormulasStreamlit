@@ -22,19 +22,13 @@ class dbController():
     
     def __init__(self,banco):
         
-        # username = st.secrets["apiAWS"]["username"]
-        # password = st.secrets["apiAWS"]["password"]
-        # host = st.secrets["apiAWS"]["host"]
-        # port = st.secrets["apiAWS"]["port"]
-        # dblocalCon = st.secrets['general']['auth_token']
-        # self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp', 
-        #                 pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)                                 
-
-        self.engine = create_engine(f'postgresql+psycopg2://postgres:Taxall2024@localhost:5432/ECF', 
-                           pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)
-        
-        # self.engine = create_engine(f'postgresql+psycopg2://postgres:Taxall2024@taxallhub.c54ciw48evvs.us-east-1.rds.amazonaws.com:5432/jcp',
-        #                             pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)   
+        username = st.secrets["apiAWS"]["username"]
+        password = st.secrets["apiAWS"]["password"]
+        host = st.secrets["apiAWS"]["host"]
+        port = st.secrets["apiAWS"]["port"]
+        dblocalCon = st.secrets['general']['auth_token']
+        self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp', 
+                        pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)                                
         
         self.conn = self.engine.connect()
 
@@ -269,24 +263,24 @@ class dbController():
 
 
 
-if __name__ =="__main__":
-    ''
+# if __name__ =="__main__":
+#     ''
     
-    controler = dbController('taxall')
+#     controler = dbController('taxall')
     
 
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','l100')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','l300')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','m300')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','m350')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','n630')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','n670')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','resultadosjcp')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','resultadosjcptrimestral')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','tipodaanalise')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','cadastrodasempresas')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','lacslalur')
-    controler.deletarDadosDaTabelaPorCnpj('83892174000133','lacslalurtrimestral')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','l100')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','l300')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','m300')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','m350')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','n630')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','n670')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','resultadosjcp')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','resultadosjcptrimestral')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','tipodaanalise')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','cadastrodasempresas')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','lacslalur')
+#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','lacslalurtrimestral')
 
 
     # controler.deletarDadosDaTabela('l100')
