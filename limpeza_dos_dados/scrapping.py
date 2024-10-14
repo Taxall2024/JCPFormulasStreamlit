@@ -23,4 +23,5 @@ class ScrappingTJPL():
         dataframe['3º Tri'] = np.floor(dataframe[['Julho', 'Agosto', 'Setembro']].sum(axis=1) * 100) / 100
         dataframe['4º Tri'] = np.floor(dataframe[['Outubro', 'Novembro', 'Dezembro']].sum(axis=1) * 100) / 100
         dataframe['Ano'] = np.floor(dataframe[['1º Tri', '2º Tri', '3º Tri', '4º Tri']].sum(axis=1) * 100) / 100
+        
         return dataframe
