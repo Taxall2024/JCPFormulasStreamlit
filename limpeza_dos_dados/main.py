@@ -239,46 +239,46 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
         
         #======== --- Tbaelas Lacs e Lalur Aós inovações
 
-        # with st.expander('Lacs Lalur'):
-        #    lacslaurAno = lacslalur.gerandoTabelas(cnpj_selecionado,anoDeAnalise)
-        #    st.dataframe(lacslaurAno)
+        with st.expander('Lacs Lalur'):
+           lacslaurAno = lacslalur.gerandoTabelas(cnpj_selecionado,anoDeAnalise)
+           st.dataframe(lacslaurAno)
 
-        # ## ---- Tabelas comparativas Lacs e Lalur antes e após inovações do período anual
+        ## ---- Tabelas comparativas Lacs e Lalur antes e após inovações do período anual
         
-        # lacslalurOrignal = lacslalur.tabelaComparativaLacsLalurAno(cnpj_selecionado,anoDeAnalise).iloc[[15,36],[3,2]].reset_index(drop='index')
+        lacslalurOrignal = lacslalur.tabelaComparativaLacsLalurAno(cnpj_selecionado,anoDeAnalise).iloc[[15,36],[3,2]].reset_index(drop='index')
    
-        # aposInovacoesLacslalur = lacslaurAno.iloc[[11,32],:]
+        aposInovacoesLacslalur = lacslaurAno.iloc[[11,32],:]
         
-        # tabelaComparativa = pd.concat([lacslalurOrignal,aposInovacoesLacslalur]).reset_index(drop='index')
+        tabelaComparativa = pd.concat([lacslalurOrignal,aposInovacoesLacslalur]).reset_index(drop='index')
 
-        # tabelaComparativa.at[2,f'Operation'] = 'Subtotal CSLL  Após Inovações'
-        # tabelaComparativa.at[3,f'Operation'] = 'Sub total IRPJ Após Inovações'
-        # tabelaComparativa.at[4,f'Operation'] = ''
-        # tabelaComparativa.at[5,f'Operation'] = 'Comparativo CSLL'
-        # tabelaComparativa.at[6,f'Operation'] = 'Comparativo IRPJ'
-        # tabelaComparativa.at[7,f'Operation'] = ''
-        # tabelaComparativa.at[8,f'Operation'] = ''       
+        tabelaComparativa.at[2,f'Operation'] = 'Subtotal CSLL  Após Inovações'
+        tabelaComparativa.at[3,f'Operation'] = 'Sub total IRPJ Após Inovações'
+        tabelaComparativa.at[4,f'Operation'] = ''
+        tabelaComparativa.at[5,f'Operation'] = 'Comparativo CSLL'
+        tabelaComparativa.at[6,f'Operation'] = 'Comparativo IRPJ'
+        tabelaComparativa.at[7,f'Operation'] = ''
+        tabelaComparativa.at[8,f'Operation'] = ''       
         
         
-        # tabelaComparativa.at[5,'Value'] = tabelaComparativa.at[0,'Value'] - tabelaComparativa.at[2,'Value'] 
-        # tabelaComparativa.at[6,'Value'] = tabelaComparativa.at[1,'Value'] - tabelaComparativa.at[3,'Value'] 
+        tabelaComparativa.at[5,'Value'] = tabelaComparativa.at[0,'Value'] - tabelaComparativa.at[2,'Value'] 
+        tabelaComparativa.at[6,'Value'] = tabelaComparativa.at[1,'Value'] - tabelaComparativa.at[3,'Value'] 
         
-        # totalCSLL = round(np.sum([tabelaComparativa.at[5,f'Value'],
-        #                     tabelaComparativa.at[5,f'Value'],
-        #                     tabelaComparativa.at[5,f'Value'],
-        #                     tabelaComparativa.at[5,f'Value']]),2)
-        # totalIRPJ = round(np.sum([tabelaComparativa.at[6,f'Value'],
-        #                     tabelaComparativa.at[6,f'Value'],
-        #                     tabelaComparativa.at[6,f'Value'],
-        #                     tabelaComparativa.at[6,f'Value']]),2)
+        totalCSLL = round(np.sum([tabelaComparativa.at[5,f'Value'],
+                            tabelaComparativa.at[5,f'Value'],
+                            tabelaComparativa.at[5,f'Value'],
+                            tabelaComparativa.at[5,f'Value']]),2)
+        totalIRPJ = round(np.sum([tabelaComparativa.at[6,f'Value'],
+                            tabelaComparativa.at[6,f'Value'],
+                            tabelaComparativa.at[6,f'Value'],
+                            tabelaComparativa.at[6,f'Value']]),2)
         
-        # with st.expander('Tabela Comparativa'):
-        #     totalCSLL_formatted = "{:,.2f}".format(totalCSLL)
-        #     totalIRPJ_formatted = "{:,.2f}".format(totalIRPJ)
-        #     tabelaComparativa = tabelaComparativa.reindex([0,2,4,5,8,1,3,7,6])
-        #     st.dataframe(tabelaComparativa,key=anoDeAnalise)
-        #     st.metric(label=f'Total CSLL {anoDeAnalise}: ', value=totalCSLL_formatted)
-        #     st.metric(label=f'Total IRPJ {anoDeAnalise}: ', value=totalIRPJ_formatted)
+        with st.expander('Tabela Comparativa'):
+            totalCSLL_formatted = "{:,.2f}".format(totalCSLL)
+            totalIRPJ_formatted = "{:,.2f}".format(totalIRPJ)
+            tabelaComparativa = tabelaComparativa.reindex([0,2,4,5,8,1,3,7,6])
+            st.dataframe(tabelaComparativa,key=anoDeAnalise)
+            st.metric(label=f'Total CSLL {anoDeAnalise}: ', value=totalCSLL_formatted)
+            st.metric(label=f'Total IRPJ {anoDeAnalise}: ', value=totalIRPJ_formatted)
 
     
         
@@ -326,76 +326,76 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
             controler.update_table_trimestral('resultadosjcptrimestral', economia2019Trimestral_data_editor, cnpj_selecionado, anoDeAnalise)    
         
         #### ---- Lacs e Lalur após inovações editavel 
-        # with st.expander('Lacs Lalur'):
-        #     session_state_lacs = f"economia_{anoDeAnalise}_lacslalur"
+        with st.expander('Lacs Lalur'):
+            session_state_lacs = f"economia_{anoDeAnalise}_lacslalur"
 
-        #     st.session_state[session_cnpj_key] = cnpj_selecionado
+            st.session_state[session_cnpj_key] = cnpj_selecionado
 
          
-        #     if session_state_lacs not in st.session_state or st.session_state.get(session_state_lacs) is None or not st.session_state[session_state_lacs].equals(lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise)):
+            if session_state_lacs not in st.session_state or st.session_state.get(session_state_lacs) is None or not st.session_state[session_state_lacs].equals(lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise)):
                
-        #         lacslalurTrimestral = lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise)
-        #         st.session_state[session_state_lacs] = lacslalurTrimestral
+                lacslalurTrimestral = lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise)
+                st.session_state[session_state_lacs] = lacslalurTrimestral
 
-        #     with st.form(f"{anoDeAnalise}__===__{trimestre}"):
+            with st.form(f"{anoDeAnalise}__===__{trimestre}"):
 
-        #         lacslalurTrimestral_data_editor = st.data_editor(st.session_state[session_state_lacs], key=f'data_{anoDeAnalise}', height=800, use_container_width=True)
+                lacslalurTrimestral_data_editor = st.data_editor(st.session_state[session_state_lacs], key=f'data_{anoDeAnalise}', height=800, use_container_width=True)
     
-        #         submittedbutton1 = st.form_submit_button(f"Recalcular Tabela {anoDeAnalise}")
+                submittedbutton1 = st.form_submit_button(f"Recalcular Tabela {anoDeAnalise}")
 
 
-        #     if submittedbutton1:
+            if submittedbutton1:
 
-        #         updated_lacslalur = lacslalur.LacsLalurAposInovacoesTrimestralCallback(lacslalurTrimestral_data_editor)
+                updated_lacslalur = lacslalur.LacsLalurAposInovacoesTrimestralCallback(lacslalurTrimestral_data_editor)
 
-        #         st.session_state[session_state_lacs] = updated_lacslalur
+                st.session_state[session_state_lacs] = updated_lacslalur
                 
-        #         lacslalurTrimestral = updated_lacslalur
+                lacslalurTrimestral = updated_lacslalur
 
-        #         st.write("Tabela recalculada com sucesso!")
-        #         st.dataframe(lacslalurTrimestral)
+                st.write("Tabela recalculada com sucesso!")
+                st.dataframe(lacslalurTrimestral)
 
-        # ####---- Tabela Comparativa Lacs e Lalur antes e apos Inovações 
-        # lacslalurOrignal = lacslalur.tabelaComparativaLacsLalur(cnpj_selecionado,anoDeAnalise).iloc[[10,32],2:].reset_index(drop='index')
+        ####---- Tabela Comparativa Lacs e Lalur antes e apos Inovações 
+        lacslalurOrignal = lacslalur.tabelaComparativaLacsLalur(cnpj_selecionado,anoDeAnalise).iloc[[10,32],2:].reset_index(drop='index')
 
-        # try:
-        #     aposInovacoesLacslalur = lacslalurTrimestral.iloc[[12,32],:]
-        # except:
-        #     aposInovacoesLacslalur = lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise).iloc[[12,32],:]
+        try:
+            aposInovacoesLacslalur = lacslalurTrimestral.iloc[[12,32],:]
+        except:
+            aposInovacoesLacslalur = lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise).iloc[[12,32],:]
         
-        # tabelaComparativa = pd.concat([lacslalurOrignal,aposInovacoesLacslalur]).reset_index(drop='index')
+        tabelaComparativa = pd.concat([lacslalurOrignal,aposInovacoesLacslalur]).reset_index(drop='index')
         
 
-        # tabelaComparativa.at[2,f'Operation 1º Trimestre'] = 'Subtotal CSLL  Após Inovações'
-        # tabelaComparativa.at[3,f'Operation 1º Trimestre'] = 'Sub total IRPJ Após Inovações'
-        # tabelaComparativa.at[4,f'Operation 1º Trimestre'] = ''
-        # tabelaComparativa.at[5,f'Operation 1º Trimestre'] = 'Comparativo CSLL'
-        # tabelaComparativa.at[6,f'Operation 1º Trimestre'] = 'Comparativo IRPJ'
-        # tabelaComparativa.at[7,f'Operation 1º Trimestre'] = ''
-        # tabelaComparativa.at[8,f'Operation 1º Trimestre'] = ''
-        # tabelaComparativa.drop(columns=['Operation 2º Trimestre','Operation 3º Trimestre','Operation 4º Trimestre'],inplace=True)
+        tabelaComparativa.at[2,f'Operation 1º Trimestre'] = 'Subtotal CSLL  Após Inovações'
+        tabelaComparativa.at[3,f'Operation 1º Trimestre'] = 'Sub total IRPJ Após Inovações'
+        tabelaComparativa.at[4,f'Operation 1º Trimestre'] = ''
+        tabelaComparativa.at[5,f'Operation 1º Trimestre'] = 'Comparativo CSLL'
+        tabelaComparativa.at[6,f'Operation 1º Trimestre'] = 'Comparativo IRPJ'
+        tabelaComparativa.at[7,f'Operation 1º Trimestre'] = ''
+        tabelaComparativa.at[8,f'Operation 1º Trimestre'] = ''
+        tabelaComparativa.drop(columns=['Operation 2º Trimestre','Operation 3º Trimestre','Operation 4º Trimestre'],inplace=True)
             
         
-        # for i in [1,2,3,4]:
-        #     tabelaComparativa.at[5,f'Value {i}º Trimestre'] = tabelaComparativa.at[0,f'Value {i}º Trimestre'] - tabelaComparativa.at[2,f'Value {i}º Trimestre'] 
-        #     tabelaComparativa.at[6,f'Value {i}º Trimestre'] = tabelaComparativa.at[1,f'Value {i}º Trimestre'] - tabelaComparativa.at[3,f'Value {i}º Trimestre'] 
+        for i in [1,2,3,4]:
+            tabelaComparativa.at[5,f'Value {i}º Trimestre'] = tabelaComparativa.at[0,f'Value {i}º Trimestre'] - tabelaComparativa.at[2,f'Value {i}º Trimestre'] 
+            tabelaComparativa.at[6,f'Value {i}º Trimestre'] = tabelaComparativa.at[1,f'Value {i}º Trimestre'] - tabelaComparativa.at[3,f'Value {i}º Trimestre'] 
         
-        # totalCSLL = round(np.sum([tabelaComparativa.at[5,f'Value 1º Trimestre'],
-        #                     tabelaComparativa.at[5,f'Value 2º Trimestre'],
-        #                     tabelaComparativa.at[5,f'Value 3º Trimestre'],
-        #                     tabelaComparativa.at[5,f'Value 4º Trimestre']]),2)
-        # totalIRPJ = round(np.sum([tabelaComparativa.at[6,f'Value 1º Trimestre'],
-        #                     tabelaComparativa.at[6,f'Value 2º Trimestre'],
-        #                     tabelaComparativa.at[6,f'Value 3º Trimestre'],
-        #                     tabelaComparativa.at[6,f'Value 4º Trimestre']]),2)
+        totalCSLL = round(np.sum([tabelaComparativa.at[5,f'Value 1º Trimestre'],
+                            tabelaComparativa.at[5,f'Value 2º Trimestre'],
+                            tabelaComparativa.at[5,f'Value 3º Trimestre'],
+                            tabelaComparativa.at[5,f'Value 4º Trimestre']]),2)
+        totalIRPJ = round(np.sum([tabelaComparativa.at[6,f'Value 1º Trimestre'],
+                            tabelaComparativa.at[6,f'Value 2º Trimestre'],
+                            tabelaComparativa.at[6,f'Value 3º Trimestre'],
+                            tabelaComparativa.at[6,f'Value 4º Trimestre']]),2)
         
-        # with st.expander('Tabela Comparativa'):
-        #     totalCSLL_formatted = "{:,.2f}".format(totalCSLL)
-        #     totalIRPJ_formatted = "{:,.2f}".format(totalIRPJ)
-        #     tabelaComparativa = tabelaComparativa.reindex([0,2,4,5,8,1,3,7,6])
-        #     st.dataframe(tabelaComparativa)
-        #     st.metric(label=f'Total CSLL {anoDeAnalise}: ', value=totalCSLL_formatted)
-        #     st.metric(label=f'Total IRPJ {anoDeAnalise}: ', value=totalIRPJ_formatted)
+        with st.expander('Tabela Comparativa'):
+            totalCSLL_formatted = "{:,.2f}".format(totalCSLL)
+            totalIRPJ_formatted = "{:,.2f}".format(totalIRPJ)
+            tabelaComparativa = tabelaComparativa.reindex([0,2,4,5,8,1,3,7,6])
+            st.dataframe(tabelaComparativa)
+            st.metric(label=f'Total CSLL {anoDeAnalise}: ', value=totalCSLL_formatted)
+            st.metric(label=f'Total IRPJ {anoDeAnalise}: ', value=totalIRPJ_formatted)
 
 
         tabelaRelatorioTri = economia2019Trimestral_data_editor.copy()
