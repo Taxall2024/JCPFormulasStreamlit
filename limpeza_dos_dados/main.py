@@ -138,7 +138,7 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorI
                                                             economia2019_copy.at[12, f'Value {i}º Trimestre'],economia2019_copy.at[13, f'Value {i}º Trimestre']])-economia2019_copy.at[10, f'Value {i}º Trimestre']
         
         #Veriricação se o valor de JSCP e negativo para ser a conta caso positivo
-        if economia2019_copy.at[15, f'Value {i}º Trimestre'] > 0 and economia2019_copy.at[9, f'Operation {i}º Trimestre'] == 'Lucro do Período' :
+        if economia2019_copy.at[15, f'Value {i}º Trimestre'] > 0 and economia2019_copy.at[9, f'Operation {i}º Trimestre'] == 'Lucro do Período ' :
             economia2019_copy.at[16, f'Value {i}º Trimestre'] = economia2019_copy.at[15, f'Value {i}º Trimestre'] - economia2019_copy.at[0,f'Value {i}º Trimestre']
         else:
             economia2019_copy.at[16, f'Value {i}º Trimestre'] = 0.0
