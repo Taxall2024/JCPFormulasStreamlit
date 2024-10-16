@@ -210,10 +210,10 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
                 st.session_state.form_submit = False
 
         if st.button('Salvar alterações',key=f'{cnpj_selecionado,anoDeAnalise}'):
-            
-            controler.update_table('resultadosjcp', economia2019_data_editor, cnpj_selecionado, anoDeAnalise)    
-            st.success('Dados atualizados')
-  
+            with st.spinner('Salvando alterações...'):
+                controler.update_table('resultadosjcp', economia2019_data_editor, cnpj_selecionado, anoDeAnalise)    
+                st.success('Dados atualizados')
+    
         #======== --- Tbaelas Lacs e Lalur Aós inovações
 
         with st.expander('Lacs Lalur'):
@@ -299,9 +299,9 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
         
         
         if st.button('Salvar Alterações',key=f'{cnpj_selecionado,anoDeAnalise}'):
-            
-            controler.update_table_trimestral('resultadosjcptrimestral', economia2019Trimestral_data_editor, cnpj_selecionado, anoDeAnalise)    
-            st.success('Dados atualizados')
+            with st.spinner('Salvando alterações...'):
+                controler.update_table_trimestral('resultadosjcptrimestral', economia2019Trimestral_data_editor, cnpj_selecionado, anoDeAnalise)    
+                st.success('Dados atualizados')
 
         #### ---- Lacs e Lalur após inovações editavel 
         with st.expander('Lacs Lalur'):

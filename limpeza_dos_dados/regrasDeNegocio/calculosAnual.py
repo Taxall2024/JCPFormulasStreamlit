@@ -75,21 +75,6 @@ class Calculo(FiltrandoDadosParaCalculo):
             else:    
                 self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2)-self.jcpRetroativo
             
-            # '''Formula que faz checagem se o valor de JSCP não esta passando certos limites, optei for fazer utilizando np.where porem
-            # o reultado esta muito distorcido, com valores muito acima do esperado, entao vou deixar a formula de calculo simples por enquanto
-            # e retornar eventualmente para implementar a formula'''
-
-            # maior_valor = max(lucroLiquid50, lucroAcuEReserva)
-
-            # #self.valorJPC = 0
-
-            # if lucroLiquid50 * self.totalJSPC > 0:
-
-            #     if self.totalJSPC * self.dataframe.loc[data, 'Ano'] > maior_valor:
-            #         self.valorJPC = maior_valor
-            #     else:
-            #         self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2) - self.jcpRetroativo
-
             self.irrfJPC = round(self.valorJPC * 0.15, 2)
             self.valorApropriar = round(self.valorJPC - self.irrfJPC, 2)
 
@@ -108,7 +93,7 @@ class Calculo(FiltrandoDadosParaCalculo):
     @timing
     def limiteDedutibilidade(self,data):
 
-
+       
         self.lucroLiquid50 = self.lucroAntIRPJ * 0.5
         self.lucroAcuEReserva = (self.reservLucro + self.lucroAcumulado) * 0.5
          
@@ -125,10 +110,13 @@ class Calculo(FiltrandoDadosParaCalculo):
     @timing
     def tabelaEconomia(self,data):
         
-        
-        self.reducaoIRPJCSLL = self.valorJPC * 0.34
-        valorAliquota = 34 
-
+        if self.lucroAntIRPJ > 240000: 
+            self.reducaoIRPJCSLL = self.valorJPC * 0.34
+            valorAliquota = 34 
+        else:
+            self.reducaoIRPJCSLL = self.valorJPC * 0.24
+            valorAliquota = 24 
+            
         self.economia = self.reducaoIRPJCSLL - self.darf
 
         results = [
