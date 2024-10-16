@@ -66,12 +66,12 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         if self.verificandoPreju == True:
 
             self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
-            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.prejuizoPeirod,self.acosTesouraria,
-            self.lucroAcumulado,self.ajustExercAnt])-(self.prejuAcumulado + self.prejuizoPeirod)
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.acosTesouraria,
+            self.lucroAcumulado,self.ajustExercAnt])-(self.prejuAcumulado + self.lucro_periodo_value)
         else:
             self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
-            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.prejuizoPeirod,self.acosTesouraria,
-            self.lucroAcumulado,self.ajustExercAnt, self.prejuizoPeirod]) - self.prejuAcumulado 
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.acosTesouraria,
+            self.lucroAcumulado,self.ajustExercAnt, self.lucro_periodo_value]) - self.prejuAcumulado 
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Patrimônio líquido", "Value": self.patrimonioliquido}])], ignore_index=True)
 
@@ -181,7 +181,7 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
     def TotalFinsCalcJSPC(self):
 
         self.totalJSPC =  sum((self.capSocial,self.reservaCapital,self.lucroAcumulado,self.reservLucro
-                               ,self.prejuizoPeirod,self.ajustExercAnt,
+                               ,self.ajustExercAnt,
                                self.resultExercicio,self.lucroPrejAcumu)) - self.prejuAcumulado
         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Total Fins Calc JSPC", "Value": self.totalJSPC}])], ignore_index=True)

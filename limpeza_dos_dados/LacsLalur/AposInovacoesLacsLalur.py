@@ -56,10 +56,11 @@ class LacsLalurAposInovacoes(dbController):
             else:
                 0    
             #Calculando Subtotal CSLL Recolher
-            lacsLalurAposInovacoesDF.at[12,'Value'] = lacsLalurAposInovacoesDF.at[7,'Value'] - lacsLalurAposInovacoesDF.at[9,'Value'] - lacsLalurAposInovacoesDF.at[10,'Value'] - lacsLalurAposInovacoesDF.at[11,'Value']                
+            lacsLalurAposInovacoesDF.at[11,'Value'] = lacsLalurAposInovacoesDF.at[7,'Value'] - lacsLalurAposInovacoesDF.at[9,'Value'] - lacsLalurAposInovacoesDF.at[10,'Value'] - lacsLalurAposInovacoesDF.at[11,'Value']                
             #Calculo Base IRPJ
             lacsLalurAposInovacoesDF.at[13,'Value'] = lacsLalurAposInovacoesDF.at[0,'Value'] - lacsLalurAposInovacoesDF.at[7,'Value']
-
+            #Exclusoes IRPJ
+            lacsLalurAposInovacoesDF.at[16,'Value'] = lacsLalurAposInovacoesDF.at[2,'Value']
             #Calculo Base de Calculo IRPJ
             lacsLalurAposInovacoesDF.at[27,'Value'] = lacsLalurAposInovacoesDF.at[13,'Value'] + lacsLalurAposInovacoesDF.at[14,'Value'] -lacsLalurAposInovacoesDF.at[2,'Value']
             #lacsLalurAposInovacoesDF.at[27,'Operation'] = 'Base de calculo IRPJ'
@@ -144,9 +145,8 @@ class LacsLalurAposInovacoes(dbController):
                                         df.at[28,f'Value {i}'] - df.at[29,f'Value {i}']-
                                         df.at[30,f'Value {i}'] - df.at[31,f'Value {i}'])
 
-
-            return df
-
+        return df
+        
     def LacsLalurAposInovacoesTrimestralCallback(self,dataframe:pd.DataFrame) -> pd.DataFrame:
 
         df = dataframe

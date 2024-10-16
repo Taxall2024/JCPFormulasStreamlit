@@ -40,7 +40,7 @@ st.markdown(
      unsafe_allow_html=True )
 
 
-def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool, valorIRPJ: bool)-> pd.DataFrame:
+def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool)-> pd.DataFrame:
     #'''Função de callback para recalcular os valores apresentados e gerados para análise trimestral do JCP'''
 
 
@@ -82,14 +82,7 @@ def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool, valorIRPJ: bo
             economia2019_copy.at[23, f'Value'] = economia2019_copy.at[19, f'Value'] + (economia2019_copy.at[19, f'Value'] * 0.2 * 0)
         else:
             economia2019_copy.at[23, f'Value'] = economia2019_copy.at[19, f'Value'] + (economia2019_copy.at[19, f'Value'] * 0.2)    
-        
-        if valorIRPJ == True:
-            # Valor da redução da multa( 24% ou 34% do valor de JSCP)
-            economia2019_copy.at[24, f'Value'] = economia2019_copy.at[18, f'Value'] * 0.24
-            economia2019_copy.at[24, f'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
-        else:
-            economia2019_copy.at[24, f'Value'] = economia2019_copy.at[18, f'Value'] * 0.34    
-            economia2019_copy.at[24, f'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+
         # Valor de economia gerada( Subtrir a redução no IRPJ pelo valor de DARF)
         economia2019_copy.at[25, f'Value'] = economia2019_copy.at[24, f'Value'] - economia2019_copy.at[23, f'Value']
         
@@ -101,12 +94,7 @@ def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool, valorIRPJ: bo
         economia2019_copy.at[22, f'Value'] = 0
                     
         economia2019_copy.at[23, f'Value'] = 0
-        if valorIRPJ == True:
-            economia2019_copy.at[24, f'Value'] = 0
-            economia2019_copy.at[24, f'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
-        else:
-            economia2019_copy.at[24, f'Value'] = 0  
-            economia2019_copy.at[24, f'Operation'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+        economia2019_copy.at[24, f'Value'] = 0
 
         economia2019_copy.at[25, f'Value'] = 0
         economia2019_copy.at[21, f'Value'] = 0
@@ -119,7 +107,7 @@ def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool, valorIRPJ: bo
     return economia2019
 
 
-def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorIRPJ: bool)-> pd.DataFrame:
+def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool)-> pd.DataFrame:
     #'''Função de callback para recalcular os valores apresentados e gerados para análise trimestral do JCP'''
     trimestres = [1,2,3,4]
     for i in trimestres:
@@ -161,14 +149,7 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorI
                 economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[19, f'Value {i}º Trimestre'] + (economia2019_copy.at[19, f'Value {i}º Trimestre'] * 0.2 * 0)
             else:
                 economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[19, f'Value {i}º Trimestre'] + (economia2019_copy.at[19, f'Value {i}º Trimestre'] * 0.2)    
-            
-            if valorIRPJ == True:
-                # Valor da redução da multa( 24% ou 34% do valor de JSCP)
-                economia2019_copy.at[24, f'Value {i}º Trimestre'] = economia2019_copy.at[18, f'Value {i}º Trimestre'] * 0.24
-                economia2019_copy.at[24, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
-            else:
-                economia2019_copy.at[24, f'Value {i}º Trimestre'] = economia2019_copy.at[18, f'Value {i}º Trimestre'] * 0.34    
-                economia2019_copy.at[24, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+                    
             # Valor de economia gerada( Subtrir a redução no IRPJ pelo valor de DARF)
             economia2019_copy.at[25, f'Value {i}º Trimestre'] = economia2019_copy.at[24, f'Value {i}º Trimestre'] - economia2019_copy.at[23, f'Value {i}º Trimestre']
             
@@ -180,12 +161,8 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool, valorI
             economia2019_copy.at[22, f'Value {i}º Trimestre'] = 0
                         
             economia2019_copy.at[23, f'Value {i}º Trimestre'] = 0
-            if valorIRPJ == True:
-                economia2019_copy.at[24, f'Value {i}º Trimestre'] = 0
-                economia2019_copy.at[24, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.24%'
-            else:
-                economia2019_copy.at[24, f'Value {i}º Trimestre'] = 0  
-                economia2019_copy.at[24, f'Operation {i}º Trimestre'] = 'REDUÇÃO NO IRPJ/CSLL - 0.34%'
+
+            economia2019_copy.at[24, f'Value {i}º Trimestre'] = 0
 
             economia2019_copy.at[25, f'Value {i}º Trimestre'] = 0
             economia2019_copy.at[21, f'Value {i}º Trimestre'] = 0
@@ -221,22 +198,22 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
         with st.form(f"my_form{anoDeAnalise}{ano}"):
 
             multa = st.toggle('Retirar multa', key=f'{anoDeAnalise}')
-            valorIRPJ = st.toggle('Alterar valor IRPJ de 34% para 24%',key=f'{anoDeAnalise}widgetMulta')
 
             economia2019_data_editor = st.data_editor(st.session_state[session_state_name], key=f'{anoDeAnalise}deano', height=1000, use_container_width=True)
             submitted = st.form_submit_button(f"Atualizar {anoDeAnalise}")
 
         if submitted:
             if 'form_submit' not in st.session_state or not st.session_state.form_submit:
-                st.session_state[session_state_name] = reCalculandoAno(economia2019_data_editor, multa,valorIRPJ)
+                st.session_state[session_state_name] = reCalculandoAno(economia2019_data_editor, multa)
                 st.session_state.form_submit = True
             else:
                 st.session_state.form_submit = False
 
-        if st.button('Atualizar Banco de Dados',key=f'{cnpj_selecionado,anoDeAnalise}'):
-
+        if st.button('Salvar alterações',key=f'{cnpj_selecionado,anoDeAnalise}'):
+            
             controler.update_table('resultadosjcp', economia2019_data_editor, cnpj_selecionado, anoDeAnalise)    
-        
+            st.success('Dados atualizados')
+  
         #======== --- Tbaelas Lacs e Lalur Aós inovações
 
         with st.expander('Lacs Lalur'):
@@ -308,23 +285,24 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
         with st.form(f"{anoDeAnalise}{trimestre}"):
 
             multa = st.toggle('Retirar multa', key=f'{anoDeAnalise}')
-            valorIRPJ = st.toggle('Alterar valor IRPJ de 34% para 24%',key=f'{anoDeAnalise}widgetMulta')
+
 
             economia2019Trimestral_data_editor = st.data_editor(st.session_state[session_state_name], key=f'data_editor_{anoDeAnalise}', height=1000, use_container_width=True)
             submittedbutton1 = st.form_submit_button(f"Atualizar {anoDeAnalise}")
 
         if submittedbutton1:
             if 'form_submitted' not in st.session_state or not st.session_state.form_submitted:
-                st.session_state[session_state_name] = reCalculandoTrimestral(economia2019Trimestral_data_editor, multa,valorIRPJ)
+                st.session_state[session_state_name] = reCalculandoTrimestral(economia2019Trimestral_data_editor, multa)
                 st.session_state.form_submitted = True
             else:
                 st.session_state.form_submitted = False
         
         
-        if st.button('Atualizar Banco de Dados',key=f'{cnpj_selecionado,anoDeAnalise}'):
-
+        if st.button('Salvar Alterações',key=f'{cnpj_selecionado,anoDeAnalise}'):
+            
             controler.update_table_trimestral('resultadosjcptrimestral', economia2019Trimestral_data_editor, cnpj_selecionado, anoDeAnalise)    
-        
+            st.success('Dados atualizados')
+
         #### ---- Lacs e Lalur após inovações editavel 
         with st.expander('Lacs Lalur'):
             session_state_lacs = f"economia_{anoDeAnalise}_lacslalur"
@@ -552,8 +530,8 @@ if __name__=='__main__':
                 calculos = CalculosEProcessamentoDosDados()
                 
                 calculos.filtrarCalcularECadastras(file_paths,file_path)
-
-            except:
+                st.success('Dados processados e salvos!')
+            except Exception as e:
                 pass
     controler.engine.dispose()
 

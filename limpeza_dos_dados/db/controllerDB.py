@@ -14,10 +14,6 @@ import psycopg2
 from psycopg2 import sql
 
 
-MAX_RETRIES = 5
-
-RETRY_DELAY = 5
-
 class dbController():
     
     def __init__(self,banco):
@@ -29,57 +25,69 @@ class dbController():
         dblocalCon = st.secrets['general']['auth_token']
         self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp', 
                         pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)                                
+
+        # self.engine = create_engine(f'postgresql+psycopg2://postgres:Taxall2024@localhost:5432/ECF',
+        #                             pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)   
         
         self.conn = self.engine.connect()
 
-        #self.closeCons()
 
 
     def closeCons(self):
  
         self.engine.dispose()
         self.conn.close()
-        print("Conexão fechada.")
-
 
     def inserirTabelas(self, tabela, df):
 
-        verificacaoCNPJ = df.iloc[0]['CNPJ']
-        query = text(f"SELECT * FROM {tabela} WHERE \"CNPJ\" = :CNPJ")
-        
-        self.retry_count = 0
+        try:
+            verificacaoCNPJ = df.iloc[0]['CNPJ']
+            verificacaoAno = df.iloc[0]['Ano']
+            query = text(f"""SELECT * 
+                        FROM {tabela} 
+                        WHERE \"CNPJ\" = :CNPJ AND \"Ano\" = :ano""")
+            
+            with self.engine.connect() as conn:
+                result = conn.execute(query, {'CNPJ': verificacaoCNPJ, 'Ano': verificacaoAno})
+                rows = result.fetchall()
+        except:
+            pass
+                    
+        try:    
+            verificacaoCNPJ = df.iloc[0]['CNPJ']
+            verificacaoAnoTanalise = df.iloc[0]['PeriodoDeAnalise']
+            
+            query = text(f"""SELECT * 
+                            FROM {tabela} 
+                            WHERE \"CNPJ\" = :CNPJ AND \"PeriodoDeAnalise\" = :PeriodoDeAnalise""")
 
-        while self.retry_count < MAX_RETRIES:
-            try:
-                # Execute the query
-                with self.engine.connect() as conn:
-                    result = conn.execute(query, {'CNPJ': verificacaoCNPJ})
+            with self.engine.connect() as conn:
+                result = conn.execute(query, {'CNPJ': verificacaoCNPJ, 'PeriodoDeAnalise': verificacaoAnoTanalise})
+                rows = result.fetchall()
+        except:
+            pass
+            
+        try:
+            verificacaoCNPJ = df.iloc[0]['CNPJ']
+            
+            query = text(f"""SELECT * 
+                            FROM {tabela} 
+                            WHERE \"CNPJ\" = :CNPJ """)
 
-                # Fetch the results
-                    rows = result.fetchall()
+            with self.engine.connect() as conn:
+                result = conn.execute(query, {'CNPJ': verificacaoCNPJ})
+                rows = result.fetchall()
+        except:
+            pass
+            
+        if rows:
+            st.warning(f"CNPJ {verificacaoCNPJ}  já existe na tabela {tabela}. Não inserindo dados.")
+        else:
+            df.to_sql(tabela, self.engine, if_exists='append', index=False)  
+                
 
-                if rows:
-                    st.warning(f"CNPJ {verificacaoCNPJ} já existe na tabela {tabela}. Não inserindo dados.")
-                else:
-                    df.to_sql(tabela, self.engine, if_exists='append', index=False)
-                    st.success(f"CNPJ {verificacaoCNPJ} inserido com sucesso na tabela {tabela}!")
-
-                # Break out of the retry loop
-                break
-
-            except sa.exc.OperationalError as e:
-        
-                print(f"Operational error: {e}")
-                self.retry_count += 1
-       
-                time.sleep(RETRY_DELAY)
-           
-                self.conn = self.engine.connect()
-
-        if self.retry_count == MAX_RETRIES:
-
-            raise Exception("Failed to execute query after {} retries".format(MAX_RETRIES))
         self.closeCons()
+
 
     def get_data_by_cnpj(self, cnpj,tabela):
         query = f"SELECT * FROM {tabela} WHERE \"CNPJ\" = '{cnpj}'"
@@ -210,7 +218,6 @@ class dbController():
             with self.engine.connect():
                 
                 df.to_sql(tabela, self.engine, if_exists='append', index=False)
-                st.success(f"Ano {verificacaoAno} e CNPJ {verificacaoCNPJ} inserido com sucesso no banco ECF!")
             
         self.closeCons()
 
@@ -221,19 +228,13 @@ class dbController():
         
         # Gerenciador de contexto para a transação
         with self.conn.begin() as transaction:
-            try:
+           
                 for operation in operations:
                     value = float(df.loc[df['Operation'] == operation, 'Value'].iloc[0])
                     query = text(f"UPDATE {tabela} SET \"Value\" = :Value WHERE \"CNPJ\" = :CNPJ AND \"Ano\" = :Ano AND \"Operation\" = :Operation")
                     params = {'Value': value, 'CNPJ': cnpj, 'Ano': ano, 'Operation': operation}
                     self.conn.execute(query, params)
                 
-                st.success('Os valores foram atualizados')
-            
-            except Exception as e:
-                # Se ocorrer um erro, a transação será revertida automaticamente
-                st.warning(f'Não foi possível atualizar os valores para {operation} por {e}')
-
         self.closeCons()
 
     def update_table_trimestral(self, tabela, df, cnpj, ano):
@@ -242,7 +243,7 @@ class dbController():
         operations = [op for trimestre in [1,2,3,4] for op in df[f'Operation {trimestre}º Trimestre'].unique()]
     # Gerenciador de contexto para a transação
         with self.conn.begin() as transaction:
-            try:
+            
                 for trimestre in [1,2,3,4]:
                     for operation in operations:
                         filtered_df = df.loc[df[f'Operation {trimestre}º Trimestre'] == operation]
@@ -252,21 +253,17 @@ class dbController():
                             params = {'Value': value, 'CNPJ': cnpj, 'Ano': ano, 'Operation': operation}
                             self.conn.execute(query, params)
                         else:
-                            st.warning(f'Não há valores para {operation} no {trimestre}º trimestre')
-                    st.success(f'Os valores para {trimestre}º trimestre foram atualizados')
-            
-            except Exception as e:
-                # Se ocorrer um erro, a transação será revertida automaticamente
-                st.warning(f'Não foi possível atualizar os valores para {operation} por {e}')
+                            print(f'Os valores para {trimestre}º trimestre foram atualizados')
+
         self.closeCons()
 
 
 
 
-# if __name__ =="__main__":
-#     ''
+if __name__ =="__main__":
+
     
-#     controler = dbController('taxall')
+    controler = dbController('taxall')
     
 
 #     controler.deletarDadosDaTabelaPorCnpj('83892174000133','l100')

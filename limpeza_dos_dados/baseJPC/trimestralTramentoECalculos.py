@@ -91,12 +91,14 @@ class trimestralFiltrandoDadosParaCalculo():
         if self.verificandoPreju == True:
 
             self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
-            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.acosTesouraria,
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,
             self.lucroAcumulado,self.exerciciosAnteriores])-(self.prejuAcumulado + self.prejuizoPeirod)
+
         else:
+
             self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
-            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.acosTesouraria,
-            self.lucroAcumulado,self.exerciciosAnteriores, self.prejuizoPeirod]) - self.prejuAcumulado 
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,
+            self.lucroAcumulado,self.exerciciosAnteriores,self.prejuizoPeirod]) - self.prejuAcumulado 
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Patrimônio líquido", "Value": self.patrimonioliquido}])], ignore_index=True)
 
@@ -374,7 +376,7 @@ class trimestralFiltrandoDadosParaCalculo():
      
         self.LacsLalurTrimestral.LucroLiquidoAntesIRPJ()
         self.lucroLiquid50 = self.LacsLalurTrimestral.lucroAntIRPJ * 0.5
-        self.lucroAcuEReserva = (self.reservLucro + self.resultado) * 0.5
+        self.lucroAcuEReserva = (self.reservLucro + self.resultado+self.reservLegal) * 0.5
            
         self.darf = self.irrfJPC + (self.irrfJPC*0.2)
 
@@ -389,9 +391,12 @@ class trimestralFiltrandoDadosParaCalculo():
 
     def tabelaEconomia(self):
 
-
-        self.reducaoIRPJCSLL = self.valorJPC * 0.34
-        self.valor = 0.34
+        if self.LacsLalurTrimestral.lucroAntIRPJ > 60000:
+            self.reducaoIRPJCSLL = self.valorJPC * 0.34
+            self.valor = 0.34
+        else:
+            self.reducaoIRPJCSLL = self.valorJPC * 0.24
+            self.valor = 0.24
 
         self.economia = self.reducaoIRPJCSLL - self.darf
 
