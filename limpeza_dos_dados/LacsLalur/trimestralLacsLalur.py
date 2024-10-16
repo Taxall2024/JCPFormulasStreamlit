@@ -110,6 +110,18 @@ class LacsLalurCSLLTrimestral():
 
 
     #      As funções abaixo sao referentes a parte da tabela Lacs e Lalur que representa os calculos de CSLL
+    def ReferencialAliquota(self):
+        
+        lalur = self.ec630
+        lalur = lalur[
+            (lalur['Código Lançamento'] == 1)&
+            (lalur['Data Inicial'].dt.year == self.ano) &
+            (lalur['Data Inicial'].dt.month >= self.mes_inicio) &
+            (lalur['Data Inicial'].dt.month <= self.mes_fim)&
+            (lalur['Trimestre'] == self.trimestre)]
+        
+        self.refAliquota = np.sum(lalur['Vlr Lançamento'].values)
+    
     def lucroAntesCSLL(self):
         
         lacs = self.lacs   
@@ -240,7 +252,7 @@ class LacsLalurCSLLTrimestral():
         self.retencoesOrgPublicos()
         self.impostoPorEstimativa()
         self.subTotalCSLLRecolher()
-
+        self.ReferencialAliquota()
         self.dataframeFinal = pd.DataFrame(self.resultsLacs)
         
         return self.dataframeFinal

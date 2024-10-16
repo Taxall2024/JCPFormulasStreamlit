@@ -532,6 +532,7 @@ if __name__=='__main__':
                 calculos.filtrarCalcularECadastras(file_paths,file_path)
                 st.success('Dados processados e salvos!')
             except Exception as e:
+                #st.warning(e)
                 pass
     controler.engine.dispose()
 

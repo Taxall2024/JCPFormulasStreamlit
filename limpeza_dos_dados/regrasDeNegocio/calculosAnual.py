@@ -109,8 +109,8 @@ class Calculo(FiltrandoDadosParaCalculo):
     
     @timing
     def tabelaEconomia(self,data):
-        
-        if self.lucroAntIRPJ > 240000: 
+        self.refAliquiotaAnual()
+        if self.refAliquAnual > 240000: 
             self.reducaoIRPJCSLL = self.valorJPC * 0.34
             valorAliquota = 34 
         else:

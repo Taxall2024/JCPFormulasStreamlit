@@ -49,7 +49,15 @@ class LacsLalurCSLL():
 
     #As funções abaixo utilizam como base para os calculos as a planilha LACS, 
     
-    
+    def refAliquiotaAnual(self):
+
+        lalur = self.ec630Filtrado
+        lalur = lalur[(
+            lalur['Código Lançamento'] == 1)&
+            (lalur['Data Inicial'].str.contains(self.data))]
+        
+        self.refAliquAnual = np.sum(lalur['Vlr Lançamento'].values)
+
     def lucroAntesCSLL(self):
         
         lacs = self.lacsFiltrado   
@@ -178,7 +186,7 @@ class LacsLalurCSLL():
         self.retencoesOrgPublicos()
         self.impostoPorEstimativa()
         self.subTotalCSLLRecolher()
-        
+        self.refAliquiotaAnual()
 
         return self.resultsLacs
 
@@ -462,7 +470,7 @@ class LacsLalurCSLL():
         self.impostoRendaRV()
         self.impostoRendPagoEfe()
         self.subTotal()
-
+        self.refAliquiotaAnual()
 
         return self.results
     
@@ -500,7 +508,7 @@ class LacsLalurCSLL():
         self.impostoRendaRV()
         self.impostoRendPagoEfe()
         self.subTotal()        
-     
+        self.refAliquiotaAnual()
         return self.LacsLalurAposInovacoes  
       
     @functools.cache
