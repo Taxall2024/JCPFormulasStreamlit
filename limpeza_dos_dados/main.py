@@ -149,7 +149,12 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool)-> pd.D
                 economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[19, f'Value {i}º Trimestre'] + (economia2019_copy.at[19, f'Value {i}º Trimestre'] * 0.2 * 0)
             else:
                 economia2019_copy.at[23, f'Value {i}º Trimestre'] = economia2019_copy.at[19, f'Value {i}º Trimestre'] + (economia2019_copy.at[19, f'Value {i}º Trimestre'] * 0.2)    
-                    
+            #Valor do imposto 
+            if economia2019_copy.at[24, f'Operation {i}º Trimestre'] == 'REDUÇÃO NO IRPJ/CSLL - 0.34%':
+                economia2019_copy.at[24, f'Value {i}º Trimestre'] = economia2019_copy.at[18, f'Value {i}º Trimestre'] * 0.34
+            else:
+                economia2019_copy.at[24, f'Value {i}º Trimestre'] = economia2019_copy.at[18, f'Value {i}º Trimestre'] * 0.24   
+
             # Valor de economia gerada( Subtrir a redução no IRPJ pelo valor de DARF)
             economia2019_copy.at[25, f'Value {i}º Trimestre'] = economia2019_copy.at[24, f'Value {i}º Trimestre'] - economia2019_copy.at[23, f'Value {i}º Trimestre']
             
