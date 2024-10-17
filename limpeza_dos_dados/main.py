@@ -131,7 +131,7 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool)-> pd.D
         else:
             economia2019_copy.at[16, f'Value {i}º Trimestre'] = 0.0
         
-        if economia2019_copy.at[15, f'Value {i}º Trimestre'] > 0:
+        if economia2019_copy.at[15, f'Value {i}º Trimestre'] or economia2019_copy.at[16, f'Value {i}º Trimestre'] > 0:
 
             #Calculando o Valor de JSCP(Valor da base multiplicado pela TJLP)
             economia2019_copy.at[18, f'Value {i}º Trimestre'] = economia2019_copy.at[16, f'Value {i}º Trimestre'] * (economia2019_copy.at[17, f'Value {i}º Trimestre'] / 100)
@@ -219,18 +219,51 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
                 controler.update_table('resultadosjcp', economia2019_data_editor, cnpj_selecionado, anoDeAnalise)    
                 st.success('Dados atualizados')
     
+
+    
         #======== --- Tbaelas Lacs e Lalur Aós inovações
 
         with st.expander('Lacs Lalur'):
-           lacslaurAno = lacslalur.gerandoTabelas(cnpj_selecionado,anoDeAnalise)
-           st.dataframe(lacslaurAno)
+            session_state_lacs = f"economia_{anoDeAnalise}_lacslalurAnual"
+
+            st.session_state[session_cnpj_key] = cnpj_selecionado
+
+         
+            if session_state_lacs not in st.session_state or st.session_state.get(session_state_lacs) is None or not st.session_state[session_state_lacs].equals(lacslalur.gerandoTabelas(cnpj_selecionado, anoDeAnalise)):
+               
+                lacslaurAno = lacslalur.gerandoTabelas(cnpj_selecionado, anoDeAnalise)
+                st.session_state[session_state_lacs] = lacslaurAno
+
+            with st.form(f"{anoDeAnalise}__===__{trimestre}"):
+
+                lacslalur_data_editor = st.data_editor(st.session_state[session_state_lacs], key=f'data_{anoDeAnalise}', height=800, use_container_width=True)
+    
+                submittedbutton1 = st.form_submit_button(f"Recalcular Tabela {anoDeAnalise}")
+
+
+            if submittedbutton1:
+
+                updated_lacslalur = lacslalur.CallBack_LacsLalurAposInovacoesCalculos(lacslalur_data_editor)
+
+                st.session_state[session_state_lacs] = updated_lacslalur
+                
+                lacslaurAno = updated_lacslalur
+
+                st.write("Tabela recalculada com sucesso!")
+                st.dataframe(lacslaurAno)
+
+
 
         ## ---- Tabelas comparativas Lacs e Lalur antes e após inovações do período anual
         
+
         lacslalurOrignal = lacslalur.tabelaComparativaLacsLalurAno(cnpj_selecionado,anoDeAnalise).iloc[[15,36],[3,2]].reset_index(drop='index')
-   
-        aposInovacoesLacslalur = lacslaurAno.iloc[[11,32],:]
         
+        try:
+            aposInovacoesLacslalur = lacslaurAno.iloc[[10,30],:]
+        except:
+            aposInovacoesLacslalur = lacslalur_data_editor.iloc[[10,30],:]
+
         tabelaComparativa = pd.concat([lacslalurOrignal,aposInovacoesLacslalur]).reset_index(drop='index')
 
         tabelaComparativa.at[2,f'Operation'] = 'Subtotal CSLL  Após Inovações'
@@ -249,6 +282,7 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
                             tabelaComparativa.at[5,f'Value'],
                             tabelaComparativa.at[5,f'Value'],
                             tabelaComparativa.at[5,f'Value']]),2)
+        
         totalIRPJ = round(np.sum([tabelaComparativa.at[6,f'Value'],
                             tabelaComparativa.at[6,f'Value'],
                             tabelaComparativa.at[6,f'Value'],

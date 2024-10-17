@@ -66,11 +66,11 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         if self.verificandoPreju == True:
 
             self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
-            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.acosTesouraria,
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.PatrimonioNaoClassificado,
             self.lucroAcumulado,self.ajustExercAnt])-(self.prejuAcumulado + self.lucro_periodo_value)
         else:
             self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
-            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,self.acosTesouraria,
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.PatrimonioNaoClassificado,
             self.lucroAcumulado,self.ajustExercAnt, self.lucro_periodo_value]) - self.prejuAcumulado 
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Patrimônio líquido", "Value": self.patrimonioliquido}])], ignore_index=True)
@@ -245,8 +245,8 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         l100 = l100[(l100['Conta Referencial']=='2.03.04.01.90')&
             (l100['Data Inicial'].str.contains(self.data))&(
             l100['Período Apuração']=='A00 – Receita Bruta/Balanço de Suspensão e Redução Anual')]
-        self.contaPatriNClassifica = np.sum(l100['Vlr Saldo Final'].values)
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Contas do Patrimônio Líquido Não Classificadas ", "Value": self.contaPatriNClassifica}])], ignore_index=True)
+        self.PatrimonioNaoClassificado = np.sum(l100['Vlr Saldo Final'].values)
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"CNPJ":self.cnpj,"Ano": self.data,"Operation": "Contas do Patrimônio Líquido Não Classificadas ", "Value": self.PatrimonioNaoClassificado}])], ignore_index=True)
     
     
     def PrejuizoPeriodo(self):
@@ -275,7 +275,12 @@ class FiltrandoDadosParaCalculo(LacsLalurCSLL):
         if (lucroOuPrejuPeriodo['D/C Saldo Final'] == 'C').any():
             self.prejuAcumulado = abs(self.contaPatriNClassifica)
         else:
-            self.prejuAcumulado = abs(self.contaPatriNClassifica - self.lucroOuPrejuPeriodo)
+            if self.contaPatriNClassifica == 0:
+                
+                self.prejuAcumulado = abs(self.contaPatriNClassifica)
+            else:                        
+                self.prejuAcumulado  = abs(self.contaPatriNClassifica - self.lucroOuPrejuPeriodo)
+                                               
         if (l100['D/C Saldo Final'] == 'C').any():
             self.prejuAcumulado = self.prejuAcumulado * -1
         else:

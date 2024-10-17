@@ -91,14 +91,14 @@ class trimestralFiltrandoDadosParaCalculo():
         if self.verificandoPreju == True:
 
             self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
-            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,
-            self.lucroAcumulado,self.exerciciosAnteriores])-(self.prejuAcumulado + self.prejuizoPeirod)
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.PatrimonioNaoClassificado,
+            self.resultado,self.exerciciosAnteriores]) - abs(self.prejuAcumulado + self.prejuizoPeirod)
 
         else:
 
             self.patrimonioliquido = np.sum([self.capSocial,self.capitalIntegra,self.reservaCapital,self.ajusteAvaPatrimonial,
-            self.reservLegal,self.reservLucro,self.acosTesouraria,self.contaPatriNClassifica,
-            self.lucroAcumulado,self.exerciciosAnteriores,self.prejuizoPeirod]) - self.prejuAcumulado 
+            self.reservLegal,self.reservLucro,self.acosTesouraria,self.PatrimonioNaoClassificado,
+            self.resultado,self.exerciciosAnteriores,self.prejuizoPeirod]) - abs(self.prejuAcumulado) 
 
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Patrimônio líquido", "Value": self.patrimonioliquido}])], ignore_index=True)
 
@@ -111,7 +111,7 @@ class trimestralFiltrandoDadosParaCalculo():
 
     def capitalSocial(self):
             l100 = self.l100
-            l100 = l100[(l100['Descrição Conta Referencial']=='CAPITAL REALIZADO - DE RESIDENTE NO PAÍS')&
+            l100 = l100[(l100['Descrição Conta Referencial'] == 'CAPITAL REALIZADO - DE RESIDENTE NO PAÍS')&
                 (l100['Data Inicial'].dt.year == self.ano) &
                 (l100['Data Inicial'].dt.month >= self.mes_inicio) &
                 (l100['Data Inicial'].dt.month <= self.mes_fim)&
@@ -283,8 +283,8 @@ class trimestralFiltrandoDadosParaCalculo():
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
-        self.contaPatriNClassifica = np.sum(l100['Vlr Saldo Final'].values)
-        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Contas do Patrimônio Líquido Não Classificadas ", "Value": self.contaPatriNClassifica}])], ignore_index=True)
+        self.PatrimonioNaoClassificado = np.sum(l100['Vlr Saldo Final'].values)
+        self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Contas do Patrimônio Líquido Não Classificadas ", "Value": self.PatrimonioNaoClassificado}])], ignore_index=True)
     
 
     def PrejuizoPeriodo(self):
@@ -391,7 +391,8 @@ class trimestralFiltrandoDadosParaCalculo():
 
     def tabelaEconomia(self):
 
-        if self.LacsLalurTrimestral.lucroAntIRPJ > 60000:
+        self.LacsLalurTrimestral.ReferencialAliquota()
+        if self.LacsLalurTrimestral.refAliquota > 60000:
             self.reducaoIRPJCSLL = self.valorJPC * 0.34
             self.valor = 0.34
         else:

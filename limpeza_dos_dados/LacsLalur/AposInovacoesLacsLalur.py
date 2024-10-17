@@ -24,7 +24,6 @@ class LacsLalurAposInovacoes(dbController):
         lacs = self.get_all_data(tabela='m350')
 
 
-
         tabelaFInal2 = self.LacsLalurAposInovacoesCalculos(tabelaFInal)
 
         return tabelaFInal2
@@ -39,63 +38,117 @@ class LacsLalurAposInovacoes(dbController):
     def LacsLalurAposInovacoesCalculos(self,dataframe: pd.DataFrame)-> pd.DataFrame:
             lacsLalurAposInovacoesDF = pd.DataFrame(dataframe)
             ganbiarraParaPegarPrejuizoIRPJ = lacsLalurAposInovacoesDF.loc[12].to_frame().T
-
-            lacsLalurAposInovacoesDF = lacsLalurAposInovacoesDF.reset_index(drop='index').iloc[[2,1,0,37,3,4,5,12,31,13,14,15,16,17,19,20,
+            lacsLalurAposInovacoesDF.at[43,'Operation'] = ''
+            lacsLalurAposInovacoesDF = lacsLalurAposInovacoesDF.reset_index(drop='index').iloc[[2,1,0,37,3,4,5,12,13,14,15,38,17,19,20,
                                                                                                 21,22,23,24,25,26,27,28,29,30,31,32,
                                                                                                 33,34,35,36],[3,2]].reset_index(drop='index')
-            lacsLalurAposInovacoesDF.at[33,'Operation'] = ''
-            # Calculo das exclusoes, (Adicionando valor de JCP)
-            lacsLalurAposInovacoesDF.at[2,'Value'] = lacsLalurAposInovacoesDF.at[2,'Value'] + lacsLalurAposInovacoesDF.at[3,'Value']
-            #Calculo da base CSLL
-            lacsLalurAposInovacoesDF.at[4,'Value'] = (lacsLalurAposInovacoesDF.at[0,'Value'] + lacsLalurAposInovacoesDF.at[1,'Value']) - lacsLalurAposInovacoesDF.at[2,'Value']
-            #Calclulo da Base de Calculo CSLL
-            lacsLalurAposInovacoesDF.at[6,'Value'] = lacsLalurAposInovacoesDF.at[4,'Value'] - lacsLalurAposInovacoesDF.at[5,'Value']
-            #Calclulo do valor  CSLL
-            if lacsLalurAposInovacoesDF.at[6,'Value'] > 0 :
-                lacsLalurAposInovacoesDF.at[7,'Value'] = lacsLalurAposInovacoesDF.at[6,'Value'] * 0.09
-            else:
-                0    
-            #Calculando Subtotal CSLL Recolher
-            lacsLalurAposInovacoesDF.at[11,'Value'] = lacsLalurAposInovacoesDF.at[7,'Value'] - lacsLalurAposInovacoesDF.at[9,'Value'] - lacsLalurAposInovacoesDF.at[10,'Value'] - lacsLalurAposInovacoesDF.at[11,'Value']                
-            #Calculo Base IRPJ
-            lacsLalurAposInovacoesDF.at[13,'Value'] = lacsLalurAposInovacoesDF.at[0,'Value'] - lacsLalurAposInovacoesDF.at[7,'Value']
-            #Exclusoes IRPJ
-            lacsLalurAposInovacoesDF.at[16,'Value'] = lacsLalurAposInovacoesDF.at[2,'Value']
-            #Calculo Base de Calculo IRPJ
-            lacsLalurAposInovacoesDF.at[27,'Value'] = lacsLalurAposInovacoesDF.at[13,'Value'] + lacsLalurAposInovacoesDF.at[14,'Value'] -lacsLalurAposInovacoesDF.at[2,'Value']
-            #lacsLalurAposInovacoesDF.at[27,'Operation'] = 'Base de calculo IRPJ'
-            #Calculo Lucro Real IRPJ
-            #lacsLalurAposInovacoesDF = pd.concat([lacsLalurAposInovacoesDF ,ganbiarraParaPegarPrejuizoIRPJ],ignore_index=True).reset_index(drop='index')
-            lacsLalurAposInovacoesDF.at[15,'Value'] = lacsLalurAposInovacoesDF.at[4,'Value'] #- lacsLalurAposInovacoesDF.at[28,'Value']
-            #Calculo valor do IRPJ
-            #lacsLalurAposInovacoesDF.at[16,'Value'] = lacsLalurAposInovacoesDF.at[15,'Value'] * 0.15
-            lacsLalurAposInovacoesDF.at[21,'Value'] = np.where(lacsLalurAposInovacoesDF.at[20,'Value']>0,
-                                                                lacsLalurAposInovacoesDF.at[20,'Value'] * 0.15,0)
             
+            lacsLalurAposInovacoesDF.at[6,'Value'] = np.where(lacsLalurAposInovacoesDF.at[3,'Value']>0,lacsLalurAposInovacoesDF.at[3,'Value'] * 0.09,0 )
+            lacsLalurAposInovacoesDF.at[6,'Operation'] = 'Valor da CSLL'
 
-            #Calculo valor do IRPJ Adicional
-            lacsLalurAposInovacoesDF.at[22,'Value'] = np.where(lacsLalurAposInovacoesDF.at[20,'Value']< 240000,
-                                                                (lacsLalurAposInovacoesDF.at[20,'Value'] - 240000)*0.1,0)
-
-            #Calculo Total Devido IRPJ
-            lacsLalurAposInovacoesDF.at[23,'Value'] = lacsLalurAposInovacoesDF.at[21,'Value'] + lacsLalurAposInovacoesDF.at[22,'Value']
-            #Calculo PAT
-            lacsLalurAposInovacoesDF.at[24,'Value'] = lacsLalurAposInovacoesDF.at[21,'Value'] * 0.04
-            #Sub total IRPJ a recolher
-            lacsLalurAposInovacoesDF.at[32,'Value'] = (lacsLalurAposInovacoesDF.at[23,'Value']-
+            # # Calculo das exclusoes, (Adicionando valor de JCP)
+            lacsLalurAposInovacoesDF.at[2,'Value'] = lacsLalurAposInovacoesDF.at[2,'Value'] + lacsLalurAposInovacoesDF.at[3,'Value']
+            # #Calculo da base CSLL
+            lacsLalurAposInovacoesDF.at[4,'Value'] = (lacsLalurAposInovacoesDF.at[0,'Value'] + lacsLalurAposInovacoesDF.at[1,'Value']) - lacsLalurAposInovacoesDF.at[2,'Value']
+            # #Calclulo da Base de Calculo CSLL
+            lacsLalurAposInovacoesDF.at[6,'Value'] = np.where((lacsLalurAposInovacoesDF.at[4,'Value'] - lacsLalurAposInovacoesDF.at[5,'Value'])>0,
+                                                              (lacsLalurAposInovacoesDF.at[4,'Value'] - lacsLalurAposInovacoesDF.at[5,'Value'])*0.09,
+                                                              0)   
+            # #Calculando Subtotal CSLL Recolher
+            lacsLalurAposInovacoesDF.at[10,'Value'] = lacsLalurAposInovacoesDF.at[6,'Value'] - lacsLalurAposInovacoesDF.at[7,'Value'] - lacsLalurAposInovacoesDF.at[8,'Value'] - lacsLalurAposInovacoesDF.at[9,'Value']                
+            # #Calculo Base IRPJ
+            lacsLalurAposInovacoesDF.at[31,'Value'] = lacsLalurAposInovacoesDF.at[6,'Value'] + lacsLalurAposInovacoesDF.at[14,'Value']
+            #CSLL IRPJ 
+            lacsLalurAposInovacoesDF.at[13,'Value'] = lacsLalurAposInovacoesDF.at[6,'Value']
+            # #Exclusoes IRPJ
+            lacsLalurAposInovacoesDF.at[15,'Value'] = lacsLalurAposInovacoesDF.at[2,'Value']
+            # Calculo Base de Calculo IRPJ
+            lacsLalurAposInovacoesDF.at[16,'Value'] = lacsLalurAposInovacoesDF.at[12,'Value'] + lacsLalurAposInovacoesDF.at[31,'Value'] - lacsLalurAposInovacoesDF.at[2,'Value']
+            # Calculo lucro real
+            lacsLalurAposInovacoesDF.at[18,'Value'] = lacsLalurAposInovacoesDF.at[16,'Value'] - lacsLalurAposInovacoesDF.at[17,'Value']
+            # Valor IRPJ
+            lacsLalurAposInovacoesDF.at[19,'Value'] = np.where(lacsLalurAposInovacoesDF.at[18,'Value']>0,lacsLalurAposInovacoesDF.at[18,'Value']*0.15,0)
+            # Valor IRPJ Adicional
+            lacsLalurAposInovacoesDF.at[20,'Value'] =np.where(lacsLalurAposInovacoesDF.at[18,'Value']>240000,
+                                                              (lacsLalurAposInovacoesDF.at[18,'Value']-240000)*0.10,
+                                                              0)
+            #Total devido IRPJ 
+            lacsLalurAposInovacoesDF.at[21,'Value'] = lacsLalurAposInovacoesDF.at[20,'Value']+lacsLalurAposInovacoesDF.at[19,'Value']
+            
+            #PAT 
+            lacsLalurAposInovacoesDF.at[22,'Value'] = lacsLalurAposInovacoesDF.at[19,'Value'] * 0.04
+                  
+            # #Sub total IRPJ a recolher
+            lacsLalurAposInovacoesDF.at[30,'Value'] = (lacsLalurAposInovacoesDF.at[21,'Value']-
+                                                            lacsLalurAposInovacoesDF.at[22,'Value']-
+                                                            lacsLalurAposInovacoesDF.at[23,'Value']-
                                                             lacsLalurAposInovacoesDF.at[24,'Value']-
-                                                            lacsLalurAposInovacoesDF.at[25,'Value']-
-                                                            lacsLalurAposInovacoesDF.at[26,'Value']-
+                                                                lacsLalurAposInovacoesDF.at[25,'Value']-
+                                                                lacsLalurAposInovacoesDF.at[26,'Value']-
                                                                 lacsLalurAposInovacoesDF.at[27,'Value']-
-                                                                lacsLalurAposInovacoesDF.at[28,'Value']-
-                                                                lacsLalurAposInovacoesDF.at[29,'Value']-
-                                                                    lacsLalurAposInovacoesDF.at[30,'Value']-
-                                                                    lacsLalurAposInovacoesDF.at[31,'Value'])
+                                                                    lacsLalurAposInovacoesDF.at[28,'Value']-
+                                                                    lacsLalurAposInovacoesDF.at[29,'Value'])
             lacsLalurAposInovacoesDF = lacsLalurAposInovacoesDF.iloc[[0,1,2,3,4,5,6,7,8,9,10,11,
-                                                                      12,33,13,14,15,16,17,18,19,
+                                                                      12,13,31,14,15,16,17,18,19,
                                                                       20,21,22,23,24,25,26,27,28,29,
-                                                                      30,31,32],:]                                              
+                                                                      30],:]  
+            lacsLalurAposInovacoesDF.at[31,'Operation'] = 'Adições'                                            
             return lacsLalurAposInovacoesDF                      
+
+    def CallBack_LacsLalurAposInovacoesCalculos(self,dataframe: pd.DataFrame)-> pd.DataFrame:
+            lacsLalurAposInovacoesDF = pd.DataFrame(dataframe)
+            ganbiarraParaPegarPrejuizoIRPJ = lacsLalurAposInovacoesDF.loc[12].to_frame().T
+            
+            lacsLalurAposInovacoesDF.at[6,'Value'] = np.where(lacsLalurAposInovacoesDF.at[3,'Value']>0,lacsLalurAposInovacoesDF.at[3,'Value'] * 0.09,0 )
+            lacsLalurAposInovacoesDF.at[6,'Operation'] = 'Valor da CSLL'
+
+            # # Calculo das exclusoes, (Adicionando valor de JCP)
+            lacsLalurAposInovacoesDF.at[2,'Value'] = lacsLalurAposInovacoesDF.at[2,'Value'] + lacsLalurAposInovacoesDF.at[3,'Value']
+            # #Calculo da base CSLL
+            lacsLalurAposInovacoesDF.at[4,'Value'] = (lacsLalurAposInovacoesDF.at[0,'Value'] + lacsLalurAposInovacoesDF.at[1,'Value']) - lacsLalurAposInovacoesDF.at[2,'Value']
+            # #Calclulo da Base de Calculo CSLL
+            lacsLalurAposInovacoesDF.at[6,'Value'] = np.where((lacsLalurAposInovacoesDF.at[4,'Value'] - lacsLalurAposInovacoesDF.at[5,'Value'])>0,
+                                                              (lacsLalurAposInovacoesDF.at[4,'Value'] - lacsLalurAposInovacoesDF.at[5,'Value'])*0.09,
+                                                              0)   
+            # #Calculando Subtotal CSLL Recolher
+            lacsLalurAposInovacoesDF.at[10,'Value'] = lacsLalurAposInovacoesDF.at[6,'Value'] - lacsLalurAposInovacoesDF.at[7,'Value'] - lacsLalurAposInovacoesDF.at[8,'Value'] - lacsLalurAposInovacoesDF.at[9,'Value']                
+            # #Calculo Base IRPJ
+            lacsLalurAposInovacoesDF.at[31,'Value'] = lacsLalurAposInovacoesDF.at[6,'Value'] + lacsLalurAposInovacoesDF.at[14,'Value']
+            #CSLL IRPJ 
+            lacsLalurAposInovacoesDF.at[13,'Value'] = lacsLalurAposInovacoesDF.at[6,'Value']
+            # #Exclusoes IRPJ
+            lacsLalurAposInovacoesDF.at[15,'Value'] = lacsLalurAposInovacoesDF.at[2,'Value']
+            # Calculo Base de Calculo IRPJ
+            lacsLalurAposInovacoesDF.at[16,'Value'] = lacsLalurAposInovacoesDF.at[12,'Value'] + lacsLalurAposInovacoesDF.at[31,'Value'] - lacsLalurAposInovacoesDF.at[2,'Value']
+            # Calculo lucro real
+            lacsLalurAposInovacoesDF.at[18,'Value'] = lacsLalurAposInovacoesDF.at[16,'Value'] - lacsLalurAposInovacoesDF.at[17,'Value']
+            # Valor IRPJ
+            lacsLalurAposInovacoesDF.at[19,'Value'] = np.where(lacsLalurAposInovacoesDF.at[18,'Value']>0,lacsLalurAposInovacoesDF.at[18,'Value']*0.15,0)
+            # Valor IRPJ Adicional
+            lacsLalurAposInovacoesDF.at[20,'Value'] =np.where(lacsLalurAposInovacoesDF.at[18,'Value']>240000,
+                                                              (lacsLalurAposInovacoesDF.at[18,'Value']-240000)*0.10,
+                                                              0)
+            #Total devido IRPJ 
+            lacsLalurAposInovacoesDF.at[21,'Value'] = lacsLalurAposInovacoesDF.at[20,'Value']+lacsLalurAposInovacoesDF.at[19,'Value']
+            
+            #PAT 
+            lacsLalurAposInovacoesDF.at[22,'Value'] = lacsLalurAposInovacoesDF.at[19,'Value'] * 0.04
+                  
+            # #Sub total IRPJ a recolher
+            lacsLalurAposInovacoesDF.at[30,'Value'] = (lacsLalurAposInovacoesDF.at[21,'Value']-
+                                                            lacsLalurAposInovacoesDF.at[22,'Value']-
+                                                            lacsLalurAposInovacoesDF.at[23,'Value']-
+                                                            lacsLalurAposInovacoesDF.at[24,'Value']-
+                                                                lacsLalurAposInovacoesDF.at[25,'Value']-
+                                                                lacsLalurAposInovacoesDF.at[26,'Value']-
+                                                                lacsLalurAposInovacoesDF.at[27,'Value']-
+                                                                    lacsLalurAposInovacoesDF.at[28,'Value']-
+                                                                    lacsLalurAposInovacoesDF.at[29,'Value'])                                           
+            return lacsLalurAposInovacoesDF                      
+
+
+
+
 
     def LacsLalurAposInovacoesTrimestral(self,dataframe:pd.DataFrame) -> pd.DataFrame:
     
@@ -136,9 +189,8 @@ class LacsLalurAposInovacoes(dbController):
             #Total devido IRPJ antes retenções
             df.at[23,f'Value {i}'] = df.at[22,f'Value {i}'] + df.at[21,f'Value {i}'] 
             #Verificação pat
-            df.at[24,f'Value {i}'] = np.where(df.at[21,f'Value {i}'] * 0.04 < df.at[24,f'Value {i}'], 
-                                              df.at[21,f'Value {i}'] * 0.04,
-                                              df.at[24,f'Value {i}']) 
+            df.at[24,f'Value {i}'] = df.at[21,f'Value {i}'] * 0.04
+    
             #Total devido IRPJ antes retenções
             df.at[32,f'Value {i}'] = (df.at[23,f'Value {i}'] - df.at[24,f'Value {i}'] - 
                                         df.at[25,f'Value {i}']- df.at[27,f'Value {i}'] - 
