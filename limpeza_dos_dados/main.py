@@ -180,7 +180,8 @@ def reCalculandoTrimestral(economia2019: pd.DataFrame,retirarMulta: bool)-> pd.D
     return economia2019
 
 
-def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframesParaDownload: pd.DataFrame, cnpj_selecionado:str,tabelaParaRelatorio:str):
+def criandoVisualizacao(trimestre: list, ano: int,
+                         anoDeAnalise: bool, dataframesParaDownload: pd.DataFrame, cnpj_selecionado:str,tabelaParaRelatorio:str):
 
     #'''Cria visualizaçãos dos widgets e tabelas'''
     st.subheader(anoDeAnalise)
@@ -220,7 +221,7 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
                 st.success('Dados atualizados')
     
 
-    
+
         #======== --- Tbaelas Lacs e Lalur Aós inovações
 
         with st.expander('Lacs Lalur'):
@@ -260,9 +261,10 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
         lacslalurOrignal = lacslalur.tabelaComparativaLacsLalurAno(cnpj_selecionado,anoDeAnalise).iloc[[15,36],[3,2]].reset_index(drop='index')
         
         try:
-            aposInovacoesLacslalur = lacslaurAno.iloc[[10,30],:]
+            
+            aposInovacoesLacslalur = lacslaurAno.iloc[[10,31],:]
         except:
-            aposInovacoesLacslalur = lacslalur_data_editor.iloc[[10,30],:]
+            aposInovacoesLacslalur = lacslalur_data_editor.iloc[[10,31],:]
 
         tabelaComparativa = pd.concat([lacslalurOrignal,aposInovacoesLacslalur]).reset_index(drop='index')
 
@@ -305,10 +307,14 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
         tabelaRelatorio.columns = [f"{col}_{anoDeAnalise}" for col in tabelaRelatorio.columns]
 
         #Tabela para exportação em excel
-        resultadoAnual = economia2019_data_editor.copy()
-        resultadoAnual.columns = [f"{col}_{anoDeAnalise}" for col in resultadoAnual.columns]
-        resultadoAnual = resultadoAnual.drop([4,5,6,7,15,20]).reset_index(drop='index')
 
+        resultadoAnual = economia2019_data_editor.copy()
+        try:
+            dfParaDownloadFinal = pd.concat([resultadoAnual,lacslaurAno,tabelaComparativa])
+        except:
+            dfParaDownloadFinal = pd.concat([resultadoAnual,lacslalur_data_editor,tabelaComparativa]) 
+        dfParaDownloadFinal.columns = [f"{col}_{anoDeAnalise}" for col in dfParaDownloadFinal.columns]
+        dfParaDownloadFinal = dfParaDownloadFinal.drop([4,5,6,7,15,20]).reset_index(drop='index')
 
 
     else:
@@ -426,13 +432,20 @@ def criandoVisualizacao(trimestre: list, ano: int, anoDeAnalise: bool, dataframe
         
         tabelaRelatorioTri = tabelaRelatorioTri.iloc[:,5].reset_index(drop='index')
         resultaTrimestral = economia2019Trimestral_data_editor
-        resultaTrimestral.columns = [f"{col}_{anoDeAnalise}" for col in resultaTrimestral.columns]
+        try:
+            dfParaDownloadFinaltrimestral = pd.concat([resultaTrimestral,lacslalurTrimestral,tabelaComparativa])
+        except:
+            dfParaDownloadFinaltrimestral = pd.concat([resultaTrimestral,lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise),tabelaComparativa]) 
+
         
+        dfParaDownloadFinaltrimestral.columns = [f"{col}_{anoDeAnalise}" for col in dfParaDownloadFinaltrimestral.columns]
+        dfParaDownloadFinaltrimestral = dfParaDownloadFinaltrimestral.reset_index(drop='index')
+
     if periodoDeAnalise == True:
-        dataframesParaDownload.append(resultadoAnual)
+        dataframesParaDownload.append(dfParaDownloadFinal)
         tabelaParaRelatorio.append(tabelaRelatorio)
     else:
-         dataframesParaDownload.append(resultaTrimestral)
+         dataframesParaDownload.append(dfParaDownloadFinaltrimestral)
          tabelaParaRelatorio.append(tabelaRelatorioTri) 
 
 if __name__=='__main__':
