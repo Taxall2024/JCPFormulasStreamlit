@@ -78,10 +78,13 @@ class SpedProcessor:
             df1 = pd.concat([df4,df2,df3])
 
         elif self.verificacaoTrimestralOuAnual == False:
-            start_idx = df[df.iloc[:, 0].str.startswith('L030') & df.iloc[:, 3].str.endswith('T01')].index[0]
-            end_idx = df[df.iloc[:, 0].str.startswith('N990')].index[0]
-            
-            df1 = df.loc[start_idx:end_idx].reset_index(drop='index')
+            try:
+                start_idx = df[df.iloc[:, 0].str.startswith('L030') & df.iloc[:, 3].str.endswith('T01')].index[0]
+                end_idx = df[df.iloc[:, 0].str.startswith('N990')].index[0]
+                
+                df1 = df.loc[start_idx:end_idx].reset_index(drop='index')
+            except:
+                st.warning(f'A emrpesa nao contém as informações nescesarias para análise no período {df.iloc[0,15]}')
 
         return df1
     
@@ -319,9 +322,3 @@ if __name__=='__main__':
     # controler.inserirTabelas('n630',N630_final)
     # controler.inserirTabelas('n670',N670_final)
     
-
-
-
-
-
-
