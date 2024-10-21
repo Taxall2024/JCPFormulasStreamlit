@@ -18,7 +18,7 @@ Essa metodologia possui respaldo legal no artigo 9º, da Lei nº 9.249/1995, com
 """
 def add_background(canvas, doc):
     
-    canvas.drawImage("Cabecalho.png", 0, 0, width=doc.pagesize[0], height=doc.pagesize[1])
+    canvas.drawImage("limpeza_dos_dados\imagensPDF\Cabecalho.png", 0, 0, width=doc.pagesize[0], height=doc.pagesize[1])
 
 
 class RelatorioPDFJSCP():
@@ -154,7 +154,7 @@ class RelatorioPDFJSCP():
             alignment=1,  # Center the title
             fontName="Helvetica-Bold",  # Bold font
         )
-        img_path = "paginaEmBranco.png"
+        img_path = "limpeza_dos_dados\imagensPDF\paginaEmBranco.png"
         img = Image(img_path, width=9*inch, height=3*inch)
         img._offs_y = 80
         story.append(img) 
@@ -184,7 +184,7 @@ class RelatorioPDFJSCP():
         """
         story.append(Paragraph(texto, styles["Normal"]))  
         story.append(Spacer(1, 12))
-        img_path = "RespaldoJuridico1.png"
+        img_path = "limpeza_dos_dados\imagensPDF\RespaldoJuridico1.png"
         img = Image(img_path, width=3.8*inch, height=0.9*inch)
         img.hAlign = 'RIGHT'
         story.append(img) 
@@ -200,7 +200,7 @@ class RelatorioPDFJSCP():
         story.append(Paragraph(texto, styles["Normal"]))
 
         story.append(Spacer(1, 12))
-        img_path = "RespaldoJuridico2.png"
+        img_path = "limpeza_dos_dados\imagensPDF\RespaldoJuridico2.png"
         img = Image(img_path, width=3.8*inch, height=3.5*inch)
         img.hAlign = 'RIGHT'
         story.append(img) 
@@ -217,7 +217,7 @@ class RelatorioPDFJSCP():
         story.append(PageBreak())
 
         story.append(Spacer(1, 12))
-        img_path = "RespaldoJuridico3.png"
+        img_path = "limpeza_dos_dados\imagensPDF\RespaldoJuridico3.png"
         img = Image(img_path, width=3.8*inch, height=4.2*inch)
         img.hAlign = 'RIGHT'
         story.append(img) 
@@ -404,7 +404,7 @@ class RelatorioPDFJSCP():
 
         story.append(Spacer(1, 24))  
 
-        img_path = "AssinaturasAtualalizado.png"
+        img_path = "limpeza_dos_dados\imagensPDF\AssinaturasAtualalizado.png"
         img = Image(img_path, width=5.6*inch, height=1.9*inch)
         img.hAlign = 'CENTER'
         story.append(img) 
