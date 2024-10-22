@@ -452,10 +452,13 @@ def criandoVisualizacao(trimestre: list, ano: int,
 if __name__=='__main__':
 
     
-    seletorDePagina = st.sidebar.radio('Selecione',['Ver tabelas','Processar dados'])
+    
 
-    if seletorDePagina=='Ver tabelas':
         
+        st.sidebar.write(f'Clique em "Selecione a empresa" para visualizar os dados e tabelas das empresas ja processadas, para adicionar uma nova empresa para análise clique em adicionar empresa')
+        st.write('')
+        st.write('')
+        st.sidebar.link_button(url='https://processamentoecf.streamlit.app/',label='Adicionar Empresa')            
 
         
         tabelaDeNomes = controler.get_all_data('cadastrodasempresas')
@@ -558,38 +561,6 @@ if __name__=='__main__':
 
             st.download_button(label="Baixar relatório",data=pdf_buffer,file_name="relatório.pdf",mime="application/pdf")
 
-
-    with st.spinner('Carregando dados'):
-        if seletorDePagina =='Processar dados':
-            try:
-                uploaded_files = st.sidebar.file_uploader("Escolha os arquivos SPED", type=['txt'], accept_multiple_files=True)
-
-                if uploaded_files:
-                                    file_paths = []
-                                    for uploaded_file in uploaded_files:
-                                        file_path = uploaded_file.name
-                                        with open(file_path, 'wb') as f:
-                                            f.write(uploaded_file.getbuffer())
-                                        file_paths.append(file_path)
-                                    
-                                    periodoDeAnalise = []
-                                    sped_processor = SpedProcessor(file_paths)                            
-                                    for file in file_paths:
-                                        periodoDeAnalise.append(sped_processor.pegandoPeriodoDeAnalise(file))
-
-                                    periodosETipoDeAnalise = pd.concat(periodoDeAnalise)
-                                    controler.inserirTabelas('tipodaanalise',periodosETipoDeAnalise)
-
-                calculos = CalculosEProcessamentoDosDados()
-                
-                calculos.filtrarCalcularECadastras(file_paths,file_path)
-                st.success('Dados processados e salvos!')
-                for file in file_paths:
-                    os.remove(file)
-            except Exception as e:
-                #st.warning(e)
-                pass
-    controler.engine.dispose()
 
 
 finish_time = time.time()
