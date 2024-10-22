@@ -125,13 +125,12 @@ class trimestralFiltrandoDadosParaCalculo():
 
 
         l100 = self.l100
-        l100 = l100[(l100['Conta Referencial']=='2.03.01.01.21')|(l100['Conta Referencial']=='2.03.01.02.10')&
+        l100 = l100[(l100['Conta Referencial']=='2.03.01.01.21')&
             (l100['Data Inicial'].dt.year == self.ano) &
             (l100['Data Inicial'].dt.month >= self.mes_inicio) &
             (l100['Data Inicial'].dt.month <= self.mes_fim)&
             (l100['Trimestre'] == self.trimestre)]
         self.capitalIntegra = np.sum(l100['Vlr Saldo Final'].values)
-    
         
         self.resultsCalcJcp = pd.concat([self.resultsCalcJcp, pd.DataFrame([{"Operation": "Capital Integralizador", "Value": self.capitalIntegra}])], ignore_index=True)
     
@@ -392,7 +391,7 @@ class trimestralFiltrandoDadosParaCalculo():
     def tabelaEconomia(self):
 
         self.LacsLalurTrimestral.ReferencialAliquota()
-        if self.LacsLalurTrimestral.refAliquota > 60000:
+        if (self.LacsLalurTrimestral.refAliquota > 60000) or (self.LacsLalurTrimestral.refAliquota < 0):
             self.reducaoIRPJCSLL = self.valorJPC * 0.34
             self.valor = 0.34
         else:

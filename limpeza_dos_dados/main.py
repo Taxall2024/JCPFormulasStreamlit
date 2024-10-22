@@ -11,6 +11,7 @@ import os
 import time
 import psutil
 import functools
+import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.controllerDB import dbController
@@ -583,6 +584,8 @@ if __name__=='__main__':
                 
                 calculos.filtrarCalcularECadastras(file_paths,file_path)
                 st.success('Dados processados e salvos!')
+                for file in file_paths:
+                    os.remove(file)
             except Exception as e:
                 #st.warning(e)
                 pass
