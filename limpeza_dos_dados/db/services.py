@@ -11,11 +11,9 @@ class serviceTaxAllDB():
         
         try:
             self.conn = psycopg2.connect(
-                dbname="taxall",
-                user="postgres",
-                password="Taxall2024",
-                host="taxalldb.c54ciw48evvs.us-east-1.rds.amazonaws.com",
-                port="5432")
+             'postgresql+psycopg2://postgres:Taxall2024@localhost:5432/ECF',
+                                    pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)   
+
             print("Conexão efetuada com sucesso")
         except Exception as e:
             print(e)    
