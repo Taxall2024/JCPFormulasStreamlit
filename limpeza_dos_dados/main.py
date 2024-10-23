@@ -60,10 +60,12 @@ def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool)-> pd.DataFram
                                                         economia2019_copy.at[12, f'Value'],economia2019_copy.at[13, f'Value']])-economia2019_copy.at[10, f'Value']
     
     #Veriricação se o valor de JSCP e negativo para ser a conta caso positivo
-    if economia2019_copy.at[15, f'Value'] > 0:
+    if economia2019_copy.at[15, f'Value'] > 0 and economia2019_copy.at[9, f'Operation'] == 'Lucro do Período':
         economia2019_copy.at[16, f'Value'] = economia2019_copy.at[15, f'Value'] - economia2019_copy.at[0,f'Value']
     else:
         economia2019_copy.at[16, f'Value'] = 0.0
+        economia2019_copy.at[24, f'Value'] = 0.0
+        economia2019_copy.at[25, f'Value'] = 0.0
     
     if economia2019_copy.at[15, f'Value'] > 0:
 
@@ -83,7 +85,11 @@ def reCalculandoAno(economia2019: pd.DataFrame,retirarMulta: bool)-> pd.DataFram
             economia2019_copy.at[23, f'Value'] = economia2019_copy.at[19, f'Value'] + (economia2019_copy.at[19, f'Value'] * 0.2 * 0)
         else:
             economia2019_copy.at[23, f'Value'] = economia2019_copy.at[19, f'Value'] + (economia2019_copy.at[19, f'Value'] * 0.2)    
-
+        
+        if economia2019_copy.at[24, f'Operation'] == 'REDUÇÃO NO IRPJ/CSLL - 0.34%':
+                economia2019_copy.at[24, f'Value'] = economia2019_copy.at[18, f'Value'] * 0.34
+        else:
+                economia2019_copy.at[24, f'Value'] = economia2019_copy.at[18, f'Value'] * 0.24  
         # Valor de economia gerada( Subtrir a redução no IRPJ pelo valor de DARF)
         economia2019_copy.at[25, f'Value'] = economia2019_copy.at[24, f'Value'] - economia2019_copy.at[23, f'Value']
         
