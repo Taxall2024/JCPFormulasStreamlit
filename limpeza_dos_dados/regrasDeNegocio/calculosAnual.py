@@ -70,7 +70,7 @@ class Calculo(FiltrandoDadosParaCalculo):
         if data in self.dataframe.index:
             self.taxaJuros = self.dataframe.loc[data, 'Ano']
             
-            if self.totalJSPC<0:
+            if self.totalJSPC < 0 or self.verificandoPreju == True:
                 self.valorJPC = 0
             else:    
                 self.valorJPC = round(self.totalJSPC * (self.dataframe.loc[data, 'Ano'] / 100), 2)-self.jcpRetroativo
@@ -85,6 +85,7 @@ class Calculo(FiltrandoDadosParaCalculo):
                 {"Ano":self.data,"CNPJ":self.cnpj,"Operation": "IRRFs/ JSPC", "Value": self.irrfJPC},
                 {"Ano":self.data,"CNPJ":self.cnpj,"Operation": "Valor do JSCP Apropriar", "Value": self.valorApropriar}
             ]
+            
             self.resultadoEconomiaGerada = pd.concat([self.resultadoEconomiaGerada, pd.DataFrame(results)], ignore_index=True)
 
         else:

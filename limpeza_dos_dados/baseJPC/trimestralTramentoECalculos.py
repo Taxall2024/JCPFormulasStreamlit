@@ -111,7 +111,7 @@ class trimestralFiltrandoDadosParaCalculo():
 
     def capitalSocial(self):
             l100 = self.l100
-            l100 = l100[(l100['Descrição Conta Referencial'] == 'CAPITAL REALIZADO - DE RESIDENTE NO PAÍS')&
+            l100 = l100[(l100['Conta Referencial'] == '2.03.01.01.01')&
                 (l100['Data Inicial'].dt.year == self.ano) &
                 (l100['Data Inicial'].dt.month >= self.mes_inicio) &
                 (l100['Data Inicial'].dt.month <= self.mes_fim)&
