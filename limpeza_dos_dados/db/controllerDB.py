@@ -25,10 +25,8 @@ class dbController():
         dblocalCon = st.secrets['general']['auth_token']
         self.engine = create_engine(f'postgresql+psycopg2://{username}:{password}@{host}:{port}/jcp', 
                         pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)                                
-
-        # self.engine = create_engine(f'postgresql+psycopg2://postgres:Taxall2024@localhost:5432/ECF',
-        #                             pool_size=2, max_overflow=1, pool_recycle=5, pool_timeout=10, pool_pre_ping=True, pool_use_lifo=True)   
-        
+  
+       
         self.conn = self.engine.connect()
 
 
@@ -77,7 +75,8 @@ class dbController():
             with self.engine.connect() as conn:
                 result = conn.execute(query, {'CNPJ': verificacaoCNPJ})
                 rows = result.fetchall()
-        except:
+        except Exception as e:
+            st.warning(e)
             pass
             
         if rows:
@@ -141,10 +140,13 @@ class dbController():
    
     def deletarDadosDaTabelaPorCnpj(self, cnpj, tabela):
         # Use parameterized query to avoid SQL injection and properly handle data types
+        self.engine
+        self.conn = self.engine.connect()
         query = text(f"DELETE FROM {tabela} WHERE \"CNPJ\" = :cnpj")
         self.conn.execute(query, {"cnpj": cnpj})
         print(f'Os valores para tabela {tabela} e CNPJ {cnpj} foram DELETADOS!')
         self.conn.commit()
+        self.closeCons()
 
 
     def get_all_data(self,tabela):
@@ -266,18 +268,18 @@ if __name__ =="__main__":
     controler = dbController('taxall')
     
 
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','l100')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','l300')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','m300')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','m350')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','n630')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','n670')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','resultadosjcp')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','resultadosjcptrimestral')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','tipodaanalise')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','cadastrodasempresas')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','lacslalur')
-#     controler.deletarDadosDaTabelaPorCnpj('83892174000133','lacslalurtrimestral')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','l100')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','l300')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','m300')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','m350')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','n630')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','n670')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','resultadosjcp')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','resultadosjcptrimestral')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','tipodaanalise')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','cadastrodasempresas')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','lacslalur')
+    controler.deletarDadosDaTabelaPorCnpj('09302262000185','lacslalurtrimestral')
 
 
     # controler.deletarDadosDaTabela('l100')

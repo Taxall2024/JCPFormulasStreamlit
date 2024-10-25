@@ -474,6 +474,30 @@ if __name__=='__main__':
         dataframesParaDownload = []
         tabelaParaRelatorio = []
         nomeEmpresaSelecionada = st.sidebar.selectbox('Selecione a empresa',listaDosNomesDasEmpresas)
+
+        st.write('')
+        st.write('')
+        st.write('')
+        deletarEmpresaInput = st.sidebar.text_input('Deletar dados(Para deletar os dados de alguma empresa coloque o CNPJ no campo sem "-" ou "/") : ',placeholder='09302262000185')
+        if deletarEmpresaInput is not None:
+            try:
+                controler.conn
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','l100')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','l300')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','m300')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','m350')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','n630')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','n670')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','resultadosjcp')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','resultadosjcptrimestral')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','tipodaanalise')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','cadastrodasempresas')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','lacslalur')
+                controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','lacslalurtrimestral')
+                st.sidebar.success(f'Dados do CNPJ {deletarEmpresaInput} foram deletados!')
+            except:
+                pass
+        
         cnpj_selecionado = nome_para_cnpj[nomeEmpresaSelecionada]
         
         if 'cnpj_selecionado' not in st.session_state:
