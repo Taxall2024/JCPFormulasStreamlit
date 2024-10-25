@@ -481,7 +481,6 @@ if __name__=='__main__':
         deletarEmpresaInput = st.sidebar.text_input('Deletar dados(Para deletar os dados de alguma empresa coloque o CNPJ no campo sem "-" ou "/") : ',placeholder='09302262000185')
         if deletarEmpresaInput is not None:
             try:
-                controler.conn
                 controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','l100')
                 controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','l300')
                 controler.deletarDadosDaTabelaPorCnpj(f'{deletarEmpresaInput}','m300')
