@@ -40,10 +40,10 @@ class serviceTaxAllDB():
         try:
             conn = psycopg2.connect(
                 dbname=f"{db}",
-                user="postgres",
-                password="Taxall2024",
-                host="taxalldb.c54ciw48evvs.us-east-1.rds.amazonaws.com",
-                port="5432"
+                user=st.secrets["apiAWS"]["username"],
+                password=st.secrets["apiAWS"]["password"],
+                host=st.secrets["apiAWS"]["host"],
+                port=st.secrets["apiAWS"]["port"]
             )
 
 
@@ -80,7 +80,6 @@ if __name__=='__main__':
         "Nível Conta" INT,
         "Vlr Saldo Final" NUMERIC,
         "D/C Saldo Final" VARCHAR(2),
-        PRIMARY KEY (CNPJ, Ano)
     )
     '''
 
@@ -100,7 +99,6 @@ if __name__=='__main__':
             "Nível Conta" INT,
             "Vlr Saldo Final" NUMERIC,
             "D/C Saldo Final" VARCHAR(2),
-            PRIMARY KEY (CNPJ, Ano)
         )
         '''
 
@@ -120,7 +118,6 @@ if __name__=='__main__':
             "Indicador Relação Parte A" VARCHAR(50),
             "Vlr Lançamento e-Lalur" NUMERIC,
             "Histórico e-Lalur" VARCHAR(50),
-            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
 
@@ -138,7 +135,6 @@ if __name__=='__main__':
             "Indicador Relação Parte A" VARCHAR(50),
             "Vlr Lançamento e-Lacs" NUMERIC,
             "Histórico e-Lacs" VARCHAR(50),
-            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
 
@@ -153,7 +149,6 @@ if __name__=='__main__':
             "Código Lançamento" FLOAT,
             "Descrição Lançamento" VARCHAR(255),
             "Vlr Lançamento" NUMERIC,
-            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
 
@@ -168,7 +163,6 @@ if __name__=='__main__':
             "Código Lançamento" FLOAT,
             "Descrição Lançamento" VARCHAR(255),
             "Vlr Lançamento" NUMERIC,
-            PRIMARY KEY (CNPJ, "Ano")
         )
         '''
     
