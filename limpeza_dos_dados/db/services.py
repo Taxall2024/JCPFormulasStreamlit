@@ -40,10 +40,10 @@ class serviceTaxAllDB():
         try:
             conn = psycopg2.connect(
                 dbname=f"{db}",
-                user="postgres",
-                password="Taxall2024",
-                host="taxalldb.c54ciw48evvs.us-east-1.rds.amazonaws.com",
-                port="5432"
+                user=st.secrets["apiAWS"]["username"],
+                password=st.secrets["apiAWS"]["password"],
+                host=st.secrets["apiAWS"]["host"],
+                port=st.secrets["apiAWS"]["port"]
             )
 
 
