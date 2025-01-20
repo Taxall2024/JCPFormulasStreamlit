@@ -158,7 +158,7 @@ class CalculosEProcessamentoDosDados():
                     l300_file=uploaded_file_l300
                 )
                 
-        calculos2019 = Calculo(data=str('2019'),
+        calculos2024 = Calculo(data=str('2024'),
                                 lacs_file=uploaded_file_lacs,
                                 lalur_file=uploaded_file_lalur,
                                 ecf670_file=uploaded_file_ecf670,
@@ -205,13 +205,13 @@ class CalculosEProcessamentoDosDados():
                                 
 
 
-        calculosIniciais_2019 = calculos2019.runPipe()
-        tabelaFinal_2019 = calculos2019.runPipeFinalTable()
-        resultadoTotal_2019 = calculos2019.pipeCalculo('2019')
-        economiaPorAno.append(resultadoTotal_2019)
-        dataFrameParaExportar1.append(calculosIniciais_2019)
-        dataFrameParaExportar2.append(tabelaFinal_2019)
-        dataFrameParaExportar3.append(resultadoTotal_2019)
+        calculosIniciais_2024 = calculos2024.runPipe()
+        tabelaFinal_2024 = calculos2024.runPipeFinalTable()
+        resultadoTotal_2024 = calculos2024.pipeCalculo('2024')
+        economiaPorAno.append(resultadoTotal_2024)
+        dataFrameParaExportar1.append(calculosIniciais_2024)
+        dataFrameParaExportar2.append(tabelaFinal_2024)
+        dataFrameParaExportar3.append(resultadoTotal_2024)
                                  
 
         calculosIniciais_2020 = calculos2020.runPipe()
@@ -254,21 +254,21 @@ class CalculosEProcessamentoDosDados():
         dfmetricaGeral = dfmetricaGeral.transpose().iloc[:,[1,3,5,7,9]]
         dfmetricaGeral['Agregado do período'] = dfmetricaGeral.apply(lambda row: row.sum(), axis=1)
 
-        arquivoParaExportar = pd.concat([calculosIniciais_2019.add_suffix('_2019'), calculosIniciais_2020.add_suffix('_2020'), 
+        arquivoParaExportar = pd.concat([calculosIniciais_2024.add_suffix('_2024'), calculosIniciais_2020.add_suffix('_2020'), 
                                         calculosIniciais_2021.add_suffix('_2021'), calculosIniciais_2022.add_suffix('_2022'), 
                                         calculosIniciais_2023.add_suffix('_2023')], axis=1)
 
-        arquivoParaExportar2 = pd.concat([tabelaFinal_2019.add_suffix('_2019'), tabelaFinal_2020.add_suffix('_2020'), 
+        arquivoParaExportar2 = pd.concat([tabelaFinal_2024.add_suffix('_2024'), tabelaFinal_2020.add_suffix('_2020'), 
                                         tabelaFinal_2021.add_suffix('_2021'), tabelaFinal_2022.add_suffix('_2022'), 
                                         tabelaFinal_2023.add_suffix('_2023')], axis=1)
 
-        arquivoParaExportar3 = pd.concat([resultadoTotal_2019.add_suffix('_2019'), resultadoTotal_2020.add_suffix('_2020'), 
+        arquivoParaExportar3 = pd.concat([resultadoTotal_2024.add_suffix('_2024'), resultadoTotal_2020.add_suffix('_2020'), 
                                         resultadoTotal_2021.add_suffix('_2021'), resultadoTotal_2021.add_suffix('_2022'),
                                         resultadoTotal_2021.add_suffix('_2023')])
         
         arquivoFInalParaExpostacao = pd.concat([arquivoParaExportar,arquivoParaExportar2,arquivoParaExportar3],axis=0)
                                 
-        jcp2019 = pd.concat([calculosIniciais_2019,tabelaFinal_2019,resultadoTotal_2019],axis=0).reset_index(drop='index').reset_index()
+        jcp2024 = pd.concat([calculosIniciais_2024,tabelaFinal_2024,resultadoTotal_2024],axis=0).reset_index(drop='index').reset_index()
         jcp2020 = pd.concat([calculosIniciais_2020,tabelaFinal_2020,resultadoTotal_2020],axis=0).reset_index(drop='index').reset_index()
         jcp2021 = pd.concat([calculosIniciais_2021,tabelaFinal_2021,resultadoTotal_2021],axis=0).reset_index(drop='index').reset_index()
         jcp2022 = pd.concat([calculosIniciais_2022,tabelaFinal_2022,resultadoTotal_2022],axis=0).reset_index(drop='index').reset_index()
@@ -276,13 +276,13 @@ class CalculosEProcessamentoDosDados():
 
 
 
-        jcp2019['Value'] = jcp2019['Value'].astype(float)
+        jcp2024['Value'] = jcp2024['Value'].astype(float)
         jcp2020['Value'] = jcp2020['Value'].astype(float)
         jcp2021['Value'] = jcp2021['Value'].astype(float)
         jcp2022['Value'] = jcp2022['Value'].astype(float)
         jcp2023['Value'] = jcp2023['Value'].astype(float)
 
-        controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2019)
+        controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2024)
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2020)
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2021)
         controler.inserirTabelasFinaisJCP('resultadosjcp',jcp2022)
@@ -297,10 +297,10 @@ class CalculosEProcessamentoDosDados():
         dataFrameParaExportarIRPJJ = []
         dfLacsLalur = pd.DataFrame(columns=['Operation','Value'])
 
-        resultadoTotal_2019 = calculos2019.runPipeLacsLalurCSLL()
-        resultadoTotal_2019IR = calculos2019.runPipeLacsLalurIRPJ()
-        dataFrameParaExportarCSLL.append(resultadoTotal_2019)
-        dataFrameParaExportarIRPJJ.append(resultadoTotal_2019IR)                         
+        resultadoTotal_2024 = calculos2024.runPipeLacsLalurCSLL()
+        resultadoTotal_2024IR = calculos2024.runPipeLacsLalurIRPJ()
+        dataFrameParaExportarCSLL.append(resultadoTotal_2024)
+        dataFrameParaExportarIRPJJ.append(resultadoTotal_2024IR)                         
                                 
                             
         
@@ -327,19 +327,19 @@ class CalculosEProcessamentoDosDados():
         dataFrameParaExportarCSLL.append(resultadoTotal_2023)
         dataFrameParaExportarIRPJJ.append(resultadoTotal_2023IR)
 
-        lacsLalur2019 = pd.concat([resultadoTotal_2019,resultadoTotal_2019IR]).reset_index(drop='index')
+        lacsLalur2024 = pd.concat([resultadoTotal_2024,resultadoTotal_2024IR]).reset_index(drop='index')
         lacsLalur2020 = pd.concat([resultadoTotal_2020,resultadoTotal_2020IR]).reset_index(drop='index')
         lacsLalur2021 = pd.concat([resultadoTotal_2021,resultadoTotal_2021IR]).reset_index(drop='index')
         lacsLalur2022 = pd.concat([resultadoTotal_2022,resultadoTotal_2022IR]).reset_index(drop='index')
         lacsLalur2023 = pd.concat([resultadoTotal_2023,resultadoTotal_2023IR]).reset_index(drop='index') 
 
-        lacsLalur2019['Value'] = lacsLalur2019['Value'].astype(float)
+        lacsLalur2024['Value'] = lacsLalur2024['Value'].astype(float)
         lacsLalur2020['Value'] = lacsLalur2020['Value'].astype(float)
         lacsLalur2021['Value'] = lacsLalur2021['Value'].astype(float)
         lacsLalur2022['Value'] = lacsLalur2022['Value'].astype(float)
         lacsLalur2023['Value'] = lacsLalur2023['Value'].astype(float) 
          
-        controler.inserirTabelasFinaisJCP('lacslalur',lacsLalur2019)
+        controler.inserirTabelasFinaisJCP('lacslalur',lacsLalur2024)
         controler.inserirTabelasFinaisJCP('lacslalur',lacsLalur2020)
         controler.inserirTabelasFinaisJCP('lacslalur',lacsLalur2021)
         controler.inserirTabelasFinaisJCP('lacslalur',lacsLalur2022)
@@ -354,7 +354,7 @@ class CalculosEProcessamentoDosDados():
         economia_gerada_por_trimestre = []
         arquivoFinalParaExportacaoTri = []
         tabelaUnicaLista = []
-        for ano in range(2019, 2024):
+        for ano in range(2020, 2025):
                 lacsLalurApos = []
                 year_dfsLacs = []
                 resultadoJCP = []
@@ -393,6 +393,7 @@ class CalculosEProcessamentoDosDados():
 
                         df = lacs.resultadoEconomiaGerada
                         df.columns = [f"{col} {trimestre}" for col in df.columns]
+                        
                         economiaGerada.append(df)
 
                         economia_gerada_por_trimestre.append(lacs.economia)
@@ -433,7 +434,7 @@ class CalculosEProcessamentoDosDados():
         col1, col2, col3, col4 = st.columns(4)
         trimestres = ['1º Trimestre', '2º Trimestre', '3º Trimestre', '4º Trimestre']
         tabelaFinalLacsLalurUnificad = []
-        for ano in range(2019, 2024):
+        for ano in range(2020, 2025):
             year_dfsLacs = []
             year_dfsLalurIRPJ = []
             tabelaFinalLacsLalur = []
