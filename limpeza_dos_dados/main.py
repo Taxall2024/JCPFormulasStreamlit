@@ -521,23 +521,23 @@ if __name__=='__main__':
 
         with col1:
         
-            criandoVisualizacao(trimestre,ano,2019,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
+            criandoVisualizacao(trimestre,ano,2020,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
         with col2:         
 
-            criandoVisualizacao(trimestre,ano,2020,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
+            criandoVisualizacao(trimestre,ano,2021,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
         with col3:
 
-            criandoVisualizacao(trimestre,ano,2021,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
+            criandoVisualizacao(trimestre,ano,2022,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
         with col4:
 
-            criandoVisualizacao(trimestre,ano,2022,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
+            criandoVisualizacao(trimestre,ano,2023,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
         with col5:
 
-            criandoVisualizacao(trimestre,ano,2023,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
+            criandoVisualizacao(trimestre,ano,2024,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
        
 
