@@ -238,7 +238,7 @@ def criandoVisualizacao(trimestre: list, ano: int,
 
          
             if session_state_lacs not in st.session_state or st.session_state.get(session_state_lacs) is None or not st.session_state[session_state_lacs].equals(lacslalur.gerandoTabelas(cnpj_selecionado, anoDeAnalise)):
-               
+                
                 lacslaurAno = lacslalur.gerandoTabelas(cnpj_selecionado, anoDeAnalise)
                 st.session_state[session_state_lacs] = lacslaurAno
 
@@ -387,73 +387,76 @@ def criandoVisualizacao(trimestre: list, ano: int,
 
         ####---- Tabela Comparativa Lacs e Lalur antes e apos Inovações 
         lacslalurOrignal = lacslalur.tabelaComparativaLacsLalur(cnpj_selecionado,anoDeAnalise).iloc[[10,32],2:].reset_index(drop='index')
-
         try:
-            aposInovacoesLacslalur = lacslalurTrimestral.iloc[[12,32],:]
-        except:
-            aposInovacoesLacslalur = lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise).iloc[[12,32],:]
-        
-        tabelaComparativa = pd.concat([lacslalurOrignal,aposInovacoesLacslalur]).reset_index(drop='index')
-        
-
-        tabelaComparativa.at[2,f'Operation 1º Trimestre'] = 'Subtotal CSLL  Após Inovações'
-        tabelaComparativa.at[3,f'Operation 1º Trimestre'] = 'Sub total IRPJ Após Inovações'
-        tabelaComparativa.at[4,f'Operation 1º Trimestre'] = ''
-        tabelaComparativa.at[5,f'Operation 1º Trimestre'] = 'Comparativo CSLL'
-        tabelaComparativa.at[6,f'Operation 1º Trimestre'] = 'Comparativo IRPJ'
-        tabelaComparativa.at[7,f'Operation 1º Trimestre'] = ''
-        tabelaComparativa.at[8,f'Operation 1º Trimestre'] = ''
-        tabelaComparativa.drop(columns=['Operation 2º Trimestre','Operation 3º Trimestre','Operation 4º Trimestre'],inplace=True)
+            try:
+                aposInovacoesLacslalur = lacslalurTrimestral.iloc[[12,32],:]
+            except:
+                aposInovacoesLacslalur = lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise).iloc[[12,32],:]
             
-        
-        for i in [1,2,3,4]:
-            tabelaComparativa.at[5,f'Value {i}º Trimestre'] = tabelaComparativa.at[0,f'Value {i}º Trimestre'] - tabelaComparativa.at[2,f'Value {i}º Trimestre'] 
-            tabelaComparativa.at[6,f'Value {i}º Trimestre'] = tabelaComparativa.at[1,f'Value {i}º Trimestre'] - tabelaComparativa.at[3,f'Value {i}º Trimestre'] 
-        
-        totalCSLL = round(np.sum([tabelaComparativa.at[5,f'Value 1º Trimestre'],
-                            tabelaComparativa.at[5,f'Value 2º Trimestre'],
-                            tabelaComparativa.at[5,f'Value 3º Trimestre'],
-                            tabelaComparativa.at[5,f'Value 4º Trimestre']]),2)
-        totalIRPJ = round(np.sum([tabelaComparativa.at[6,f'Value 1º Trimestre'],
-                            tabelaComparativa.at[6,f'Value 2º Trimestre'],
-                            tabelaComparativa.at[6,f'Value 3º Trimestre'],
-                            tabelaComparativa.at[6,f'Value 4º Trimestre']]),2)
-        
-        with st.expander('Tabela Comparativa'):
-            totalCSLL_formatted = "{:,.2f}".format(totalCSLL)
-            totalIRPJ_formatted = "{:,.2f}".format(totalIRPJ)
-            tabelaComparativa = tabelaComparativa.reindex([0,2,4,5,8,1,3,7,6])
-            st.dataframe(tabelaComparativa)
-            st.metric(label=f'Total CSLL {anoDeAnalise}: ', value=totalCSLL_formatted)
-            st.metric(label=f'Total IRPJ {anoDeAnalise}: ', value=totalIRPJ_formatted)
+            tabelaComparativa = pd.concat([lacslalurOrignal,aposInovacoesLacslalur]).reset_index(drop='index')
+
+                
+
+            tabelaComparativa.at[2,f'Operation 1º Trimestre'] = 'Subtotal CSLL  Após Inovações'
+            tabelaComparativa.at[3,f'Operation 1º Trimestre'] = 'Sub total IRPJ Após Inovações'
+            tabelaComparativa.at[4,f'Operation 1º Trimestre'] = ''
+            tabelaComparativa.at[5,f'Operation 1º Trimestre'] = 'Comparativo CSLL'
+            tabelaComparativa.at[6,f'Operation 1º Trimestre'] = 'Comparativo IRPJ'
+            tabelaComparativa.at[7,f'Operation 1º Trimestre'] = ''
+            tabelaComparativa.at[8,f'Operation 1º Trimestre'] = ''
+            tabelaComparativa.drop(columns=['Operation 2º Trimestre','Operation 3º Trimestre','Operation 4º Trimestre'],inplace=True)
+                
+            
+            for i in [1,2,3,4]:
+                tabelaComparativa.at[5,f'Value {i}º Trimestre'] = tabelaComparativa.at[0,f'Value {i}º Trimestre'] - tabelaComparativa.at[2,f'Value {i}º Trimestre'] 
+                tabelaComparativa.at[6,f'Value {i}º Trimestre'] = tabelaComparativa.at[1,f'Value {i}º Trimestre'] - tabelaComparativa.at[3,f'Value {i}º Trimestre'] 
+            
+            totalCSLL = round(np.sum([tabelaComparativa.at[5,f'Value 1º Trimestre'],
+                                tabelaComparativa.at[5,f'Value 2º Trimestre'],
+                                tabelaComparativa.at[5,f'Value 3º Trimestre'],
+                                tabelaComparativa.at[5,f'Value 4º Trimestre']]),2)
+            totalIRPJ = round(np.sum([tabelaComparativa.at[6,f'Value 1º Trimestre'],
+                                tabelaComparativa.at[6,f'Value 2º Trimestre'],
+                                tabelaComparativa.at[6,f'Value 3º Trimestre'],
+                                tabelaComparativa.at[6,f'Value 4º Trimestre']]),2)
+            
+            with st.expander('Tabela Comparativa'):
+                totalCSLL_formatted = "{:,.2f}".format(totalCSLL)
+                totalIRPJ_formatted = "{:,.2f}".format(totalIRPJ)
+                tabelaComparativa = tabelaComparativa.reindex([0,2,4,5,8,1,3,7,6])
+                st.dataframe(tabelaComparativa)
+                st.metric(label=f'Total CSLL {anoDeAnalise}: ', value=totalCSLL_formatted)
+                st.metric(label=f'Total IRPJ {anoDeAnalise}: ', value=totalIRPJ_formatted)
 
 
-        tabelaRelatorioTri = economia2019Trimestral_data_editor.copy()
-        tabelaRelatorioTri = tabelaRelatorioTri.iloc[24:,[0,1,3,5,7]].reset_index(drop='index')
-        
-        tabelaRelatorioTri[f'Value_{anoDeAnalise}'] = sum([tabelaRelatorioTri.at[1,'Value 1º Trimestre'],tabelaRelatorioTri.at[1,'Value 2º Trimestre'],
-                                                        tabelaRelatorioTri.at[1,'Value 3º Trimestre'],tabelaRelatorioTri.at[1,'Value 4º Trimestre']])
-        
-        tabelaRelatorioTri.at[0,f'Value_{anoDeAnalise}'] = sum([tabelaRelatorioTri.at[0,'Value 1º Trimestre'],tabelaRelatorioTri.at[0,'Value 2º Trimestre'],
-                                                        tabelaRelatorioTri.at[0,'Value 3º Trimestre'],tabelaRelatorioTri.at[0,'Value 4º Trimestre']])
-        
-        tabelaRelatorioTri = tabelaRelatorioTri.iloc[:,5].reset_index(drop='index')
-        resultaTrimestral = economia2019Trimestral_data_editor
-        try:
-            dfParaDownloadFinaltrimestral = pd.concat([resultaTrimestral,lacslalurTrimestral,tabelaComparativa])
+            tabelaRelatorioTri = economia2019Trimestral_data_editor.copy()
+            tabelaRelatorioTri = tabelaRelatorioTri.iloc[24:,[0,1,3,5,7]].reset_index(drop='index')
+            
+            tabelaRelatorioTri[f'Value_{anoDeAnalise}'] = sum([tabelaRelatorioTri.at[1,'Value 1º Trimestre'],tabelaRelatorioTri.at[1,'Value 2º Trimestre'],
+                                                            tabelaRelatorioTri.at[1,'Value 3º Trimestre'],tabelaRelatorioTri.at[1,'Value 4º Trimestre']])
+            
+            tabelaRelatorioTri.at[0,f'Value_{anoDeAnalise}'] = sum([tabelaRelatorioTri.at[0,'Value 1º Trimestre'],tabelaRelatorioTri.at[0,'Value 2º Trimestre'],
+                                                            tabelaRelatorioTri.at[0,'Value 3º Trimestre'],tabelaRelatorioTri.at[0,'Value 4º Trimestre']])
+            
+            tabelaRelatorioTri = tabelaRelatorioTri.iloc[:,5].reset_index(drop='index')
+            resultaTrimestral = economia2019Trimestral_data_editor
+            try:
+                dfParaDownloadFinaltrimestral = pd.concat([resultaTrimestral,lacslalurTrimestral,tabelaComparativa])
+            except:
+                dfParaDownloadFinaltrimestral = pd.concat([resultaTrimestral,lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise),tabelaComparativa]) 
+
+            
+            dfParaDownloadFinaltrimestral.columns = [f"{col}_{anoDeAnalise}" for col in dfParaDownloadFinaltrimestral.columns]
+            dfParaDownloadFinaltrimestral = dfParaDownloadFinaltrimestral.reset_index(drop='index')
+
+            if periodoDeAnalise == True:
+                dataframesParaDownload.append(dfParaDownloadFinal)
+                tabelaParaRelatorio.append(tabelaRelatorio)
+            else:
+                dataframesParaDownload.append(dfParaDownloadFinaltrimestral)
+                tabelaParaRelatorio.append(tabelaRelatorioTri) 
         except:
-            dfParaDownloadFinaltrimestral = pd.concat([resultaTrimestral,lacslalur.gerandoTabelasTrimestral(cnpj_selecionado, anoDeAnalise),tabelaComparativa]) 
-
-        
-        dfParaDownloadFinaltrimestral.columns = [f"{col}_{anoDeAnalise}" for col in dfParaDownloadFinaltrimestral.columns]
-        dfParaDownloadFinaltrimestral = dfParaDownloadFinaltrimestral.reset_index(drop='index')
-
-    if periodoDeAnalise == True:
-        dataframesParaDownload.append(dfParaDownloadFinal)
-        tabelaParaRelatorio.append(tabelaRelatorio)
-    else:
-         dataframesParaDownload.append(dfParaDownloadFinaltrimestral)
-         tabelaParaRelatorio.append(tabelaRelatorioTri) 
+                pass
 
 if __name__=='__main__':
 
@@ -536,9 +539,10 @@ if __name__=='__main__':
             criandoVisualizacao(trimestre,ano,2023,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
 
         with col5:
-
-            criandoVisualizacao(trimestre,ano,2024,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
-
+            try:
+                criandoVisualizacao(trimestre,ano,2024,dataframesParaDownload,cnpj_selecionado,tabelaParaRelatorio)
+            except:
+                pass
        
 
         arquivoParaDownload = pd.concat(dataframesParaDownload,axis=1)
@@ -554,11 +558,11 @@ if __name__=='__main__':
         st.write('')
         st.write('')
         
-        colunas = ['2019','2020','2021','2022','2023']
+        colunas = ['2020','2021','2022','2023']
         
         try:
         
-            dataframeParaRelatorio = pd.concat(tabelaParaRelatorio,axis=1,ignore_index=True).rename(columns={0:'',1:'2019',2:'2020',3:'2021',4:'2022',5:'2023'})
+            dataframeParaRelatorio = pd.concat(tabelaParaRelatorio,axis=1,ignore_index=True).rename(columns={0:'',1:'2020',2:'2021',3:'2022',4:'2023'})
             
             for i in colunas:
                 dataframeParaRelatorio[i] = dataframeParaRelatorio[i].apply(lambda x: f"{float(x):,.2f}" if pd.notnull(x) else x).str.replace('.', '_').str.replace(',', '.').str.replace('_', ',')
@@ -567,7 +571,7 @@ if __name__=='__main__':
         except:
             dataframeParaRelatorio = pd.concat(tabelaParaRelatorio,axis=1,ignore_index=True)
             dataframeParaRelatorio[''] = ''
-            dataframeParaRelatorio = dataframeParaRelatorio[['',0,1,2,3,4]].rename(columns={0:'2019',1:'2020',2:'2021',3:'2022',4:'2023'})
+            dataframeParaRelatorio = dataframeParaRelatorio[['',0,1,2,3]].rename(columns={0:'2020',1:'2021',2:'2022',3:'2023'})
             dataframeParaRelatorio.at[0,''] =  'Redução no IRPJ/CSLL'
             dataframeParaRelatorio.at[1,''] = 'Economia'
             for i in colunas:
